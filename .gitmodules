@@ -1,0 +1,3 @@
+[submodule "mechanical_design"]
+	path = mechanical_design
+	url = https://github.com/jbryant57/IGVC2013Design.git
