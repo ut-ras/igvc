@@ -1,5 +1,3 @@
-CMakeCache.txt
-CMakeFiles
-Makefile
-cmake_install.cmake
-install_manifest.txt
+ros_groovy_workspace/devel
+ros_groovy_workspace/build
+
