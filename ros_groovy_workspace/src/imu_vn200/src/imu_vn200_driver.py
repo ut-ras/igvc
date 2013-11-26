@@ -4,9 +4,9 @@
 #datasheet:
 #Author: Cruz Monrreal II
 
-import roslib; roslib.load_manifest('vn_200_imu')
+import roslib; roslib.load_manifest('imu_vn200')
 import rospy
-from vn_200_imu.msg import vn_200_accel_gyro_compass, vn_200_gps_soln, vn_200_ins_soln
+from imu_vn200.msg import vn_200_accel_gyro_compass, vn_200_gps_soln, vn_200_ins_soln
 import serial
 import struct
 import time
