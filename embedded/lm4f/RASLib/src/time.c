@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// time.c - real time based functions
+// time - Real Time based functions
 // 
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
@@ -17,20 +17,19 @@
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
-// Contact: rasware@ras.ece.utexas.edu
+// Contact: ut.ieee.ras@gmail.com
 //
 //*****************************************************************************
 
 #include "time.h"
-#include "gpio.h"
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_ints.h"
-#include "inc/lm4f120h5qr.h"
-#include "driverlib/sysctl.h"
-#include "driverlib/systick.h"
-#include "driverlib/timer.h"
-#include "driverlib/interrupt.h"
+
+#include <StellarisWare/inc/hw_memmap.h>
+#include <StellarisWare/inc/hw_ints.h>
+#include <StellarisWare/driverlib/sysctl.h>
+#include <StellarisWare/driverlib/systick.h>
+#include <StellarisWare/driverlib/timer.h>
+#include <StellarisWare/driverlib/interrupt.h>
+
 
 // Global System Clock
 // Only contains resolution to sysTickPeriod
@@ -67,7 +66,6 @@ static tTask *pendingQueue;
 // Queue of unused tasks also a linked list
 // The end is identified for efficiency
 static tTask *unusedQueue;
-static tTask **unusedEnd;
 
 // Buffer of tasks to use
 static tTask taskBuffer[TASK_COUNT];
@@ -85,7 +83,6 @@ void InitializeSystemTime(void) {
   
     // Reset queue and thread all tasks in the buffer together
     unusedQueue = &taskBuffer[0];
-    unusedEnd = &unusedQueue;
 
     for (i = 0; i < TASK_COUNT-1; i++)
         taskBuffer[i].next = &taskBuffer[i+1];
@@ -207,13 +204,13 @@ void Timer5Handler(void) {
     tTime time = GetTimeUS();
     
     TimerIntClear(TIMER5_BASE, TIMER_TIMA_TIMEOUT);
-  
+
     // Handling any waiting tasks
     while (pendingQueue && time >= pendingQueue->target) {
         // remove it from the buffer
         tTask *task = pendingQueue;
         pendingQueue = task->next;
-      
+
         task->callback(task->data);
         
         if (task->repeatTime) {
@@ -223,9 +220,8 @@ void Timer5Handler(void) {
 
         } else {
             // Otherwise we stick it back in the available tasks
-            *unusedEnd = task;
-            unusedEnd = &task->next;
-            task->next = 0;
+            task->next = unusedQueue;
+            unusedQueue = task;
         }
     }
     
@@ -238,7 +234,7 @@ void Timer5Handler(void) {
 // The return value can be used to stop the call with CallStop
 int CallInUS(tCallback callback, void *data, tTime us) {
     tTask *task;
-
+    
     // Check if any tasks are available
     if (!unusedQueue)
         return 0;
@@ -247,10 +243,6 @@ int CallInUS(tCallback callback, void *data, tTime us) {
     task = unusedQueue;
     unusedQueue = task->next;
 
-    // Update the end if nescessary
-    if (!unusedQueue)
-        unusedEnd = &unusedQueue;
-  
     // Claim the next task id
     task->id = nextID++;
     
@@ -287,10 +279,6 @@ int CallEveryUS(tCallback callback, void *data, tTime us) {
     task = unusedQueue;
     unusedQueue = task->next;
 
-    // Update the end if nescessary
-    if (!unusedQueue)
-        unusedEnd = &unusedQueue;
-    
     // Claim the next task id
     task->id = nextID++;
     
@@ -325,9 +313,8 @@ void CallStop(int id) {
             tTask *task = *p;
             *p = task->next;
             
-            *unusedEnd = task;
-            unusedEnd = &task->next;
-            task->next = 0;
+            task->next = unusedQueue;
+            unusedQueue = task;
         }
     }
 }

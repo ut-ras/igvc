@@ -23,6 +23,7 @@
 
 #include "encoder.h"
 
+
 // Definition of tDecoderState
 // Contains all data for the mealy machine
 typedef const struct {
@@ -49,6 +50,9 @@ struct Encoder {
     
     // Recorded number of encoder "ticks" thus far
     signed long ticks;
+
+    // Set to switch direction encoder is incremented
+    tBoolean invert;
 };
 
 // Buffer of encoder structs to use
@@ -69,15 +73,20 @@ static void EncoderHandler(void *data) {
                 (GetPin(enc->pinB) ? 0x2 : 0x0);
     
     // Add the value in the FSM to the current tick count
-    enc->ticks += enc->decoder->value[input];
-    
+    // (or substract if invert is set)
+    if (enc->invert) {
+        enc->ticks -= enc->decoder->value[input];
+    } else {
+        enc->ticks += enc->decoder->value[input];
+    }
+
     // Setup the next state of the mealy machine
     enc->decoder = &DecoderFSM[input];
 }
 
 // Function to initialize an encoder on a pair of pins
 // The returned pointer can be used by the GetEncoder function
-tEncoder *InitializeEncoder(tPin a, tPin b) {
+tEncoder *InitializeEncoder(tPin a, tPin b, tBoolean invert) {
     // Grab the next encoder
     tEncoder *enc = &encoderBuffer[encoderCount++];
     
@@ -86,6 +95,7 @@ tEncoder *InitializeEncoder(tPin a, tPin b) {
     enc->pinA = a;
     enc->pinB = b;
     enc->ticks = 0;
+    enc->invert = invert;
 
     // Register the interrupt handler on the pins
     CallOnPin(EncoderHandler, enc, a);

@@ -79,7 +79,7 @@ int InitializePublisher(tPub *pubPtr, char *jsonkey, void *data, char* (*handler
     pubPtr->data = data;
     pubPtr->handler = handler;
     
-    [pubCount] = pubPtr;
+    pubPtrBuff[pubCount] = pubPtr;
     pubCount += 1;
     
     return true;

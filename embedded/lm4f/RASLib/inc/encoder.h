@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// encoder.h - encoder driver
+// encoder - Quadrature Encoder driver
 // 
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
@@ -17,34 +17,48 @@
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
-// Contact: rasware@ras.ece.utexas.edu
+// Contact: ut.ieee.ras@gmail.com
 //
 //*****************************************************************************
 
-#ifndef __ENCODER_H__
-#define __ENCODER_H__
+#ifndef _R_ENCODER_H_
+#define _R_ENCODER_H_
 
 #include "gpio.h"
-#include "internal.h"
 
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_ints.h"
-#include "driverlib/gpio.h"
-#include "driverlib/sysctl.h"
-#include "driverlib/interrupt.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 // Definition of struct Encoder in encoder.c
 typedef struct Encoder tEncoder;
 
-// Function to initialize an encoder on a pair of pins
-// The returned pointer can be used by the GetEncoder function
-tEncoder *InitializeEncoder(tPin a, tPin b);
+/**
+ * Initializes an encoder on a pair of pins
+ * @param a Pin that the encoder A line should be plugged into
+ * @param b Pin that the encoder B line should be plugged into
+ * @param invert Flag to switch the direction that the encoder value is incremented 
+ * @return Pointer to a tEncoder used by the GetEncoder and ResetEncoder functions
+ */
+tEncoder *InitializeEncoder(tPin a, tPin b, tBoolean invert);
 
-// This function returns the accumulated encoder value
+/**
+ * Gets the accumulated value for an encoder
+ * @param enc Pointer to a tEncoder that was returned by the InitializeEncoder function
+ * @return Accumulated encoder value
+ */
 signed long GetEncoder(tEncoder *enc);
 
-// This function clears any ticks on the encoder
+/**
+ * Clears any ticks that have been accumulated for an encoder
+ * @param enc Pointer to a tEncoder that was returned by the InitializeEncoder function
+ */
 void ResetEncoder(tEncoder *enc);
 
-#endif // __ENCODER_H__
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // _R_ENCODER_H_

@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// uart.c - usbuart commuications
+// uart - USB UART Communications
 // 
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
@@ -17,25 +17,28 @@
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
-// Contact: rasware@ras.ece.utexas.edu
+// Contact: ut.ieee.ras@gmail.com
 //
 //*****************************************************************************
 
+#include "uart.h"
+
 #include <stdarg.h>
 #include <math.h>
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_ints.h"
-#include "inc/lm4f120h5qr.h"
-#include "driverlib/sysctl.h"
-#include "driverlib/systick.h"
-#include "driverlib/timer.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/gpio.h"
-#include "driverlib/debug.h"
-#include "driverlib/uart.c"
-#include "utils/uartstdio.c"
-#include "uart.h"
+
+#include <StellarisWare/inc/hw_types.h>
+#include <StellarisWare/inc/hw_ints.h>
+#include <StellarisWare/inc/hw_memmap.h>
+#include <StellarisWare/inc/hw_types.h>
+#include <StellarisWare/inc/hw_uart.h>
+#include <StellarisWare/driverlib/gpio.h>
+#include <StellarisWare/driverlib/debug.h>
+#include <StellarisWare/driverlib/interrupt.h>
+#include <StellarisWare/driverlib/rom.h>
+#include <StellarisWare/driverlib/rom_map.h>
+#include <StellarisWare/driverlib/sysctl.h>
+#include <StellarisWare/driverlib/uart.h>
+
 
 static const char * const g_pcHex_U = "0123456789ABCDEF";
 static const char * const g_pcHex_L = "0123456789abcdef";
@@ -45,6 +48,7 @@ void InitializeUART(void)
 {
   // Enable GPIO port A which is used for UART0 pins.
   SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
 
   // Configure the pin muxing for UART0 functions on port A0 and A1.
   GPIOPinConfigure(GPIO_PA0_U0RX);
@@ -53,25 +57,51 @@ void InitializeUART(void)
   // Select the alternate (UART) function for these pins.
   GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
+  SysCtlPeripheralEnable(UART0_BASE);
   // Initialize the UART for console I/O.
-  StdioInit(0);
+  UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200,
+			  (UART_CONFIG_PAR_NONE | UART_CONFIG_STOP_ONE |
+			   UART_CONFIG_WLEN_8));
 }
 
 // The following block of funcitons are wrappers for StellarisWare UART functions
-
-void StdioConfig(unsigned long ulPort, unsigned long ulBaud, unsigned long ulSrcClock)
+void UARTwrite(const char *pucBuffer, unsigned long ulCount)
 {
-  UARTStdioConfig(ulPort, ulBaud, ulSrcClock);
+    //
+    // Loop while there are more characters to send.
+    //
+    while(ulCount--)
+    {
+        //
+        // Write the next character to the UART.
+        //
+	if (*pucBuffer == '\n') {
+	    UARTCharPut(UART0_BASE, '\r');
+	}
+        UARTCharPut(UART0_BASE, *pucBuffer++);
+    }
 }
 
-void StdioInit(unsigned long ulPort)
-{
-  UARTStdioInit(ulPort);
-}
 
-void StdioInitExpClk(unsigned long ulPort, unsigned long ulBaud)
+int UARTgets(char *pucBuffer, unsigned long ulCount)
 {
-  UARTStdioInitExpClk(ulPort, ulBaud);
+    //
+    // Loop while there are more characters to send.
+    //
+  unsigned long ulTemp = ulCount;
+    while(ulTemp--)
+    {
+        //
+        // Write the next character to the UART.
+        //
+        *pucBuffer = UARTCharGet(UART0_BASE);
+	UARTCharPut(UART0_BASE, *pucBuffer);
+	if( *pucBuffer == '\r') {
+	  return ulCount - ulTemp;
+	}
+	pucBuffer++;
+    }
+    return ulCount;
 }
 
 int Gets(char *pcBuf, unsigned long ulLen)
@@ -81,7 +111,7 @@ int Gets(char *pcBuf, unsigned long ulLen)
 
 unsigned char Getc(void)
 {
-  return UARTgetc();
+  return UARTCharGet(UART0_BASE);
 }
 
 // Pulled out of RASDemo Code
@@ -516,6 +546,7 @@ again:
     }
   }
 }
+
 
 void Putc(char ch)
 {

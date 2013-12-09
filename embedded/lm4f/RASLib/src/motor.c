@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// motor.c - software pwm drivers for the TLE5205-2 
+// motor - Software PWM drivers for the TLE5205-2
 // 
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
@@ -17,15 +17,13 @@
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
-// Contact: rasware@ras.ece.utexas.edu
+// Contact: ut.ieee.ras@gmail.com
 //
 //*****************************************************************************
 
 #include "motor.h"
-#include "inc/hw_ints.h"
-#include "inc/lm4f120h5qr.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/timer.h"
+#include "pwm.h"
+
 
 // Definition of struct Motor
 // Defined to tMotor in motor.h
@@ -36,6 +34,9 @@ struct Motor {
 
     // True if braking is applied
     tBoolean brake;
+
+    // Set to switch motor direction
+    tBoolean invert;
 };
 
 // Buffer of motor structs to use
@@ -48,16 +49,17 @@ int motorCount = 0;
 
 // Function to initialize a motor on a pair of pins
 // The returned pointer can be used by the SetMotor function
-tMotor *InitializeMotor(tPin a, tPin b, tBoolean brake) {
+tMotor *InitializeMotor(tPin a, tPin b, tBoolean brake, tBoolean invert) {
     // Grab the next motor
     tMotor *mtr = &motorBuffer[motorCount++];
     
     // Setup the initial data
     mtr->brake = brake;
+    mtr->invert = invert;
     
     // Initialize pwm on both pins
-    mtr->pwm0 = InitializePWM(a, 20.0f);
-    mtr->pwm1 = InitializePWM(b, 20.0f);
+    mtr->pwm0 = InitializePWM(a, 1600.0f);
+    mtr->pwm1 = InitializePWM(b, 1600.0f);
     
     // Return the new motor
     return mtr;
@@ -69,17 +71,22 @@ void SetMotor(tMotor *mtr, float input) {
     if(input > 1 || input < -1)
         return;
     
+    // invert if set
+    if (mtr->invert) {
+        input *= -1;
+    }
+
     // Operate the motor controller
     // Motor controller operation is specific 
     // to the TLE5205-2
     if (mtr->brake) {
         if (input < 0) {
             // CCW (P, ~P)
-            SetPWM(mtr->pwm0, 1.0f+input, -input);
-            SetPWM(mtr->pwm1, -input, 0.0f);
+            SetPWM(mtr->pwm0, 1.0f+input, 0.0f);
+            SetPWM(mtr->pwm1, -input, 1.0f+input);
         } else if (input > 0) {
             // CW (P, 0)
-            SetPWM(mtr->pwm0, input, 0.0f);
+            SetPWM(mtr->pwm0, 1.0f-input, 0.0f);
             SetPWM(mtr->pwm1, 0.0f, 0.0f);
         } else {
             // S (1, 0)
@@ -89,12 +96,12 @@ void SetMotor(tMotor *mtr, float input) {
     } else {
         if (input < 0) {
             // CCW (P, 1)
-            SetPWM(mtr->pwm0, 1.0f+input, -input);
+            SetPWM(mtr->pwm0, 1.0f+input, 0.0f);
             SetPWM(mtr->pwm1, 1.0f, 0.0f);
         } else if (input > 0) {
             // CW (P, P)
-            SetPWM(mtr->pwm0, input, 0.0f);
-            SetPWM(mtr->pwm1, input, 0.0f);
+            SetPWM(mtr->pwm0, 1.0f-input, 0.0f);
+            SetPWM(mtr->pwm1, 1.0f-input, 0.0f);
         } else {
             // S (1, 1)
             SetPWM(mtr->pwm0, 1.0f, 0.0f);

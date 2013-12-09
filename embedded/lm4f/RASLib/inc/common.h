@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// pwm - Software PWM drivers
+// common - Shared functionality
 // 
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
@@ -21,35 +21,36 @@
 //
 //*****************************************************************************
 
-#ifndef _R_PWM_H_
-#define _R_PWM_H_
+#ifndef _R_COMMON_H_
+#define _R_COMMON_H_
 
-#include "gpio.h"
+// Included for definition of tBoolean
+#include <StellarisWare/inc/hw_types.h>
+
+// Included for common use in debugging
+#include "uart.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-// Definition of struct PWM in pwm.c
-typedef struct PWM tPWM;
+// Definition of callback function pointer
+typedef void (*tCallback)();
 
 /**
- * Initializes a PWM signal for a pin
- * @param pin Pin that will output a PWM signal
- * @param freq Frequency of the signal, must be specified in hertz
- * @return Pointer to an initialized tPWM, can be used by the SetPWM function
- * Note: If the number of frequencies passes the number of available modules, which is currently 12, then a null pointer is returned
+ * Sets up the LM4F to use RASLib
  */
-tPWM *InitializePWM(tPin pin, float freq);
+void InitializeMCU(void);
 
 /**
- * Sets a PWM duty cycle and phase
- * @param pwm Initialized tPWM, returned by InitializePWM
- * @param duty Duty cycle of signal, specified as a percentage
- * @param phase Phase of signal, specified as a percentage
+ * Function which does nothing
  */
-void SetPWM(tPWM *pwm, float duty, float phase);
+void Dummy(void);
 
 
-#endif //  _R_PWM_H_
+#ifdef __cplusplus
+}
+#endif
+
+#endif // _R_COMMON_H_
