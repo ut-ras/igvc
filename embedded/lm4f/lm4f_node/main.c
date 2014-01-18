@@ -34,21 +34,23 @@ char* pubKey[NUMPUB] = {"SPLMdebug", "SPRMdebug", "SVLXdebug", "SVAXdebug"};
 int main(void) {
     int i;
     InitializeMCU();
-    InitializeUART();
 
 	// Initialize subscribers
 	// subHandlers Array located in handlers.c
-	for(i=0;i<NUMSUB;i++) {
+	Printf("___LM4F___\n");
+    for(i=0;i<NUMSUB;i++) {
 	    InitializeSubscriber(subArray[i], subKey[i], 0, subHandlers[i]);
 	}
-
+    Printf("Subscribers initialized...\n");  
+  
 	// Initialize publishers
 	for(i=0;i<NUMPUB;i++) {
     	InitializePublisher(pubArray[i], pubKey[i], 0, pubHandlers[i]);
     }
+    Printf("Publishers initialized...\n");
 
     BeginPublishing(.1);
-    BeginSubscribing(.1);
-    
+    Printf("_______LM4F Running_______\n\n");
+    BeginSubscribing(.1); //while(1) contained within BeginSubscribing
     while(1);
 }

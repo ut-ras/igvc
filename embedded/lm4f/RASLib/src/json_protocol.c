@@ -125,7 +125,7 @@ static void createAndPublishMessage(void *data) {
         char *value = (pubPtrBuff[i]->handler)(pubPtrBuff[i]->data);
 
         unsigned int valuelen = Strnlen(value, MAX_VAL_LEN),
-                     len = pubPtrBuff[i]->keylen + valuelen + elemExtra; 
+                     len = pubPtrBuff[i]->keylen + valuelen + elemExtra;
 
         if (valuelen >= MAX_VAL_LEN) {
             printError("data value string returned by publisher exceeds maximum length", 0, 0);
@@ -190,7 +190,7 @@ static int walkJSONMsg(int index, int isKey) {
             index == 0 && i%2 == 0
             );
     }
-
+    
     return total + tokens[index].size;
 }
 
@@ -210,10 +210,10 @@ static int ReadLine(char *line, int max_len) {
 }
 
 void BeginSubscribing(float secsBetweenReads) {
+    Printf("_____LM4F Subscribing at period of: %f_____\n",secsBetweenReads);
     while (1) {
         int numBytes = ReadLine(inMsgBuff, sizeof(inMsgBuff));
         inMsgBuff[MAX_IN_MSG_SIZE - 1] = 0; // just in case Gets doesn't set the null terminator
-
         if (numBytes > 0) {
             int error;
 
