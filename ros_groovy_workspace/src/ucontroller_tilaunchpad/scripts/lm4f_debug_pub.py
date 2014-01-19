@@ -14,16 +14,18 @@ BAUD_RATE = 115200
 
 def lm4f_handler(data, pub):
     try:
-        comm.open()
+        comm.flushInput()
+        comm.flushOutput()
+        dataIn = data.data.replace("{","")
+        dataIn = dataIn.replace("}","")
         comm.write(data.data)
         print data.data
-        comm.flush()
+        comm.flushOutput()
         response = comm.readline()
-        comm.flush()
+        comm.flushInput()
        #rospy.loginfo(rospy.get_name()+": LM4F response: "+response)      
-        if 'error' not in response:
-            print('LM4F Response: ') + response
-            pub.publish(response) 
+        print('LM4F Response: ') + response
+        pub.publish(response) 
         #rospy.sleep(0.05) # publish at 20Hz
     except:
         print(traceback.format_exc())
