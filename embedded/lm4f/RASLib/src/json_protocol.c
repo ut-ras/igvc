@@ -213,6 +213,7 @@ void BeginSubscribing(float secsBetweenReads) {
     Printf("_____LM4F Subscribing at period of: %f_____\n",secsBetweenReads);
     while (1) {
         int numBytes = ReadLine(inMsgBuff, sizeof(inMsgBuff));
+        inMsgBuff[numBytes - 1] = 0;
         inMsgBuff[MAX_IN_MSG_SIZE - 1] = 0; // just in case Gets doesn't set the null terminator
         if (numBytes > 0) {
             int error;

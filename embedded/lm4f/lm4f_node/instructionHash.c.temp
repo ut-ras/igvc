@@ -1,0 +1,25 @@
+#include "instructionHash.h"
+#include <stdio.h>
+
+int fastHashGen(char*, int);
+
+int fastHashGen(char* key, int length) {
+    int hash = INITIAL_HASH_VAL, i;
+    for(i = 0; i < length; i++) {
+        hash = HASHWEIGHT * hash + key[i];
+    }        
+    return hash % TABLESIZE;
+}
+
+int main(void) {
+    int n = 0;
+    char* wordList[5] = {"SPLM","SPRM","SPVX","SVAX","RSTE"}; 
+    tHashtable hTable;
+    initTable(&hTable, TABLESIZE);
+
+    for(n=0;n<5;n++) {
+        insert(&hTable,wordList[n]);
+    }
+    printTable(&hTable);
+    return 0;
+}

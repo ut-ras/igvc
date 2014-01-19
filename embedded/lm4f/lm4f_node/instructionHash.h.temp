@@ -1,0 +1,69 @@
+/***********************************************************
+* Kevin Gilbert
+* 18 January 2014
+*
+* Simple hashtable functionality to parse incoming
+*    instructions to the LM4F for IGVC2014 framwork.
+***********************************************************/
+#include <stdio.h>
+
+#define TABLESIZE 5
+#define INITIAL_HASH_VAL 5381
+#define HASHWEIGHT 33
+
+/**********************************************************
+*    Function Declarations
+**********************************************************/
+
+/*********************************************************
+*    Linked List datatype
+*********************************************************/
+typedef struct tLList {
+    struct tLList* next;
+    void* data;
+} tLList;
+
+/*********************************************************
+*    Hashtable datatype
+*********************************************************/
+struct {
+    tLList* table;
+
+} typedef tHashtable;
+
+
+    void initTable(tHashtable* table, int tableLength) {
+        table = malloc(sizeof(tLList)*tableLength);
+    }
+
+    void insert(tHashtable* table, char* key) {
+        tLList nodePtr = table[fastHashGen(key, strlen(key))];
+        if(nodePtr.next == 0) {
+            notePtr.data = key;
+            return;
+        }
+        while(nodePtr.next != 0) {
+            //Collision, go to next element
+            nodePtr = notePtr.next;
+        } 
+        nodePtr.next = malloc(sizeof(tLList));
+        nodePtr.next.data = key;
+        return;
+    }
+
+    void printTable(tHashtable* table) {
+        int k; 
+        for(k=0;k<TABLESIZE;k++) {
+            printf("%s",table[k].data);
+            if(table[k].next != 0) {
+                tLList nextPtr = table[k].next;
+                printf(" -> "); printf("%s",nextPtr.data);
+                while(nextPtr.next != 0) {
+                    nextPtr = nextPtr.next;
+                    printf(" -> %s",nextPtr.data); 
+                }
+            }
+            printf("\n");
+        }
+    }    
+
