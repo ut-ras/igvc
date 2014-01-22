@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+#################
+# TI LM4F Launchpad ROS Node. Faciliates communication between 
+#    IGVC Framework and the embedded system.
+#
+# TWIST Message format input, JSON comm between embedded system.
+# Broadcasts internal state of LM4F onto a debug channel.
+#
+# IGVC 2014 IEEE RAS UT Austin
+# December 19 2013
+# Last Update: January 22 2014
+# Kevin Gilbert
+#################
+import roslib; roslib.load_manifest('ucontroller_tilaunchpad')
+import json, serial, sys
+import rospy, traceback
+from std_msgs.msg import String
+from geometry_msgs.msg import Twist
+##################################
+# Node parameters
+#################
+TOPIC = 'lm4f_debug'
+SUBSCRIBER = 'lm4f'
+SERIAL_LINE = '/dev/lm4f'
+BAUD_RATE = 115200
+##################################
+
+def lm4f_handler(data, pub):
+    try:
+        comm.flushOutput()
+        comm.flushInput()
+        # Sample hardcoded data stream
+        splm = round(data.linear.x, 3)
+        sprm = round(data.linear.y, 3)
+        mesg = json.dumps({'SPLM':splm, 'SPRM':sprm})
+        comm.write(mesg+'\n')
+        comm.flushOutput()
+        response = comm.readline()
+        comm.flushInput()
+        rospy.loginfo(rospy.get_name()+": LM4F response: "+response)      
+        pub.publish(response) 
+    except:
+        rospy.loginfo(traceback.format_exc())
+        rospy.loginfo('Closing LM4F Node due to exception...')
+        comm.close()
+        sys.exit()
+
+def lm4fNode():
+    pub = rospy.Publisher(TOPIC, String)
+    sub = rospy.Subscriber(SUBSCRIBER, Twist, lm4f_handler, pub)
+    rospy.init_node('lm4f_node', anonymous=True)
+    print 'printing debug info...'
+    rospy.spin()
+
+
+if __name__ == '__main__':
+    try:
+        comm = serial.Serial(
+            port = SERIAL_LINE,
+            baudrate = BAUD_RATE,
+            timeout = .2,
+            writeTimeout = 1
+        )
+        print 'comm initialized...'
+        lm4fNode()
+    except rospy.ROSInterruptException: pass
+    except serial.SerialException:
+        comm.close()
+        print 'comm error'
+        sys.exit()
+        
