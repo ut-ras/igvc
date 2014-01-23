@@ -31,9 +31,8 @@ def gpsDriver( ip_address, port_number, callback ) :
             record_data = trimble.recv(record_length)
             if record_type in typeJumpTable :
                 assert record_length == struct.calcsize(typeJumpTable[record_type][1])
-                for name,value in zip(typeJumpTable[record_type][0],
-                                      struct.unpack_from(typeJumpTable[record_type][1],record_data)) :
-                    packetHash[name] = value
+                packetHash.update( { name : value for name, value in zip( typeJumpTable[record_type][0],
+                                                                          struct.unpack_from( typeJumpTable[record_type][1], record_data ) ) } ) 
             else :
                 print("unknown record type : {0}".format(record_type))
             length -= record_length + 2
@@ -60,7 +59,6 @@ def gpsMockUp( ip_address, port_number, callback) :
     while True:
         packetHash['time'] += 200
         callback( packetHash )
-    
 
 if __name__ == "__main__" :
     import pprint
