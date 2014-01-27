@@ -8,7 +8,7 @@
 #
 # IGVC 2014 IEEE RAS UT Austin
 # December 19 2013
-# Last Update: January 22 2014
+# Last Update: January 23 2014
 # Kevin Gilbert
 #################
 import roslib; roslib.load_manifest('ucontroller_tilaunchpad')
@@ -25,6 +25,15 @@ SERIAL_LINE = '/dev/lm4f'
 BAUD_RATE = 115200
 ##################################
 
+##################################
+##
+#    lm4f_handler
+######
+##
+#    Node function placed here
+#    Called when data received 
+#    from subscriber topic.
+##################################
 def lm4f_handler(data, pub):
     try:
         comm.flushOutput()
@@ -44,6 +53,7 @@ def lm4f_handler(data, pub):
         rospy.loginfo('Closing LM4F Node due to exception...')
         comm.close()
         sys.exit()
+##################################
 
 def lm4fNode():
     pub = rospy.Publisher(TOPIC, String)
@@ -51,7 +61,6 @@ def lm4fNode():
     rospy.init_node('lm4f_node', anonymous=True)
     print 'printing debug info...'
     rospy.spin()
-
 
 if __name__ == '__main__':
     try:
