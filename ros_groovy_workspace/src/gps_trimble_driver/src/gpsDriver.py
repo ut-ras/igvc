@@ -22,13 +22,13 @@ def gpsDriver( ip_address, port_number, callback ) :
     # the following code uses blocking oi, so it should not eat your processor.
     while True:
         header  = trimble.recv(7)
-        stx, status, type, length, trans_number, page_index, max_page_index = header
-        assert stx == 0x02
-        assert type == 0x40
+        stx, status, type, length, trans_number, page_index, max_page_index = struct.unpack_from( ">BBBBBBB", header )
+        #assert stx == 0x02
+        #assert type == 0x40
         while length > 3 :
             data = trimble.recv(2)
-            record_type , record_length = data
-            record_data = trimble.recv(record_length)
+            record_type , record_length = struct.unpack_from( ">BB", data )
+            record_data = trimble.recv( record_length )
             if record_type in typeJumpTable :
                 assert record_length == struct.calcsize(typeJumpTable[record_type][1])
                 packetHash.update( { name : value for name, value in zip( typeJumpTable[record_type][0],
