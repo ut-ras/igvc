@@ -37,7 +37,7 @@ int main(void) {
 
 	// Initialize subscribers
 	// subHandlers Array located in handlers.c
-	Printf("___LM4F___\n");
+	Printf("_____LM4F_____\n");
     for(i=0;i<NUMSUB;i++) {
 	    InitializeSubscriber(subArray[i], subKey[i], 0, subHandlers[i]);
 	}

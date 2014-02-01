@@ -13,7 +13,7 @@
 #################
 import roslib; roslib.load_manifest('ucontroller_tilaunchpad')
 import json, serial, sys
-import rospy, traceback
+import rospy, traceback,subprocess
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 ##################################
@@ -23,6 +23,11 @@ TOPIC = 'lm4f_debug'
 SUBSCRIBER = 'lm4f'
 SERIAL_LINE = '/dev/lm4f'
 BAUD_RATE = 115200
+### LM4F parameters to reflash board on node startup 
+rstLm4fcmd = 'make' 
+rstLm4fFlag = '-C'
+rstLm4fdst = '../../../../embedded/lm4f/lm4f_node/'
+rstLm4farg = 'flash'
 ##################################
 
 ##################################
@@ -71,6 +76,10 @@ if __name__ == '__main__':
             writeTimeout = 1
         )
         print 'comm initialized...'
+        print 'Flashing board...'
+        process = subprocess.call([rstLm4fcmd,rstLm4fFlag,rstLm4fdst,rstLm4farg])
+        print 'board reset, output: '
+        print process
         lm4fNode()
     except rospy.ROSInterruptException: pass
     except serial.SerialException:
