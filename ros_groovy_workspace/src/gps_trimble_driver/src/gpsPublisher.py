@@ -44,7 +44,7 @@ def publishPacket( publisher ) :
         elif packet[ 'sigma-E' ] != 0 :
             message.position_covariance_type = 2
         else :
-            message.position_covariance_type = 0
+            message.position_covariance_type = -1
         if debug :
             pp.pprint( packet )
         publisher.publish( message )
