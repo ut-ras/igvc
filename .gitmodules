@@ -1,3 +1,6 @@
 [submodule "mechanical_design"]
 	path = mechanical_design
 	url = https://github.com/jbryant57/IGVC2013Design.git
+[submodule "ros_groovy_workspace/src/gps_umd"]
+	path = ros_groovy_workspace/src/gps_umd
+	url = https://github.com/ktossell/gps_umd.git
