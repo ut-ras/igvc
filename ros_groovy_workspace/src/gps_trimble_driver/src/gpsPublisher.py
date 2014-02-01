@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(sys.executable))
 import gpsDriver
 
 # ROS stuff
-import roslib
+import roslib; roslib.load_manifest( "gps_trimble_driver" )
 import rospy
 from gps_common.msg import GPSFix
 
@@ -53,4 +53,4 @@ def publishPacket( publisher ) :
 if __name__ == "__main__" :
     pub = rospy.Publisher( '/gps/trimble/raw', GPSFix )
     rospy.init_node( 'gps_driver_trimble' )
-    gpsDriver.gpsDriver( "192.168.2.2", 28001,  publishPacket(pub) )
+    gpsDriver.gpsMockUp( rospy.get_param( '~GPS_IP' , "192.168.2.2" ), int( rospy.get_param( "~GPS_PORT", "28001" ), publishPacket( pub ) ) )
