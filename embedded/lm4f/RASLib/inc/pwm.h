@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// pwm.h - software pwm drivers for the TLE5205-2
+// pwm - Software PWM drivers
 // 
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
@@ -17,32 +17,39 @@
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
-// Contact: rasware@ras.ece.utexas.edu
+// Contact: ut.ieee.ras@gmail.com
 //
 //*****************************************************************************
 
+#ifndef _R_PWM_H_
+#define _R_PWM_H_
+
 #include "gpio.h"
 
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "driverlib/gpio.h"
-#include "driverlib/sysctl.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#ifndef __PWM_H__
-#define __PWM_H__
 
 // Definition of struct PWM in pwm.c
 typedef struct PWM tPWM;
 
-// Function to initialize pwm on a pin
-// The returned pointer can be used by the SetPWM function
-// Frequency must be specified in hertz
-// If the number of frequencies passes the number of available
-// modules, which is currently 12, then a null pointer is returned
+/**
+ * Initializes a PWM signal for a pin
+ * @param pin Pin that will output a PWM signal
+ * @param freq Frequency of the signal, must be specified in hertz
+ * @return Pointer to an initialized tPWM, can be used by the SetPWM function
+ * Note: If the number of frequencies passes the number of available modules, which is currently 12, then a null pointer is returned
+ */
 tPWM *InitializePWM(tPin pin, float freq);
 
-// This function sets a pwm duty cycle and phase
-// Both Duty Cycle and Phase must be in percentage
+/**
+ * Sets a PWM duty cycle and phase
+ * @param pwm Initialized tPWM, returned by InitializePWM
+ * @param duty Duty cycle of signal, specified as a percentage
+ * @param phase Phase of signal, specified as a percentage
+ */
 void SetPWM(tPWM *pwm, float duty, float phase);
 
-#endif //  __PWM_H__
+
+#endif //  _R_PWM_H_

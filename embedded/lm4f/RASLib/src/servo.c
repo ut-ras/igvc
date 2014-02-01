@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// servo.c - software servo (rc pwm) driver
+// servo - Servo (RC PWM) driver
 // 
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
@@ -17,15 +17,13 @@
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
-// Contact: rasware@ras.ece.utexas.edu
+// Contact: ut.ieee.ras@gmail.com
 //
 //*****************************************************************************
 
 #include "servo.h"
-#include "inc/hw_ints.h"
-#include "inc/lm4f120h5qr.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/timer.h"
+#include "pwm.h"
+
 
 // Function to initialize a servo on a pin
 // The returned pointer can be used by the SetPWM function
@@ -40,13 +38,13 @@ tServo *InitializeServo(tPin pin) {
     return servo;
 }
 
-// Servo output is 50hz with 2.5% to 12.5% duty cycle, centered at 7.5%
-// This function sets a servo value, with 0.0 being 2.5% and 1.0 being 12.5%
+// Servo output is 50hz with 3% to 12% duty cycle, centered at 7.5%
+// This function sets a servo value, with 0.0 being 3% and 1.0 being 12%
 void SetServo(tServo *servo, float value) { 
     // Bind to the valid range of inputs
-    value = (value > 1.0f) ? 1.0f :
-            (value < 0.0f) ? 0.0f : value;
+    if (value > 1.0f || value < 0.0f)
+        return;
     
     // Set pwm to proper value
-    SetPWM(servo, 0.025f + (value * 0.10f), 0.0f);
+    SetPWM(servo, 0.03f + (value * 0.09f), 0.0f);
 }

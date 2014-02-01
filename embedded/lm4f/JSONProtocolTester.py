@@ -1,8 +1,9 @@
 import serial, json
-import time
+import time, sys
 import atexit
+import traceback
 
-SERIAL_LINE = "COM6"
+SERIAL_LINE = "/dev/lm4f"
 BAUD_RATE = 115200
 
 def printError(s):
@@ -26,13 +27,14 @@ def processData(data):
         count = int(data["SPLMdebug"])
     except:
         printError("couldn't receive values for expected keys") 
-        return	
+        return    
         
     print "counter received: %d" % count
 
 def parseLine(s):
     try :
         data = json.loads(s.strip())
+        print s
     except:
         print "ERROR: problem while parsing JSON: ", s.strip()
         return
@@ -44,27 +46,29 @@ counter = 0
 connection.flush()
 
 while True:
-	try:
-		# send message
-		msg = json.dumps({"SPLM":str(counter)})
-		print "sent: %s" % msg
-		
-		connection.write(msg + '\n')
-		connection.flushOutput()
+    try:
+        # send message
+        msg = json.dumps({"SPLM":str(counter), "SVLX":str(counter + 10)})
+        print "sent: %s" % msg
+        
+        connection.flushOutput()
+        connection.write(msg + '\n')
+        
+        # read response
+        line = connection.readline()
+        connection.flush()
+        if len(line) == 0:
+            printError("ERROR: timeout")
+        else:
+            print line
+            #parseLine(line)
 
-		# read response
-		connection.flushInput()
-		line = connection.readline()
+        counter += 1
+        time.sleep(5)
+    except:
+        print 'Exception caught in Main loop'
+        traceback.print_exc(file=sys.stdout)
+        break
 
-		if len(line) == 0:
-			printError("ERROR: timeout")
-		else:
-			print line
-			parseLine(line)
-
-		counter += 1
-		time.sleep(1)
-	except: 
-		break
-
+print 'Connection Closing'
 connection.close()

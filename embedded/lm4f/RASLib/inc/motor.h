@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// motor.h - software pwm drivers for the TLE5205-2
+// motor - Software PWM drivers for the TLE5205-2
 // 
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
@@ -17,28 +17,43 @@
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
-// Contact: rasware@ras.ece.utexas.edu
+// Contact: ut.ieee.ras@gmail.com
 //
 //*****************************************************************************
 
-#include "pwm.h"
+#ifndef _R_MOTOR_H_
+#define _R_MOTOR_H_
 
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "driverlib/gpio.h"
-#include "driverlib/sysctl.h"
+#include "gpio.h"
 
-#ifndef __MOTOR_H__
-#define __MOTOR_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 // Definition of struct Motor in motor.c
 typedef struct Motor tMotor;
 
-// Function to initialize a motor on a pair of pins
-// The returned pointer can be used by the SetMotor function
-tMotor *InitializeMotor(tPin a, tPin b, tBoolean brake);
+/**
+ * Initializes a motor on a pair of pins
+ * @param a Pin that should plug into the IN1 motor line
+ * @param b Pin that should plug into the IN2 motor line
+ * @param brake Flag to enable breaking when the motor is set to 0 speed
+ * @param invert Flag to switch the direction that the motor will turn
+ * @return Pointer to an initialized tMotor, can be used by the SetMotor function
+ */
+tMotor *InitializeMotor(tPin a, tPin b, tBoolean brake, tBoolean invert);
 
-// This function sets a motor speed
-void SetMotor(tMotor *mtr, float speed);
+/**
+ * Sets a motor speed
+ * @param mtr Pointer to an initialized tMotor, returned by InitializeMotor
+ * @param speed Float on range [-1, 1] where -1 means maximum backward speed and 1 means maximum forward speed
+ */
+ void SetMotor(tMotor *mtr, float speed);
 
-#endif //  __MOTOR_H__
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // _R_MOTOR_H_

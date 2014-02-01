@@ -1,6 +1,6 @@
 //*****************************************************************************
 //
-// pwm.c - software pwm drivers for the TLE5205-2 
+// pwm - Software PWM drivers
 // 
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
@@ -17,16 +17,20 @@
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
-// Contact: rasware@ras.ece.utexas.edu
+// Contact: ut.ieee.ras@gmail.com
 //
 //*****************************************************************************
 
 #include "pwm.h"
-#include "gpio.h"
-#include "inc/hw_ints.h"
-#include "inc/lm4f120h5qr.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/timer.h"
+
+#include <StellarisWare/inc/hw_ints.h>
+#include <StellarisWare/inc/hw_memmap.h>
+#include <StellarisWare/inc/lm4f120h5qr.h>
+#include <StellarisWare/driverlib/interrupt.h>
+#include <StellarisWare/driverlib/timer.h>
+#include <StellarisWare/driverlib/gpio.h>
+#include <StellarisWare/driverlib/sysctl.h>
+
 
 // The number of PWM modules is simply the number of 
 // available 32bit timers
@@ -143,7 +147,9 @@ static void InitializePWMModule(tPWMModule *mod, tPWM *pwm) {
     
     // Setup the timer
     TimerLoadSet(mod->BASE, mod->TIMER, pwm->up.timing);
-    TimerEnable(mod->BASE, mod->TIMER);
+    // This is a bit hacky and assumes the order of pwm modules
+    // By editing the config register both timers are disabled
+    TimerEnable(mod->BASE, mod->TIMER | TIMER_A);
     
     // Enable the interrupt
     IntEnable(mod->INT);
@@ -345,10 +351,11 @@ void SetPWM(tPWM *pwm, float duty, float phase) {
     unsigned long iphase, iduty;
 
     // Limit the range of both values to [0.0,1.0]
-    duty = (duty > 1.0f) ? 1.0f :
-           (duty < 0.0f) ? 0.0f : duty;
-    phase = (phase > 1.0f) ? 1.0f :
-            (phase < 0.0f) ? 0.0f : phase;
+    if (duty > 1.0f || duty < 0.0f)
+        return;
+    
+    if (phase > 1.0f || phase < 0.0f)
+        return;
 
     // Calculate the new absolute phase and duty
     iphase = (unsigned long)(phase * pwm->period);
