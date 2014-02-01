@@ -1,0 +1,3 @@
+<launch>
+  <node  name="gps_trimble_driver" pkg="gps_trimble_driver" type="gpsPublisher.py" />
+</launch>
