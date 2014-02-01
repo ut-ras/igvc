@@ -53,4 +53,4 @@ def publishPacket( publisher ) :
 if __name__ == "__main__" :
     pub = rospy.Publisher( '/gps/trimble/raw', GPSFix )
     rospy.init_node( 'gps_driver_trimble' )
-    gpsDriver.gpsMockUp( rospy.get_param( '~GPS_IP' , "192.168.2.2" ), int( rospy.get_param( "~GPS_PORT", "28001" ), publishPacket( pub ) ) )
+    gpsDriver.gpsMockUp( rospy.get_param( '~GPS_IP' , "192.168.2.2" ), int( rospy.get_param( "~GPS_PORT", "28001" ) ), publishPacket( pub ) )
