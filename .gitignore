@@ -26,4 +26,4 @@ ros_groovy_workspace/build
 *.xls
 *.hex
 *._ia
-
+*.pyc
