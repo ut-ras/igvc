@@ -47,16 +47,18 @@ def gpsMockUp( ip_address, port_number, callback) :
                   'VDOP': 0.0,        'X': 0.0,
                   'Y': 0.0,           'Z': 0.0,
                   'cov-EN': 0.0,      'flags': 37888,
-                  'heading': 0.0,     'height': 0.0,
-                  'init_num': 0,      'latitude': 0.0,
-                  'longitude': 0.0,   'numEpotch': 0,
-                  'sigma-E': 0.0,     'sigma-Major': 0.0,
-                  'sigma-Minor': 0.0, 'sigma-N': 0.0,
+                  'heading': 0.0,     'height': 186.10987,
+                  'init_num': 0,      'latitude':  30.2884882154,
+                  'longitude':  -97.7354240056,   'numEpotch': 0,
+                  'sigma-E':10.234149932861328,     'sigma-Major': 0.0,
+                  'sigma-Minor': 0.0, 'sigma-N':6.974400997161865 ,
                   'sigma-Up': 0.0,    'svs': 0,
                   'time': 62200,      'up': 0.0,
                   'velocity': 0.0,    'velocityFlags': 0,
                   'week': 0}
+    import time
     while True:
+        time.sleep(.1)
         packetHash['time'] += 200
         callback( packetHash )
 

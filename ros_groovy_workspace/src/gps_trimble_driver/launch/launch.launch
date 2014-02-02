@@ -1,3 +1,13 @@
 <launch>
-  <node  name="gps_trimble_driver" pkg="gps_trimble_driver" type="gpsPublisher.py" />
+  <node name="gps_trimble_driver" pkg="gps_trimble_driver" type="gpsPublisher.py" />
+  <node name="utm_odometry_node" pkg="gps_common" type="utm_odometry_node" >
+    <remap from="fix" to="/gps/trimble/fix" />
+    <param name="child_frame_id" value="UTM_global" />
+    <remap from="odom" to="/gps/trimble/odom" />
+  </node>		 
+  <node name="utm_relativeizer" pkg="gps_trimble_driver" type="relativeizeOdometry" output="screen" >
+    <remap from="relative" to="/gps/trimble/odom_rel" />
+    <remap from="absolute" to="/gps/trimble/odom" />
+    <param name="waypoint_file" value="/u/jimmy/IGVC2014/gps_test_waypoints.txt" />
+  </node>
 </launch>

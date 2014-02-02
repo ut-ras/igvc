@@ -10,24 +10,26 @@ import gpsDriver
 import roslib; roslib.load_manifest( "gps_trimble_driver" )
 import rospy
 from gps_common.msg import GPSFix
+from sensor_msgs.msg import NavSatFix
+from sensor_msgs.msg import NavSatStatus
 
 debug = False
 
 if debug :
     # debug
-    import PPrint
-    pp = PPrint.PrettyPrinter()
-
-
+    import pprint
+    pp = pprint.PrettyPrinter()
 
 # list of everything in a packetDict
 # 'HDOP', 'Orient', 'PDOP', 'PositionRMS', 'TDOP', 'UnitVarience', 'VDOP', 'X', 'Y', 'Z', 'cov-EN', 'flags', 'heading', 'height', 'init_num', 'latitude', 'longitude', 'numEpotch''sigma-E', 'sigma-Major', 'sigma-Minor', 'sigma-N', 'sigma-Up', 'svs', 'time', 'up', 'velocity', 'velocityFlags', 'week'
 # this is the callback provided to the driver
-def publishPacket( publisher ) :
+def publishPacket( publisherGPSFix, publisherNavSatFix) :
     def callback( packet ) :
         if rospy.is_shutdown() :
             sys.exit()
         message = GPSFix()
+        message.header.stamp = rospy.Time.now()
+        message.header.frame_id = 'base_link'
         message.latitude = packet[ 'latitude' ] * 180 / math.pi
         message.longitude = packet[ 'longitude' ] * 180 / math.pi
         message.altitude = packet[ 'height' ]
@@ -44,13 +46,22 @@ def publishPacket( publisher ) :
         elif packet[ 'sigma-E' ] != 0 :
             message.position_covariance_type = 2
         else :
-            message.position_covariance_type = -1
+            message.position_covariance_type = 0
         if debug :
             pp.pprint( packet )
-        publisher.publish( message )
+            pp.pprint( message )
+        message.status.status = (0 if (message.position_covariance_type > 0) else -1)
+        message.status.position_source = 1
+        message.status.header = message.header
+        publisherGPSFix.publish( message )
+        if message.status >= 0 :
+            publisherNavSatFix.publish( NavSatFix( message.header , NavSatStatus( message.status.status, 3 ), message.latitude, message.longitude,
+                                                   message.altitude, message.position_covariance, message.position_covariance_type ) )
+                                               
     return callback
     
 if __name__ == "__main__" :
-    pub = rospy.Publisher( '/gps/trimble/raw', GPSFix )
+    pubGPS = rospy.Publisher( '/gps/trimble/raw', GPSFix )
+    pubNav = rospy.Publisher( '/gps/trimble/fix', NavSatFix )
     rospy.init_node( 'gps_driver_trimble' )
-    gpsDriver.gpsMockUp( rospy.get_param( '~GPS_IP' , "192.168.2.2" ), int( rospy.get_param( "~GPS_PORT", "28001" ) ), publishPacket( pub ) )
+    gpsDriver.gpsMockUp( rospy.get_param( '~GPS_IP' , "192.168.2.2" ), int( rospy.get_param( "~GPS_PORT", "28001" ) ), publishPacket( pubGPS, pubNav ) )

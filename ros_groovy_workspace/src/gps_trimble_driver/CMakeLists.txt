@@ -4,7 +4,7 @@ project(gps_trimble_driver)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS gps_common rospy)
+find_package(catkin REQUIRED COMPONENTS gps_common roscpp rospy sensor_msgs geometry_msgs message_generation)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -27,17 +27,14 @@ find_package(catkin REQUIRED COMPONENTS gps_common rospy)
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+    Point.srv
+    Waypoints.srv
+)
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(DEPENDENCIES std_msgs geometry_msgs)
 
 ###################################
 ## catkin specific configuration ##
@@ -50,7 +47,7 @@ find_package(catkin REQUIRED COMPONENTS gps_common rospy)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES gps_trimble
-#  CATKIN_DEPENDS gps_common rospy
+ CATKIN_DEPENDS gps_common rospy message_runtime sensor_msgs geometry_msgs roscpp
 #  DEPENDS system_lib
 )
 
@@ -60,7 +57,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
 ## Declare a cpp library
 # add_library(gps_trimble
@@ -68,16 +65,16 @@ catkin_package(
 # )
 
 ## Declare a cpp executable
-# add_executable(gps_trimble_node src/gps_trimble_node.cpp)
+add_executable(relativeizeOdometry src/relativePosition.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(gps_trimble_node gps_trimble_generate_messages_cpp)
+add_dependencies(relativeizeOdometry gps_trimble_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(gps_trimble_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(relativeizeOdometry
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
