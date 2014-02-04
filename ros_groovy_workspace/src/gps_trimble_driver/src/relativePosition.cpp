@@ -67,8 +67,8 @@ int main(int argc, char**argv, char**envp) {
   std::ifstream waypointsFile;
   waypointsFile.open( fileName.c_str() );
   if ( not waypointsFile.is_open() ) { return 1; }
-  double degN, minN, secN, degE, minE, secE;
 
+  double degN, minN, secN, degE, minE, secE;
   while ( waypointsFile >> degN >> minN >> secN >> degE >> minE >> secE ) {
     double decimalN = deg_min_sec_to_decimal( degN, minN, secN );
     double decimalE = deg_min_sec_to_decimal( degE, minE, secE );
