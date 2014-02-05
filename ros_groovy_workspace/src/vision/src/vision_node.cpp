@@ -265,6 +265,12 @@ namespace vision_node
         //todo: match 9-cell (or param) instead of one pixel
         cv::Point3d cloud_point(camera_clouds[j].points[i].x, camera_clouds[j].points[i].y, camera_clouds[j].points[i].z);
         cv::Point2d image_point = m_cam_models[j].project3dToPixel(cloud_point);
+
+        if(!(image_point.y < cv_images[i]->height && image_point.x < cv_images[i]->width && image_point.y >= 0 && image_point.x >= 0))
+        {
+          continue; //point is not on the image, so skip to the next one
+        }
+
         colors.push_back(cvGet2D(cv_images[i], image_point.y, image_point.x));
         CvScalar matching_color;
         if(colorsMatch(colors, images, matching_color))
