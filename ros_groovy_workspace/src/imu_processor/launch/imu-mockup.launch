@@ -1,0 +1,3 @@
+<launch>
+  <node name="imu_mockup" pkg="imu_processor" type="imu-to-heading"/>
+</launch>
