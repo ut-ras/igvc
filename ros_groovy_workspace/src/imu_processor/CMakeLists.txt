@@ -50,9 +50,14 @@ find_package(catkin REQUIRED COMPONENTS roslisp sensor_msgs)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES imu_processor
-#  CATKIN_DEPENDS roslisp sensor_msgs
+  CATKIN_DEPENDS roslisp sensor_msgs
+  #CFG_EXTRAS roslisp-extras.cmake
 #  DEPENDS system_lib
 )
+
+## roslisp specific stuff
+
+include($ENV{ROS_ROOT}/../roslisp/cmake/roslispConfig.cmake)
 
 ###########
 ## Build ##
@@ -73,7 +78,7 @@ catkin_package(
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(imu_processor_node imu_processor_generate_messages_cpp)
-rospack_add_lisp_executable(bin/imu-to-heading imu-to-heading imu-to-heading:converter)
+rosbuild_add_lisp_executable( bin/imu-to-heading imu-to-heading imu-to-heading:converter)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(imu_processor_node
