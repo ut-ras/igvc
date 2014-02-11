@@ -1,6 +1,7 @@
 (defpackage :imu-to-heading
   (:use :cl :asdf :roslisp)
-  (:export :converter))
+  (:export :converter
+	   :imu-mock-up))
 (in-package :imu-to-heading)
 
 (defun mk-filter (freq-response)
@@ -30,3 +31,15 @@
 			      (yaw-from-quaternion
 			       (geometry_msgs-msg:x-val quat) (geometry_msgs-msg:y-val quat)
 			       (geometry_msgs-msg:z-val quat) (geometry_msgs-msg:w-val quat)))))))))))
+
+(defun imu-mock-up ()
+  (with-ros-node ("imu_mockup")
+    (let ((pub (advertise "raw" 'sensor_msgs-msg:Imu)))
+      (loop-at-most-every .1
+	 (let ((x (random 10)) (y (random 10))
+	       (z (random 10)) (w (random 10)))
+	   (let ((denom (sqrt (+ (* x x) (* y y) (* z z) (* w w)))))
+	     (publish pub (make-instance 'sensor_msgs-msg:Imu
+					 :orientation
+					 (vector (/ x denom) (/ y denom)
+						 (/ z denom) (/ w denom))))))))))
