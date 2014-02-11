@@ -1,3 +1,9 @@
 <launch>
-  <node name="imu_mockup" pkg="imu_processor" type="imu-to-heading"/>
+  <node name="imu_vn200_processor" pkg="imu_processor" type="imu-to-heading">
+    <remap from="raw" to="/imu/vn200/raw"/>
+    <remap from="heading" to="/imu/vn200/heading"/>
+  </node>
+  <node name="imu_vn200_mockup" pkg="imu_processor" type="imu-mock-up">
+    <remap from="raw" to="/imu/vm200/raw" />
+  </node>
 </launch>

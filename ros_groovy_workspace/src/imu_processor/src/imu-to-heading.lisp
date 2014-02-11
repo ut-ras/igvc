@@ -23,23 +23,24 @@
 	  (filter (mk-filter '(1/2 1/4 1/2))))
       (subscribe "/raw" 'sensor_msgs-msg:Imu
 		 (lambda (message)
-		   (let ((quat (sensor_msgs-msg:orientation-val message)))
+		   (let ((quat (sensor_msgs-msg:orientation message)))
 		     (publish pub
 		      (make-instance
 		       'std_msgs-msg:Float64
 		       :data (funcall filter
 			      (yaw-from-quaternion
-			       (geometry_msgs-msg:x-val quat) (geometry_msgs-msg:y-val quat)
-			       (geometry_msgs-msg:z-val quat) (geometry_msgs-msg:w-val quat)))))))))))
+			       (geometry_msgs-msg:x quat) (geometry_msgs-msg:y quat)
+			       (geometry_msgs-msg:z quat) (geometry_msgs-msg:w quat)))))))))))
 
 (defun imu-mock-up ()
   (with-ros-node ("imu_mockup")
-    (let ((pub (advertise "raw" 'sensor_msgs-msg:Imu)))
-      (loop-at-most-every .1
-	 (let ((x (random 10)) (y (random 10))
-	       (z (random 10)) (w (random 10)))
-	   (let ((denom (sqrt (+ (* x x) (* y y) (* z z) (* w w)))))
-	     (publish pub (make-instance 'sensor_msgs-msg:Imu
-					 :orientation
-					 (vector (/ x denom) (/ y denom)
-						 (/ z denom) (/ w denom))))))))))
+    (let ((pub (advertise "/imu/vn200/raw" 'sensor_msgs-msg:Imu)))
+      (loop-at-most-every 0.1
+	   (let ((x (random 10)) (y (random 10))
+		 (z (random 10)) (w (random 10)))
+	     (let ((denom (sqrt (+ (* x x) (* y y) (* z z) (* w w)))))
+	       (publish pub (make-instance 'sensor_msgs-msg:Imu
+					   :orientation
+					   (make-instance 'geometry_msgs-msg:quaternion
+							  :x (/ x denom) :y (/ y denom)
+							  :z (/ z denom) :w (/ w denom))))))))))
