@@ -1,0 +1,5 @@
+<launch>
+  <node name="imu_vn200_processor" pkg="imu_processor" type="imu-to-heading">
+    <remap from="raw" to="/imu/vn200/heading"/>
+  </node>
+</launch>
