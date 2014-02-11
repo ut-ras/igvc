@@ -79,6 +79,7 @@ include($ENV{ROS_ROOT}/../roslisp/cmake/roslispConfig.cmake)
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(imu_processor_node imu_processor_generate_messages_cpp)
 rosbuild_add_lisp_executable( bin/imu-to-heading imu-to-heading imu-to-heading:converter)
+rosbuild_add_lisp_executable( bin/imu-mock-up imu-to-heading imu-to-heading:imu-mock-up)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(imu_processor_node
