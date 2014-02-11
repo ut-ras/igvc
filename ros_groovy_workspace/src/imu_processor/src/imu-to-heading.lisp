@@ -6,11 +6,6 @@
 (defun dot-product (lhs rhs)
   (apply #'+ (mapcar #'* lhs rhs)))
 
-(defun nconvolve (func time-shifted)
-  (dot-product func (nreverse time-shifted)))
-(defun convolve (func time-shifted)
-  (dot-product func (reverse time-shifted)))
-
 (defun mk-filter (freq-response)
   (let ((delayed-data nil)
 	(reversed-response (reverse freq-response)))
@@ -23,7 +18,8 @@
 
 (defun converter ()
   (with-ros-node ("heading")
-    (let ((pub (advertise "heading" 'std_msgs-msg:Float64)))
+    (let ((pub (advertise "heading" 'std_msgs-msg:Float64))
+	  (filter (mk-filter '(1/2 1/4 1/2))))
       (loop-at-most-every .1
-	 (publish pub (make-instance 'std_msgs-msg:Float64 :data 1.0))))))
+	 (publish pub (make-instance 'std_msgs-msg:Float64 :data (funcall filter 1.0)))))))
 				     
