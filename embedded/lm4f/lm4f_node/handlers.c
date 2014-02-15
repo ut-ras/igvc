@@ -8,11 +8,11 @@
 /**
 *	Message Buffers for subscribers/publishers
 */
-char msgBuffSPLM[BUFFERSIZE] = {"NA"};
-char msgBuffSPRM[BUFFERSIZE] = {"NA"};
-char msgBuffSVLX[BUFFERSIZE] = {"NA"};
-char msgBuffSVAX[BUFFERSIZE] = {"NA"};
-char msgBuffRSTE[BUFFERSIZE] = {"NA"};
+char msgBuffSPLM[BUFFERSIZE] = {'-'};
+char msgBuffSPRM[BUFFERSIZE] = {'-'};
+char msgBuffSVLX[BUFFERSIZE] = {'-'};
+char msgBuffSVAX[BUFFERSIZE] = {'-'};
+char msgBuffRSTE[BUFFERSIZE] = {'-'};
 char* msgBuffer[NUMSUB+NUMPUB] = {msgBuffSPLM, msgBuffSPRM, msgBuffSVLX, msgBuffSVAX, msgBuffRSTE};
 
 /**
