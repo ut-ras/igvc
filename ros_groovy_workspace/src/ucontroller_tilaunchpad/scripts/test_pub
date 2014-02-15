@@ -14,9 +14,11 @@ def talker():
     msg = Twist()
     msg.linear.x = 0.01
     msg.linear.y = 0.06
+    msg.angular.z = 0.11
     while not rospy.is_shutdown():
         try:
             msg.linear.x += 0.01; msg.linear.y += 0.01;
+            msg.angular.z += 0.01
             rospy.loginfo(msg)
             pub.publish(msg)
             r.sleep()

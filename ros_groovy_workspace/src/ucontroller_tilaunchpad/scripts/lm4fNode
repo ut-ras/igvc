@@ -43,12 +43,9 @@ def lm4f_handler(data, pub):
     try:
         comm.flushOutput()
         comm.flushInput()
-        # Sample hardcoded data stream
-        splm = round(data.linear.x, 3)
-        sprm = round(data.linear.y, 3)
-        mesg = json.dumps({'SPLM':splm, 'SPRM':sprm})
-        comm.write(mesg+'\n')
-        comm.flushOutput()
+        # Parse and send data to LM4F
+        sendCommand(data) 
+        # Read response and print to logs/debug topic
         response = comm.readline()
         comm.flushInput()
         rospy.loginfo(rospy.get_name()+": LM4F response: "+response)      
@@ -59,6 +56,16 @@ def lm4f_handler(data, pub):
         comm.close()
         sys.exit()
 ##################################
+
+def sendCommand(data):
+    linearVelocity = round(data.linear.x, 3) #ignore y,z for linear vel
+    angularVelocity = round(data.angular.z, 3) #ignore x,y for ang vel
+    # linear velocity in m/s
+    # angular velocity in rad/s
+    mesg = json.dumps({'SVLX':linearVelocity, 'SVAX':angularVelocity})
+    comm.write(mesg+'\n')
+    comm.flushOutput()
+    return
 
 def lm4fNode():
     pub = rospy.Publisher(TOPIC, String)
