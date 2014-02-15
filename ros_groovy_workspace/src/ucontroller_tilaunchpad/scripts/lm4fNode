@@ -12,7 +12,7 @@
 # Kevin Gilbert
 #################
 import roslib; roslib.load_manifest('ucontroller_tilaunchpad')
-import json, serial, sys
+import json, serial, sys, os, roslib.packages
 import rospy, traceback,subprocess
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
@@ -26,7 +26,8 @@ BAUD_RATE = 115200
 ### LM4F parameters to reflash board on node startup 
 rstLm4fcmd = 'make' 
 rstLm4fFlag = '-C'
-rstLm4fdst = '../../../../embedded/lm4f/lm4f_node/'
+rstLm4fdst = os.path.abspath(os.path.join(os.path.abspath(roslib.packages.get_pkg_dir('ucontroller_tilaunchpad')),'../../../../IGVC2014/embedded/lm4f/lm4f_node/')
+)
 rstLm4farg = 'flash'
 ##################################
 
