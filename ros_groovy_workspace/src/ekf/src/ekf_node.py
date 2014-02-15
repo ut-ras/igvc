@@ -100,13 +100,28 @@ def main():
     rospy.Subscriber("gps/trimble/odom", Odometry, trimble_callback)
   
     pub = rospy.Publisher("ekf", Odometry)
+    br = tf.TransformBroadcaster()
  
-    r = rospy.Rate(10) # 10hz
+    rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
         ekf.Predict()
+
         msg = createMsgFromEKF()
         pub.publish(msg)
-        r.sleep()
+
+        br.sendTransform(
+            ( msg.pose.pose.position.x, 
+              msg.pose.pose.position.y,
+              msg.pose.pose.position.z ),
+            ( msg.pose.pose.orientation.x,
+              msg.pose.pose.orientation.y,
+              msg.pose.pose.orientation.z,
+              msg.pose.pose.orientation.w ),
+            rospy.Time.now(),
+            "base_link",
+            "world") 
+
+        rate.sleep()
 
 if __name__ == "__main__":
     try:
