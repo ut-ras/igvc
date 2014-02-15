@@ -38,7 +38,7 @@ def initSensors():
             EKF.orientation_observation_funct ),
 
         Sensor(
-            "gps/trimble/odom_rel", 
+            "gps/trimble/pose", 
             Odometry, 
             lambda odom: numpy.matrix([ [odom.pose.pose.position.x], [odom.pose.pose.position.y] ]),
             numpy.eye(2) * 5.0,
