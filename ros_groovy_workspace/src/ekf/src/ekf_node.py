@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import roslib, rospy, numpy, math, tf, operator;
+import roslib, rospy, numpy, math, tf, operator
 import EKF
 
 from geometry_msgs.msg import Twist,Point
@@ -8,8 +8,9 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64
 
 class Sensor:
-    def __init__(self, topicName, msgType, getMeasurementVector, covariance, jacobian_funct, observation_funct):
+    def __init__(self, topicName, msgType, getMeasurementVector, covariance, jacobian_funct, observation_funct, covariance_func=None):
         self.covariance = covariance
+        self.covariance_func = covariance_func
         self.topicName = topicName
         self.msgType = msgType
         self.getMeasurementVector = getMeasurementVector
@@ -42,7 +43,9 @@ def initSensors():
             lambda odom: numpy.matrix([ [odom.pose.pose.position.x], [odom.pose.pose.position.y] ]),
             numpy.eye(2) * 5.0,
             EKF.position_jacobian_funct,
-            EKF.position_observation_funct ) ]
+            EKF.position_observation_funct,
+            lambda odom: numpy.rshape( odom.pose.pose.covariance[0:2] +
+                                       odom.pose.pose.covariance[6:8], (2,2) ) ) ]
 
     for index in range(len(sensors)):
         sensors[index].index = index
@@ -90,6 +93,8 @@ def createMsgFromEKF(ekf):
 def makeCallback(sensor, ekf):
     def callback(data, sensor=sensor, ekf=ekf):
         sensor.dataReceived = True
+        if sensor.covariance_func is not None :
+            ekf.R_arr[sensor.index] = sensor.covariance_func(data)
         measurement_vector = sensor.getMeasurementVector(data)
         ekf.Step(sensor.index, measurement_vector)
  
