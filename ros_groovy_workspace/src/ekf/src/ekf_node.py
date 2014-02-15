@@ -71,6 +71,9 @@ def lm4f_callback(twist):
     global ekf, LM4F_INDEX
     ekf.Step(LM4F_INDEX, measurement_vector)
 
+    global dataReceived
+    dataReceived[LM4F_INDEX] = True
+
 def trimble_callback(odom):
     measurement_vector = numpy.matrix(
                             [ [odom.pose.x],
@@ -78,6 +81,9 @@ def trimble_callback(odom):
 
     global ekf, TRIMBLE_INDEX
     ekf.Step(TRIMBLE_INDEX, measurement_vector)
+
+    global dataReceived
+    dataReceived[TRIMBLE_INDEX] = True
 
 def vn200_callback(yaw):
     measurement_vector = numpy.matrix(
@@ -88,12 +94,25 @@ def vn200_callback(yaw):
     global ekf, VN200_INDEX
     ekf.Step(VN200_INDEX, measurement_vector)
 
+    global dataReceived
+    dataReceived[VN200_INDEX] = True
+
+
+def receivedAllExpectedData():
+    global dataReceived
+    for c in dataReceived:
+        if not c:
+            return False
+    return True
 
 def main():
     rospy.init_node('ekf_node', anonymous=False)
    
     global ekf 
     ekf = initEKF()
+
+    global dataReceived
+    dataReceived = [False, False, False]
 
     rospy.Subscriber("speedometer/lm4f/vel_data", Twist, lm4f_callback)
     rospy.Subscriber("imu/vn200/heading", Float64, vn200_callback)
@@ -103,7 +122,11 @@ def main():
     br = tf.TransformBroadcaster()
  
     rate = rospy.Rate(10) # 10hz
+
     while not rospy.is_shutdown():
+        if not receivedAllExpectedData(): 
+            continue
+
         ekf.Predict()
 
         msg = createMsgFromEKF()
@@ -127,5 +150,4 @@ if __name__ == "__main__":
     try:
         main()
     except rospy.ROSInterruptException: pass
-
 
