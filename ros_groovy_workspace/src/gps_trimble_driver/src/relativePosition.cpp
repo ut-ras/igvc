@@ -4,6 +4,7 @@
 #include <gps_trimble_driver/Point.h>
 #include <gps_trimble_driver/Waypoints.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/PoseWithCovariance.h>
 #include <gps_common/conversions.h>
 
 #include <vector>
@@ -30,10 +31,10 @@ bool zero ( std_srvs::Empty::Request  &req,
 
 void relativeizeOdometry ( const nav_msgs::OdometryConstPtr &msg ) {
   if ( TrustFix ) {
-    nav_msgs::Odometry newMsg = *msg;
-    newMsg.pose.pose.position.x -= firstFix.point.x;
-    newMsg.pose.pose.position.z -= firstFix.point.z;
-    newMsg.pose.pose.position.y -= firstFix.point.y;
+    geometry_msgs::PoseWithCovariance newMsg = msg->pose;
+    newMsg.pose.position.x -= firstFix.point.x;
+    newMsg.pose.position.z -= firstFix.point.z;
+    newMsg.pose.position.y -= firstFix.point.y;
     correctedOdometry.publish(newMsg); }
   else {
     firstFix.point.x = msg->pose.pose.position.x;
@@ -78,7 +79,7 @@ int main(int argc, char**argv, char**envp) {
     newPoint.z = 0;
     Waypoints.push_back( newPoint ); }
     
-  correctedOdometry = node.advertise< nav_msgs::Odometry >( "relative", 1000 );
+  correctedOdometry = node.advertise< geometry_msgs::PoseWithCovariance >( "relative", 1000 );
   ros::Rate loop_rate( 100 );
   ros::Subscriber absoluteOdometry = node.subscribe( "absolute", 1000,
 						     &relativeizeOdometry );

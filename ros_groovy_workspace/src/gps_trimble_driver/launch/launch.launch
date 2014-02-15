@@ -6,7 +6,7 @@
     <remap from="odom" to="/gps/trimble/odom" />
   </node>		 
   <node name="utm_relativeizer" pkg="gps_trimble_driver" type="relativeizeOdometry" output="screen" >
-    <remap from="relative" to="/gps/trimble/odom_rel" />
+    <remap from="relative" to="/gps/trimble/pose" />
     <remap from="absolute" to="/gps/trimble/odom" />
     <param name="waypoint_file" value="$(find gps_trimble_driver)/gps_test_waypoints.txt" />
   </node>
