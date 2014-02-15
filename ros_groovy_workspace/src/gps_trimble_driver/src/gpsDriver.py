@@ -1,5 +1,9 @@
 #!/usr/bin/env python3.3
 
+# this driver was created by referencing:
+#   http://www.trimble.com/OEM_ReceiverHelp/v4.82/en/default.html#GSOFmessages_Overview.html 
+#   http://www.trimble.com/OEM_ReceiverHelp/v4.82/en/default.html#GSOFmessages_GSOF.html
+
 import socket 
 import struct
 
