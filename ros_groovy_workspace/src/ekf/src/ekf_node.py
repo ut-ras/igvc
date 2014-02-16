@@ -1,47 +1,72 @@
 #!/usr/bin/env python
 
-import roslib, rospy, numpy, math, tf;
+import roslib, rospy, numpy, math, tf, operator;
 import EKF
 
 from geometry_msgs.msg import Twist,Point
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64
 
+class Sensor:
+    def __init__(self, topicName, msgType, getMeasurementVector, covariance, jacobian_funct, observation_funct):
+        self.covariance = covariance
+        self.topicName = topicName
+        self.msgType = msgType
+        self.getMeasurementVector = getMeasurementVector
+        self.jacobian_funct = jacobian_funct
+        self.observation_funct = observation_funct
+        self.index = -1
+        self.received = False
 
-VN200_INDEX = 0
-TRIMBLE_INDEX = 1
-LM4F_INDEX = 2
+def initSensors():
+    sensors = [
+        Sensor(
+            "speedometer/lm4f/vel_data", 
+            Twist,
+            lambda twist: numpy.matrix([ [twist.linear.x], [twist.angular.z] ]),
+            numpy.eye(2) * 1e-6,
+            EKF.velocity_jacobian_funct, 
+            EKF.velocity_observation_funct ),
 
+        Sensor(
+            "imu/vn200/heading", 
+            Float64, 
+            lambda yaw: numpy.matrix([ [0.0], [0.0], [yaw] ]),
+            numpy.eye(3) * 1e-4,
+            EKF.orientation_jacobian_funct, 
+            EKF.orientation_observation_funct ),
 
-def initEKF():
+        Sensor(
+            "gps/trimble/odom", 
+            Odometry, 
+            lambda odom: numpy.matrix([ [odom.pose.pose.position.x], [odom.pose.pose.position.y] ]),
+            numpy.eye(2) * 5.0,
+            EKF.position_jacobian_funct,
+            EKF.position_observation_funct ) ]
+
+    for index in range(len(sensors)):
+        sensors[index].index = index
+
+    return sensors
+
+def initEKF(sensors):
     initial_state = numpy.matrix([[0],[0],[0],[0],[0],[0],[0],[0]])
     initial_probability = numpy.eye(8)
     process_covariance = numpy.eye(8) * 1e-3
 
-    trimble_measurement_covar = numpy.eye(2) * 5.0
-    lm4f_measurement_covar = numpy.eye(2) * 1e-6
-    vn200_measurement_covar = numpy.eye(3) * 1e-4
-
     return EKF.ExtendedKalmanFilter(
         EKF.transition_funct,
         EKF.transition_jacobian_funct,
-        [ EKF.orientation_observation_funct, 
-          EKF.velocity_observation_funct, 
-          EKF.position_observation_funct ],
-        [ EKF.orientation_jacobian_funct, 
-          EKF.velocity_jacobian_funct, 
-          EKF.position_jacobian_funct ],
+        [ s.observation_funct for s in sensors ],
+        [ s.jacobian_funct for s in sensors ],
         initial_state,
         initial_probability,
         process_covariance,
-        [ vn200_measurement_covar, 
-          lm4f_measurement_covar, 
-          trimble_measurement_covar ])
+        [ s.covariance for s in sensors ] )
 
-def createMsgFromEKF():
+def createMsgFromEKF(ekf):
     msg = Odometry()
     
-    global ekf 
     belief = ekf.GetCurrentState()
     
     msg.pose.pose.position.x = belief[0,0]
@@ -62,74 +87,35 @@ def createMsgFromEKF():
 
     return msg 
 
-
-def lm4f_callback(twist):
-    measurement_vector = numpy.matrix(
-            [ [twist.linear.x],
-              [twist.angular.z] ] )
-    
-    global ekf, LM4F_INDEX
-    ekf.Step(LM4F_INDEX, measurement_vector)
-
-    global dataReceived
-    dataReceived[LM4F_INDEX] = True
-
-def trimble_callback(odom):
-    measurement_vector = numpy.matrix(
-                            [ [odom.pose.x],
-                              [odom.pose.y] ] )
-
-    global ekf, TRIMBLE_INDEX
-    ekf.Step(TRIMBLE_INDEX, measurement_vector)
-
-    global dataReceived
-    dataReceived[TRIMBLE_INDEX] = True
-
-def vn200_callback(yaw):
-    measurement_vector = numpy.matrix(
-                            [ [0.0],
-                              [0.0],
-                              [yaw]] )
-    
-    global ekf, VN200_INDEX
-    ekf.Step(VN200_INDEX, measurement_vector)
-
-    global dataReceived
-    dataReceived[VN200_INDEX] = True
-
-
-def receivedAllExpectedData():
-    global dataReceived
-    for c in dataReceived:
-        if not c:
-            return False
-    return True
+def makeCallback(sensor, ekf):
+    def callback(data, sensor=sensor, ekf=ekf):
+        sensor.dataReceived = True
+        measurement_vector = sensor.getMeasurementVector(data)
+        ekf.Step(sensor.index, measurement_vector)
+ 
+    return callback
 
 def main():
     rospy.init_node('ekf_node', anonymous=False)
-   
-    global ekf 
-    ekf = initEKF()
 
-    global dataReceived
-    dataReceived = [False, False, False]
+    sensors = initSensors()
+    ekf = initEKF(sensors)
 
-    rospy.Subscriber("speedometer/lm4f/vel_data", Twist, lm4f_callback)
-    rospy.Subscriber("imu/vn200/heading", Float64, vn200_callback)
-    rospy.Subscriber("gps/trimble/odom", Odometry, trimble_callback)
-  
+    for s in sensors:
+        rospy.Subscriber(s.topicName, s.msgType, makeCallback(s, ekf))
+
     pub = rospy.Publisher("ekf", Odometry)
     br = tf.TransformBroadcaster()
  
     rate = rospy.Rate(10) # 10hz
 
     while not rospy.is_shutdown():
-        if not receivedAllExpectedData(): 
+        if not reduce(operator.and_, [s.received for s in sensors]): 
             continue
 
         ekf.Predict()
 
-        msg = createMsgFromEKF()
+        msg = createMsgFromEKF(ekf)
         pub.publish(msg)
 
         br.sendTransform(
