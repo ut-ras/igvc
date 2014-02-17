@@ -40,7 +40,7 @@ def initSensors():
         Sensor(
             "gps/trimble/pose", 
             Odometry, 
-            lambda pose: numpy.matrix([ [pose.pose.position.x], [odom.pose.pose.position.y] ]),
+            lambda pose: numpy.matrix([ [pose.pose.position.x], [pose.pose.position.y] ]),
             numpy.eye(2) * 5.0,
             EKF.position_jacobian_funct,
             EKF.position_observation_funct,
