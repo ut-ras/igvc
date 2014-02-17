@@ -40,12 +40,12 @@ def initSensors():
         Sensor(
             "gps/trimble/pose", 
             Odometry, 
-            lambda odom: numpy.matrix([ [odom.pose.pose.position.x], [odom.pose.pose.position.y] ]),
+            lambda pose: numpy.matrix([ [pose.pose.position.x], [odom.pose.pose.position.y] ]),
             numpy.eye(2) * 5.0,
             EKF.position_jacobian_funct,
             EKF.position_observation_funct,
-            lambda odom: numpy.rshape( odom.pose.pose.covariance[0:2] +
-                                       odom.pose.pose.covariance[6:8], (2,2) ) ) ]
+            lambda pose: numpy.rshape( pose.pose.covariance[0:2] +
+                                       pose.pose.covariance[6:8], (2,2) ) ) ]
 
     for index in range(len(sensors)):
         sensors[index].index = index
@@ -82,11 +82,8 @@ def createMsgFromEKF(ekf):
     pitch = belief[7,0] 
     yaw = belief[2,0] 
 
-    quaternion = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
-    msg.pose.pose.orientation.x = quaternion[0]
-    msg.pose.pose.orientation.y = quaternion[1]
-    msg.pose.pose.orientation.z = quaternion[2]
-    msg.pose.pose.orientation.w = quaternion[3]
+    ori = msg.pose.pose.orientation
+    ori.x, ori.y, ori.z, ori.w = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
 
     return msg 
 
