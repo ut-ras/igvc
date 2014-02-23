@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find igvc_sim)/launch/sim.launch">
+    <arg name="world" value="empty"/>
+  </include> 
+</launch>
