@@ -303,7 +303,7 @@
         <rightJoint>right_wheel_joint</rightJoint>
         <wheelSeparation>0.508</wheelSeparation>
         <wheelDiameter>0.254</wheelDiameter> 
-        <torque>20</torque>
+        <torque>3000</torque>
         <interface:position name="position_iface_0"/>
         <robotNamespace>/</robotNamespace>
         <topicName>cmd_vel</topicName>
@@ -328,13 +328,13 @@
     
     <gazebo reference="left_wheel">
       <mu1>1</mu1>
-      <mu2>1</mu2>
+      <mu2>0.7</mu2>
       <material>Gazebo/Road</material>
     </gazebo>
     
     <gazebo reference="right_wheel">
       <mu1>1</mu1>
-      <mu2>1</mu2>
+      <mu2>0.7</mu2>
       <material>Gazebo/Road</material>
     </gazebo>
 </robot>
