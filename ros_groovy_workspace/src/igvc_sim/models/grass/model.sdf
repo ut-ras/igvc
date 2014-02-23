@@ -4,6 +4,7 @@
     <static>true</static>
     <link name='link'>
       <collision name='collision'>
+        <max_contacts>4</max_contacts>
         <geometry>
           <plane>
             <normal>0 0 1</normal>
@@ -13,8 +14,8 @@
         <surface>
           <friction>
             <ode>
-              <mu>50</mu> <!-- 100 -->
-              <mu2>25</mu2> <!-- 50 -->
+              <mu>1</mu> <!-- 100 -->
+              <mu2>1</mu2> <!-- 50 -->
             </ode>
           </friction>
         </surface>

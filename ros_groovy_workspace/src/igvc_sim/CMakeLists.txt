@@ -11,9 +11,14 @@ find_package(catkin REQUIRED COMPONENTS
   urdf_parser
 )
 
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(gazebo REQUIRED)
 
+## System dependencies are found with CMake's conventions
+find_package(Boost REQUIRED COMPONENTS system thread)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDF sdformat REQUIRED)
+include_directories(include ${SDF_INCLUDE_DIRS})
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -90,18 +95,14 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+link_directories(${GAZEBO_LIBRARY_DIRS})
+include_directories(include ${SDF_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 ## Declare a cpp library
-# add_library(igvc_sim
-#   src/${PROJECT_NAME}/igvc_sim.cpp
-# )
+add_library(diffdrive_plugin src/diffdrive_plugin.cpp)
+target_link_libraries(diffdrive_plugin ${Boost_LIBRARIES} ${SDF_LIBRARIES} ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 
 ## Declare a cpp executable
 # add_executable(igvc_sim_node src/igvc_sim_node.cpp)
