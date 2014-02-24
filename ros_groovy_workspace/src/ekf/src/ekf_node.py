@@ -85,6 +85,12 @@ def createMsgFromEKF(ekf):
     ori = msg.pose.pose.orientation
     ori.x, ori.y, ori.z, ori.w = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
 
+    covar = ekf.GetCurrentCovMatrix()
+
+    cols = int(math.sqrt(len(msg.pose.covariance)))
+    msg.pose.covariance[0 + 0*cols] = float(covar[0,0])
+    msg.pose.covariance[1 + 1*cols] = float(covar[1,1])
+
     return msg 
 
 def makeCallback(sensor, ekf):
