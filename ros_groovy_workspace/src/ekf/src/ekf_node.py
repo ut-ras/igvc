@@ -3,7 +3,7 @@
 import roslib, rospy, numpy, math, tf, operator
 import EKF
 
-from geometry_msgs.msg import Twist,Point
+from geometry_msgs.msg import Twist, PoseWithCovariance
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64
 
@@ -39,13 +39,13 @@ def initSensors():
 
         Sensor(
             "gps/trimble/pose", 
-            Odometry, 
+            PoseWithCovariance, 
             lambda pose: numpy.matrix([ [pose.pose.position.x], [pose.pose.position.y] ]),
             numpy.eye(2) * 5.0,
             EKF.position_jacobian_funct,
             EKF.position_observation_funct,
-            lambda pose: numpy.rshape( pose.pose.covariance[0:2] +
-                                       pose.pose.covariance[6:8], (2,2) ) ) ]
+            lambda pose: numpy.reshape( pose.covariance[0:2] +
+                                        pose.covariance[6:8], (2,2) ) ) ]
 
     for index in range(len(sensors)):
         sensors[index].index = index

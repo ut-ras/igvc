@@ -2,8 +2,7 @@
 
 import roslib, rospy;
 
-from geometry_msgs.msg import Twist
-from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Twist, PoseWithCovariance
 from std_msgs.msg import Float64
     
 def main():
@@ -18,8 +17,8 @@ def main():
         Float64)
 
     trimblePub = rospy.Publisher(
-        "gps/trimble/odom", 
-        Odometry)
+        "gps/trimble/pose", 
+        PoseWithCovariance)
 
     rate = rospy.Rate(10) # 10hz
 
@@ -28,7 +27,7 @@ def main():
     while not rospy.is_shutdown():
         lm4fPub.publish(Twist())
         vn200Pub.publish(0.0)
-        trimblePub.publish(Odometry())
+        trimblePub.publish(PoseWithCovariance())
 
         rate.sleep()
 
