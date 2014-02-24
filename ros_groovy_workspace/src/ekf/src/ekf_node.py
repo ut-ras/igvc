@@ -32,7 +32,7 @@ def initSensors():
         Sensor(
             "imu/vn200/heading", 
             Float64, 
-            lambda yaw: numpy.matrix([ [0.0], [0.0], [yaw] ]),
+            lambda yaw: numpy.matrix([ [0.0], [0.0], [yaw.data] ]),
             numpy.eye(3) * 1e-4,
             EKF.orientation_jacobian_funct, 
             EKF.orientation_observation_funct ),
@@ -89,9 +89,13 @@ def createMsgFromEKF(ekf):
 
 def makeCallback(sensor, ekf):
     def callback(data, sensor=sensor, ekf=ekf):
-        sensor.dataReceived = True
+        if sensor.received == False:
+            rospy.loginfo("received data from %s", sensor.topicName)
+        sensor.received = True
+        
         if sensor.covariance_func is not None :
             ekf.R_arr[sensor.index] = sensor.covariance_func(data)
+        
         measurement_vector = sensor.getMeasurementVector(data)
         ekf.Step(sensor.index, measurement_vector)
  
@@ -111,10 +115,15 @@ def main():
  
     rate = rospy.Rate(10) # 10hz
 
-    while not rospy.is_shutdown():
-        if not reduce(operator.and_, [s.received for s in sensors]): 
-            continue
+    rospy.loginfo("EKF initialized and waiting for sensor data");
 
+    while not rospy.is_shutdown() and \
+          not reduce(operator.and_, [s.received for s in sensors]): 
+        rate.sleep()
+    
+    rospy.loginfo("EKF received sensor data and now publishing");
+    
+    while not rospy.is_shutdown():
         ekf.Predict()
 
         msg = createMsgFromEKF(ekf)
