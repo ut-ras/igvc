@@ -1,0 +1,2 @@
+~53.13 degrees horizontal fov,
+~42.77 degrees vertical fov
