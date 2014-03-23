@@ -42,7 +42,7 @@ namespace vision_node
       m_image_frame_ids.push_back(camera_frame_id);
 
       sensor_msgs::CameraInfoConstPtr camera_info_ptr;
-      while(!camera_info_ptr)
+      while(!camera_info_ptr && ros::ok())
       {
         camera_info_ptr = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(info_topic.str(), m_nh);
         ROS_WARN_THROTTLE(1.0, "Waiting for camera #%d info", i);
