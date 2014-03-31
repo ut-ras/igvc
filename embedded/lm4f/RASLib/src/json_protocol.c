@@ -210,7 +210,6 @@ static int ReadLine(char *line, int max_len) {
 }
 
 void BeginSubscribing(float secsBetweenReads) {
-    Printf("_____LM4F Subscribing at period of: %f_____\n",secsBetweenReads);
     while (1) {
         int numBytes = ReadLine(inMsgBuff, sizeof(inMsgBuff));
         inMsgBuff[numBytes - 1] = 0;

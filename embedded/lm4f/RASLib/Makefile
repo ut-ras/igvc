@@ -3,10 +3,8 @@ TARGET = output/libras.a
 
 # Library Locations
 STELLARIS = /home/ras/lm4f/StellarisWare
-#Temp for Toast, change on IGVCBot
 RASLIB = ../RASLib
 CORTEXM4 = /home/ras/lm4f/CortexM4Libs
-#Temp for Toast, change on IGVCBot
 ARMCLIB = $(dir $(shell which $(CC)))..
 
 # Command Definitions
@@ -53,6 +51,7 @@ CFLAGS += -DTARGET_IS_BLIZZARD_RA1
 
 LDFLAGS += --entry ResetHandler
 LDFLAGS += --gc-sections
+LDFLAGS += --no-check-sections
 
 CFLAGS += $(addprefix -I, $(INC))
 LDFLAGS += $(addprefix -L, $(LDDIR))

@@ -64,7 +64,7 @@ while True:
             #parseLine(line)
 
         counter += 1
-        time.sleep(5)
+        time.sleep(0.1)
     except:
         print 'Exception caught in Main loop'
         traceback.print_exc(file=sys.stdout)

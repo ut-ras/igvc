@@ -4,8 +4,11 @@
 #include <RASLib/inc/uart.h>            // InitializeUART, Printf
 #include <RASLib/inc/rasstring.h>       // SPrintf
 #include <RASLib/inc/encoder.h>
+#include <RASLib/inc/time.h>
+#include <RASLib/inc/gpio.h>
 #include <RASLib/inc/motor.h>
 #include <RASLib/inc/json_protocol.h>
+#include <RASLib/inc/servo.h>
 #include "handlers.h"
 
 /**
@@ -31,26 +34,43 @@ tPub* pubArray[NUMPUB] = {&SPLMdebug, &SPRMdebug, &SVLXdebug, &SVAXdebug};
 char* subKey[NUMSUB] = {"SPLM", "SPRM", "SVLX", "SVAX", "RSTE"};
 char* pubKey[NUMPUB] = {"SPLMdebug", "SPRMdebug", "SVLXdebug", "SVAXdebug"};
 
+tServo* left;
+tServo* right;
+int LED=1;
+tBoolean newCmd=false;
+tBoolean kill=false;
+
+void blinkLED(void) {
+    SetPin(PIN_F2, LED);
+    LED = !LED;
+}
+
+void cmdWatchDog(void){
+    if(!newCmd) {
+        SetServo(left, 0.0f);
+        SetServo(right, 0.0f);
+    }
+}
+
 int main(void) {
     int i;
     InitializeMCU();
 
+    left = InitializeServoMotor(PIN_A6,false);
+    right = InitializeServoMotor(PIN_A7,false);
+    //CallEvery(blinkLED,0,0.25f);
+    //CallEvery(cmdWatchDog,0,0.2f);
 	// Initialize subscribers
 	// subHandlers Array located in handlers.c
-	Printf("_____LM4F_____\n");
     for(i=0;i<NUMSUB;i++) {
 	    InitializeSubscriber(subArray[i], subKey[i], 0, subHandlers[i]);
 	}
-    Printf("Subscribers initialized...\n");  
   
 	// Initialize publishers
 	for(i=0;i<NUMPUB;i++) {
     	InitializePublisher(pubArray[i], pubKey[i], 0, pubHandlers[i]);
     }
-    Printf("Publishers initialized...\n");
-
-    BeginPublishing(.1);
-    Printf("_______LM4F Running_______\n\n");
-    BeginSubscribing(.1); //while(1) contained within BeginSubscribing
+    BeginPublishing(.05);
+    BeginSubscribing(.05); //while(1) contained within BeginSubscribing
     while(1);
 }

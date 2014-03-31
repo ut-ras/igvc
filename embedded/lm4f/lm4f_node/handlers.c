@@ -3,6 +3,8 @@
 // November 30 2013
 #include <RASLib/inc/json_protocol.h>
 #include <RASLib/inc/rasstring.h>       // SPrintf
+#include <RASLib/inc/gpio.h>
+#include <StellarisWare/inc/hw_types.h>
 #include "handlers.h"
 
 /**
@@ -14,6 +16,9 @@ char msgBuffSVLX[BUFFERSIZE] = {'-'};
 char msgBuffSVAX[BUFFERSIZE] = {'-'};
 char msgBuffRSTE[BUFFERSIZE] = {'-'};
 char* msgBuffer[NUMSUB+NUMPUB] = {msgBuffSPLM, msgBuffSPRM, msgBuffSVLX, msgBuffSVAX, msgBuffRSTE};
+
+extern tBoolean kill, newCmd;
+extern tMotor *left, *right;
 
 /**
 *	Subscriber Handlers
@@ -28,7 +33,17 @@ void SPRM_handler(void* data, char *jsonvalue) {
 }
 
 void SVLX_handler(void* data, char *jsonvalue) {
+    int val;
+    float speed;
     SPrintf(msgBuffSVLX, "%s", jsonvalue);
+    newCmd=true;
+    val = (int) (jsonvalue[2]-0x30)*10;
+    val += (int) (jsonvalue[3]-0x30);
+    SetPin(PIN_F1,((val%2)==0));
+    
+    
+    SetServo(left, speed);
+    SetServo(right, speed);
 }
 
 void SVAX_handler(void* data, char *jsonvalue) {
