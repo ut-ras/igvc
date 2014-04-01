@@ -6,7 +6,12 @@
 #include <RASLib/inc/gpio.h>
 #include <RASLib/inc/servo.h>
 #include <RASLib/inc/motor.h>
+
+#include <StellarisWare/inc/hw_memmap.h>
 #include <StellarisWare/inc/hw_types.h>
+#include <StellarisWare/inc/hw_watchdog.h>
+#include <StellarisWare/driverlib/watchdog.h>
+
 #include "handlers.h"
 
 /**
@@ -41,8 +46,9 @@ void SVLX_handler(void* data, char *jsonvalue) {
     newCmd=true;
     val = (int) (jsonvalue[2]-0x30)*10;
     val += (int) (jsonvalue[3]-0x30);
-    SetPin(PIN_F1,((val%2)==0));
-    
+    //SetPin(PIN_F1,((val%2)==0));
+    SetPin(PIN_F3,false);
+    WatchdogReloadSet(WATCHDOG_BASE, 25000000);    
     //SetServo(left, speed);
     //SetServo(right, speed);
 }

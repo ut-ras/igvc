@@ -9,6 +9,13 @@
 #include <RASLib/inc/motor.h>
 #include <RASLib/inc/json_protocol.h>
 #include <RASLib/inc/servo.h>
+
+#include <StellarisWare/inc/hw_memmap.h>
+#include <StellarisWare/inc/hw_sysctl.h>
+#include <StellarisWare/driverlib/sysctl.h>
+#include <StellarisWare/inc/hw_watchdog.h>
+#include <StellarisWare/driverlib/watchdog.h>
+
 #include "handlers.h"
 
 /**
@@ -36,7 +43,7 @@ char* pubKey[NUMPUB] = {"SPLMdebug", "SPRMdebug", "SVLXdebug", "SVAXdebug"};
 
 tServo* left;
 tServo* right;
-int LED=1;
+tBoolean LED=true;
 tBoolean newCmd=false;
 tBoolean kill=false;
 
@@ -45,11 +52,32 @@ void blinkLED(void) {
     LED = !LED;
 }
 
-void cmdWatchDog(void){
-    if(!newCmd) {
-        SetServo(left, 0.0f);
-        SetServo(right, 0.0f);
+void WatchdogHandler(void) {
+    WatchdogIntClear(WATCHDOG_BASE);
+    //WatchdogIntUnregister(WATCHDOG_BASE);
+    WatchdogResetDisable(WATCHDOG_BASE);
+
+    SetPin(PIN_F3, true);
+}
+
+void WatchDog_Init(void) {
+    SetPin(PIN_F3, false);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_WDOG);  // Watchdog timer
+    WatchdogIntClear(WATCHDOG_BASE);
+    //WatchdogStallEnable(WATCHDOG_BASE);   // Enable for breakpoint debugging
+    if(WatchdogLockState(WATCHDOG_BASE) == true) {
+        WatchdogUnlock(WATCHDOG_BASE);
     }
+
+    WatchdogIntRegister(WATCHDOG_BASE, WatchdogHandler);
+
+    //Motor control node communicates at 10Hz, if no command for 20Hz halts
+    WatchdogReloadSet(WATCHDOG_BASE, 2500000);   
+
+    WatchdogIntEnable(WATCHDOG_BASE);
+    WatchdogResetDisable(WATCHDOG_BASE);   //Second interrupt doesn't result processor
+
+    WatchdogEnable(WATCHDOG_BASE);
 }
 
 int main(void) {
@@ -59,7 +87,6 @@ int main(void) {
     left = InitializeServoMotor(PIN_A6,false);
     right = InitializeServoMotor(PIN_A7,false);
     //CallEvery(blinkLED,0,0.25f);
-    //CallEvery(cmdWatchDog,0,0.2f);
 	// Initialize subscribers
 	// subHandlers Array located in handlers.c
     for(i=0;i<NUMSUB;i++) {
@@ -70,6 +97,9 @@ int main(void) {
 	for(i=0;i<NUMPUB;i++) {
     	InitializePublisher(pubArray[i], pubKey[i], 0, pubHandlers[i]);
     }
+
+    WatchDog_Init();
+    
     BeginPublishing(.1);
     BeginSubscribing(.05); //while(1) contained within BeginSubscribing
     while(1);
