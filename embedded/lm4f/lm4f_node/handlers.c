@@ -4,6 +4,8 @@
 #include <RASLib/inc/json_protocol.h>
 #include <RASLib/inc/rasstring.h>       // SPrintf
 #include <RASLib/inc/gpio.h>
+#include <RASLib/inc/servo.h>
+#include <RASLib/inc/motor.h>
 #include <StellarisWare/inc/hw_types.h>
 #include "handlers.h"
 
@@ -41,9 +43,8 @@ void SVLX_handler(void* data, char *jsonvalue) {
     val += (int) (jsonvalue[3]-0x30);
     SetPin(PIN_F1,((val%2)==0));
     
-    
-    SetServo(left, speed);
-    SetServo(right, speed);
+    //SetServo(left, speed);
+    //SetServo(right, speed);
 }
 
 void SVAX_handler(void* data, char *jsonvalue) {

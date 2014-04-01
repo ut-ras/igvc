@@ -70,7 +70,7 @@ int main(void) {
 	for(i=0;i<NUMPUB;i++) {
     	InitializePublisher(pubArray[i], pubKey[i], 0, pubHandlers[i]);
     }
-    BeginPublishing(.05);
+    BeginPublishing(.1);
     BeginSubscribing(.05); //while(1) contained within BeginSubscribing
     while(1);
 }

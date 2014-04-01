@@ -12,7 +12,7 @@
 # Kevin Gilbert
 #################
 import roslib; roslib.load_manifest('ucontroller_tilaunchpad')
-import json, serial, sys, os, roslib.packages
+import json, serial, sys, os, roslib.packages, time
 import rospy, traceback,subprocess
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
@@ -42,13 +42,14 @@ rstLm4farg = 'flash'
 ##################################
 def lm4f_handler(data, pub):
     try:
-        comm.flushOutput()
-        comm.flushInput()
         # Parse and send data to LM4F
         sendCommand(data) 
         # Read response and print to logs/debug topic
-        response = comm.readline()
-        comm.flushInput()
+        #response = comm.readline()
+        response = ''
+        while comm.inWaiting() > 0:
+            response += comm.read(1)
+        #comm.flush()
         rospy.loginfo(rospy.get_name()+": LM4F response: "+response)      
         pub.publish(response) 
     except:
@@ -65,7 +66,7 @@ def sendCommand(data):
     # angular velocity in rad/s
     mesg = json.dumps({'SVLX':linearVelocity, 'SVAX':angularVelocity})
     comm.write(mesg+'\n')
-    comm.flushOutput()
+    comm.flush()
     return
 
 def lm4fNode():

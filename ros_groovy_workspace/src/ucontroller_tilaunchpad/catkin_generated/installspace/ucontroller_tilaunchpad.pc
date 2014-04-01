@@ -1,0 +1,8 @@
+prefix=/home/ras/ros/IGVC2014/ros_groovy_workspace/install
+
+Name: ucontroller_tilaunchpad
+Description: Description of ucontroller_tilaunchpad
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/ras/ros/IGVC2014/ros_groovy_workspace/install/lib 
+Requires: 
