@@ -1,10 +1,11 @@
 # Makefile for RASWare 2013
-TARGET = RASDemo.axf
+TARGET = igvc_vel_cmd.axf
 
 # Library Locations
-STELLARIS = /home/ras/lm4f/StellarisWare
-RASLIB = ../RASLib
-CORTEXM4 = /home/ras/lm4f/CortexM4Libs
+STELLARIS = /home/ras/StellarisWare
+RASLIB = /home/ras/Rasware2013/RASLib
+CORTEXM4 = /home/ras/CortexM4Libs
+
 ARMCLIB = $(dir $(shell which $(CC)))..
 
 # Command Definitions
@@ -20,8 +21,8 @@ SCREEN := screen
 
 # File Definitions
 SRC := $(wildcard src/*.c *.c)
-INC = inc $(RASLIB)/.. $(STELLARIS)/.. $(STELLARIS)
-LIB = ras driver-cm4f m c gcc
+INC = inc $(RASLIB)/.. $(STELLARIS)/.. $(STELLARIS) 
+LIB = ras driver-cm4f m c gcc 
 LDS = lm4f.ld
 
 OBJ := $(SRC:.c=.o)
