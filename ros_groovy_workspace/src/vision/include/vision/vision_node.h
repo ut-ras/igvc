@@ -11,6 +11,8 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl/filters/passthrough.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/filters/radius_outlier_removal.h>
 #include <pcl_ros/transforms.h>
 #include <laser_geometry/laser_geometry.h>
 #include <image_geometry/pinhole_camera_model.h>
@@ -36,9 +38,15 @@ namespace vision_node
     ros::NodeHandle m_nh;
     double m_loop_rate;
     double m_match_threshold;
+    int m_lightness_threshold;
     int m_white_threshold;
     int m_num_cameras;
     std::string m_base_frame_id;
+    double m_resolution;
+    double m_x_min;
+    double m_x_max;
+    double m_y_min;
+    double m_y_max;
 
     double m_max_image_time_lag;
 
@@ -65,10 +73,12 @@ namespace vision_node
     bool allImagesValid();
     bool imagesSynced();
 
+    void filterCloud(pcl::PointCloud<pcl::PointXYZ> in, pcl::PointCloud<pcl::PointXYZ>& out);
+
     void imageCallback(const sensor_msgs::ImageConstPtr& image, int idx);
 
     void processImages(std::vector<sensor_msgs::Image>& images);
-    bool colorsMatch(std::vector<CvScalar> colors, std::vector<sensor_msgs::Image>& images, CvScalar matched_color);
+    bool colorsMatch(std::vector<CvScalar> colors, std::vector<sensor_msgs::Image>& images, CvScalar& matched_color);
     bool transformGridToCameras(std::vector<sensor_msgs::Image>& images, std::vector<pcl::PointCloud<pcl::PointXYZRGB> >& clouds);
     double colorDistance(CvScalar a, CvScalar b);
     void parseEncoding(CvScalar s, std::string encoding, unsigned char& red, unsigned char& green, unsigned char& blue);

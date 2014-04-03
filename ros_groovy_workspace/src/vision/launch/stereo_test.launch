@@ -1,18 +1,22 @@
 <launch>
-  <node pkg="image_view" type="image_view" name="left_viewer" output="screen">
+  <!--<node pkg="image_view" type="image_view" name="left_viewer" output="screen">
     <remap from="/image" to="/left_camera/image_raw"/>
   </node>
 
   <node pkg="image_view" type="image_view" name="right_viewer" output="screen">
     <remap from="/image" to="/right_camera/image_raw"/>
-  </node>
+  </node>-->
 
   <node pkg="vision" type="vision_node" name="vision_node" output="screen">
   	<param name="x_min" value="0.0"/>
   	<param name="x_max" value="5.0"/>
-  	<param name="y_min" value="-1.5"/>
-  	<param name="y_max" value="1.5"/>
-  	<param name="resolution" value="0.05"/>
+  	<param name="y_min" value="-5"/>
+  	<param name="y_max" value="5"/>
+    <param name="resolution" value="0.05"/>
+    
+    <param name="white_threshold" value="60"/>
+    <param name="lightness_threshold" value="180"/>
+    <param name="match_threshold" value="2"/>
   
     <remap from="/camera_info_0" to="/left_camera/camera_info"/>
     <remap from="/image_0" to="/left_camera/image_raw"/>

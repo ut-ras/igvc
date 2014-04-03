@@ -6,10 +6,12 @@ namespace vision_node
       m_nh(nh)
   {
     m_nh.param("loop_rate", m_loop_rate, 10.0);
-    m_nh.param("white_threshold", m_white_threshold, 200);
+    m_nh.param("white_threshold", m_white_threshold, 10);
+    m_nh.param("lightness_threshold", m_lightness_threshold, 180);
     m_nh.param("base_frame_id", m_base_frame_id, std::string("/base_link"));
     m_nh.param("num_cameras", m_num_cameras, 2);
     m_nh.param("max_image_time_lag", m_max_image_time_lag, 0.1);
+    m_nh.param("match_threshold", m_match_threshold, 10.0);
 
     if(m_num_cameras < 2 || m_num_cameras > 8)
     {
@@ -21,14 +23,13 @@ namespace vision_node
     m_obstacle_cloud_pub = m_nh.advertise<sensor_msgs::PointCloud2>("/obstacles", 1, true);
     m_sensed_area_cloud_pub = m_nh.advertise<sensor_msgs::PointCloud2>("/sensed_area", 1, true);
 
-    double resolution, x_min, x_max, y_min, y_max;
-    m_nh.param("resolution", resolution, 0.05);
-    m_nh.param("x_min", x_min, 0.0);
-    m_nh.param("x_max", x_max, 2.0);
-    m_nh.param("y_min", y_min, -0.75);
-    m_nh.param("y_max", y_max, 0.75);
+    m_nh.param("resolution", m_resolution, 0.05);
+    m_nh.param("x_min", m_x_min, 0.0);
+    m_nh.param("x_max", m_x_max, 2.0);
+    m_nh.param("y_min", m_y_min, -0.75);
+    m_nh.param("y_max", m_y_max, 0.75);
 
-    generateGroundGrid(resolution, x_min, x_max, y_min, y_max);
+    generateGroundGrid(m_resolution, m_x_min, m_x_max, m_y_min, m_y_max);
 
     m_have_clouds = false;
 
@@ -141,7 +142,7 @@ namespace vision_node
     return true;
   }
 
-  bool VisionNode::colorsMatch(std::vector<CvScalar> colors, std::vector<sensor_msgs::Image>& images, CvScalar matched_color)
+  bool VisionNode::colorsMatch(std::vector<CvScalar> colors, std::vector<sensor_msgs::Image>& images, CvScalar& matched_color)
   {
     if(colors.size() == 1)
     {
@@ -166,6 +167,45 @@ namespace vision_node
     return false;
   }
 
+  void VisionNode::filterCloud(pcl::PointCloud<pcl::PointXYZ> in, pcl::PointCloud<pcl::PointXYZ>& out)
+  {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr in_cloud_ptr = in.makeShared();
+
+    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+    kdtree.setInputCloud(in_cloud_ptr);
+
+    std::vector<int> pointIdxRadiusSearch;
+    std::vector<float> pointRadiusSquaredDistance;
+    double radius = m_resolution * 5.0;
+    for(unsigned int i = 0; i < in.size(); i++)
+    {
+      int num_neighbors = kdtree.radiusSearch(in.points[i], radius, pointIdxRadiusSearch, pointRadiusSquaredDistance);
+      if(num_neighbors > 5)
+      {
+        out.points.push_back(in.points[i]);
+      }
+    }
+    out.height = 1;
+    out.width = out.points.size();
+
+    //    pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
+    //    sor.setInputCloud(obstacle_cloud_ptr);
+    //    sor.setMeanK(3);
+    //    sor.setStddevMulThresh(1.0);
+    //    sor.filter(obstacle_cloud_filtered);
+
+    //    pcl::RadiusOutlierRemoval<pcl::PointXYZ> outrem;
+    //    outrem.setInputCloud(obstacle_cloud_ptr);
+    //    outrem.setRadiusSearch(3000.0);
+    //    outrem.setMinNeighborsInRadius(1);
+    //    outrem.filter(obstacle_cloud_filtered);
+
+    if(out.size() / in_cloud_ptr->size() < 0.5)
+    {
+      ROS_WARN_THROTTLE(1.0, "Filtered all but %d/%d (%g%%) of obstacle points", (int) out.size(), (int) in_cloud_ptr->size(), 100.0 * out.size() / in_cloud_ptr->size());
+    }
+  }
+
   void VisionNode::processImages(std::vector<sensor_msgs::Image>& images)
   {
     ROS_DEBUG("Processing image set");
@@ -185,10 +225,12 @@ namespace vision_node
     }
 
     pcl::PointCloud<pcl::PointXYZRGB> obstacle_cloud;
+    pcl::PointCloud<pcl::PointXYZ> obstacle_cloud_no_color;
     pcl::PointCloud<pcl::PointXYZRGB> ground_cloud;
     for(unsigned int i = 0; i < m_ground_grid.size(); i++)
     {
       int num_matches = 0;
+      int num_image_hits = 0;
       std::vector<CvScalar> colors;
       for(unsigned int j = 0; j < camera_clouds.size(); j++)
       {
@@ -198,26 +240,30 @@ namespace vision_node
 
         if(!(image_point.y < cv_images[j]->height && image_point.x < cv_images[j]->width && image_point.y >= 0 && image_point.x >= 0))
         {
-          obstacle_cloud.points.push_back(m_ground_grid[i]);//TODO: REMOVE!
-          //ROS_INFO("Grid cell (%g,%g,%g) was not on the image!", cloud_point.x, cloud_point.y, cloud_point.z);
           continue; //point is not on the image, so skip to the next one
         }
+        else
+        {
+          num_image_hits++;
+        }
 
-//        colors.push_back(cvGet2D(cv_images[j], image_point.y, image_point.x));
+        colors.push_back(cvGet2D(cv_images[j], image_point.y, image_point.x));
+
         CvScalar matching_color;
-//        if(colorsMatch(colors, images, matching_color))
-//        {
+        if(colorsMatch(colors, images, matching_color))
+        {
           pcl::PointXYZRGB point = m_ground_grid[i];
           point.r = matching_color.val[0];
           point.g = matching_color.val[1];
           point.b = matching_color.val[2];
           ground_cloud.points.push_back(point);
-//          break;
-//        }
-//        else if(j == camera_clouds.size() - 1) //no match was found for any pair of cameras (the point must not be on the ground)
-//        {
-//          obstacle_cloud.points.push_back(m_ground_grid[i]);
-//        }
+          break;
+        }
+        else if(j == camera_clouds.size() - 1 && num_image_hits > 2) //the point was on more than one camera, but no match was found for any pair of cameras (the point must not be on the ground)
+        {
+          obstacle_cloud.points.push_back(m_ground_grid[i]);
+          obstacle_cloud_no_color.points.push_back(pcl::PointXYZ(m_ground_grid[i].x, m_ground_grid[i].y, m_ground_grid[i].z));
+        }
       }
     }
 
@@ -227,14 +273,24 @@ namespace vision_node
     //find white points on the ground and add them to the obstacle_cloud
     for(unsigned int i = 0; i < ground_cloud.size(); i++)
     {
-      if(((ground_cloud.points[i].r + ground_cloud.points[i].g + ground_cloud.points[i].b) / 3) > m_white_threshold)
+      double lightness = ((ground_cloud.points[i].r + ground_cloud.points[i].g + ground_cloud.points[i].b) / 3);
+      bool light_enough = (lightness > m_lightness_threshold);
+      bool r_close = abs(ground_cloud.points[i].r - lightness) < m_white_threshold;
+      bool g_close = abs(ground_cloud.points[i].g - lightness) < m_white_threshold;
+      bool b_close = abs(ground_cloud.points[i].b - lightness) < m_white_threshold;
+      if(light_enough && r_close && g_close && b_close)
       {
         obstacle_cloud.points.push_back(ground_cloud.points[i]);
+        obstacle_cloud_no_color.points.push_back(pcl::PointXYZ(ground_cloud.points[i].x, ground_cloud.points[i].y, ground_cloud.points[i].z));
       }
     }
 
-    obstacle_cloud.header = m_ground_grid.header;
-    pcl::toROSMsg(obstacle_cloud, m_obstacle_cloud_msg);
+    //remove outliers from obstacle cloud
+    pcl::PointCloud<pcl::PointXYZ> obstacle_cloud_filtered;
+    filterCloud(obstacle_cloud_no_color, obstacle_cloud_filtered);
+
+    obstacle_cloud_filtered.header = m_ground_grid.header;
+    pcl::toROSMsg(obstacle_cloud_filtered, m_obstacle_cloud_msg);
 
     m_have_clouds = true;
   }
