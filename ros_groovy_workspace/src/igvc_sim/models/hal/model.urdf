@@ -196,11 +196,35 @@
         </geometry>
       </visual>
     </link>
+ 
+    <link name="left_camera_optical_frame">
+      <inertial>
+        <mass value="0.0001"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
+      </inertial>
+      <collision name="left_camera_c">
+        <geometry>
+          <box size="0.0001 0.0001 0.0001"/>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box size="0.0001 0.0001 0.0001"/>
+        </geometry>
+      </visual>
+    </link>
     
     <joint name="left_camera_joint" type="fixed">
-        <origin xyz="0.3302 0.05275 1.3854" rpy="0 1.047 0"/>
+        <origin xyz="0.3302 0.05275 1.3854" rpy="0 0.589048623 0"/>
       <parent link="base_link"/>
       <child link="left_camera_link"/>
+    </joint>
+    
+    <joint name="left_camera_optical_joint" type="fixed">
+        <origin xyz="0 0 0 " rpy="-1.57 0 -1.57"/>
+      <parent link="left_camera_link"/>
+      <child link="left_camera_optical_frame"/>
     </joint>
  
     <link name="right_camera_link">
@@ -221,10 +245,34 @@
       </visual>
     </link>
     
+    <link name="right_camera_optical_frame">
+      <inertial>
+        <mass value="0.0001"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001"/>
+      </inertial>
+      <collision name="right_camera_c">
+        <geometry>
+          <box size="0.0001 0.0001 0.0001"/>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box size="0.0001 0.0001 0.0001"/>
+        </geometry>
+      </visual>
+    </link>
+    
     <joint name="right_camera_joint" type="fixed">
-        <origin xyz="0.3302 -0.05275 1.3854" rpy="0 1.047 0"/>
+        <origin xyz="0.3302 -0.05275 1.3854" rpy="0 0.589048623 0"/>
       <parent link="base_link"/>
       <child link="right_camera_link"/>
+    </joint>
+    
+    <joint name="right_camera_optical_joint" type="fixed">
+        <origin xyz="0 0 0 " rpy="-1.57 0 -1.57"/>
+      <parent link="right_camera_link"/>
+      <child link="right_camera_optical_frame"/>
     </joint>
     
     <gazebo reference="left_camera_link">
@@ -239,16 +287,16 @@
           </image>
           <clip>
             <near>0.02</near>
-            <far>100</far>
+            <far>300</far>
           </clip>
         </camera>
         <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
           <alwaysOn>true</alwaysOn>
-          <updateRate>0.0</updateRate>
+          <updateRate>30.0</updateRate>
           <cameraName>left_camera</cameraName>
           <imageTopicName>image_raw</imageTopicName>
           <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-          <frameName>left_camera_link</frameName>
+          <frameName>left_camera_optical_frame</frameName>
           <hackBaseline>0.07</hackBaseline>
           <distortionK1>0.0</distortionK1>
           <distortionK2>0.0</distortionK2>
@@ -273,16 +321,16 @@
           </image>
           <clip>
             <near>0.02</near>
-            <far>100</far>
+            <far>300</far>
           </clip>
         </camera>
         <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
           <alwaysOn>true</alwaysOn>
-          <updateRate>0.0</updateRate>
+          <updateRate>30.0</updateRate>
           <cameraName>right_camera</cameraName>
           <imageTopicName>image_raw</imageTopicName>
           <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-          <frameName>right_camera_link</frameName>
+          <frameName>right_camera_optical_frame</frameName>
           <hackBaseline>0.07</hackBaseline>
           <distortionK1>0.0</distortionK1>
           <distortionK2>0.0</distortionK2>

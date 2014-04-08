@@ -1,3 +1,5 @@
+.cproject
+.project
 ros_groovy_workspace/devel
 ros_groovy_workspace/build
 *.swp
