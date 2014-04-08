@@ -12,7 +12,7 @@
 # Kevin Gilbert
 #################
 import roslib; roslib.load_manifest('ucontroller_tilaunchpad')
-import json, serial, sys, os, roslib.packages, time
+import json, serial, sys, os, roslib.packages
 import rospy, traceback,subprocess
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
@@ -20,6 +20,7 @@ from geometry_msgs.msg import Twist
 # Node parameters
 #################
 TOPIC = 'lm4f_debug'
+#SUBSCRIBER = 'lm4f'
 SUBSCRIBER = 'vel_cmd'
 SERIAL_LINE = '/dev/lm4f'
 BAUD_RATE = 115200
@@ -40,18 +41,22 @@ rstLm4farg = 'flash'
 #    Called when data received 
 #    from subscriber topic.
 ##################################
-def lm4f_handler(data, pub):
+def lm4f_handler(data):
     try:
+#        comm.flushOutput()
         # Parse and send data to LM4F
-        sendCommand(data) 
+	left = data.linear.x
+        right = data.linear.x
+
+        if data.angular.z > 0: right += data.angular.z/2
+        if data.angular.z < 0: left -= data.angular.z/2
+
+	msg = '{%s,%s}' % (left, right)
+	comm.write(msg)
+	comm.write('\r')
+        rospy.loginfo(msg)
+#        comm.flushOutput()
         # Read response and print to logs/debug topic
-        #response = comm.readline()
-        response = ''
-        while comm.inWaiting() > 0:
-            response += comm.read(1)
-        #comm.flush()
-        rospy.loginfo(rospy.get_name()+": LM4F response: "+response)      
-        pub.publish(response) 
     except:
         rospy.loginfo(traceback.format_exc())
         rospy.loginfo('Closing LM4F Node due to exception...')
@@ -66,12 +71,11 @@ def sendCommand(data):
     # angular velocity in rad/s
     mesg = json.dumps({'SVLX':linearVelocity, 'SVAX':angularVelocity})
     comm.write(mesg+'\n')
-    comm.flush()
+    comm.flushOutput()
     return
 
 def lm4fNode():
-    pub = rospy.Publisher(TOPIC, String)
-    sub = rospy.Subscriber(SUBSCRIBER, Twist, lm4f_handler, pub)
+    sub = rospy.Subscriber(SUBSCRIBER, Twist, lm4f_handler)
     rospy.init_node('lm4f_node', anonymous=True)
     print 'printing debug info...'
     rospy.spin()
@@ -85,10 +89,7 @@ if __name__ == '__main__':
             writeTimeout = 1
         )
         print 'comm initialized...'
-        print 'Flashing board...'
-        process = subprocess.call([rstLm4fcmd,rstLm4fFlag,rstLm4fdst,rstLm4farg])
         print 'board reset, output: '
-        print process
         lm4fNode()
     except rospy.ROSInterruptException: pass
     except serial.SerialException:

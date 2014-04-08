@@ -60,11 +60,16 @@ def lm4f_handler(data, pub):
 ##################################
 
 def sendCommand(data):
-    linearVelocity = round(data.linear.x, 3) #ignore y,z for linear vel
-    angularVelocity = round(data.angular.z, 3) #ignore x,y for ang vel
+    left = data.linear.x
+    right = data.linear.x
+
+    if data.angular.z > 0:
+        right += data.angular.z/2
+    if data.angular.z < 0:
+        left -= data.angular.z/2
     # linear velocity in m/s
     # angular velocity in rad/s
-    mesg = json.dumps({'SVLX':linearVelocity, 'SVAX':angularVelocity})
+    mesg = json.dumps({'SPLM':left, 'SPRM':right})
     comm.write(mesg+'\n')
     comm.flush()
     return
