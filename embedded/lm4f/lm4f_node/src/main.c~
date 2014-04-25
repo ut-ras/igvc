@@ -115,8 +115,8 @@ int main(void) {
     WatchDog_Init();
     
     // Initialize PID and velocity control 
-    InitializePID(&pidLeft, .00015, 0.000, 0.0001, -0.15, 0.15);
-    InitializePID(&pidRight, .00015, 0.000, 0.0001, -0.15, 0.15);
+    InitializePID(&pidLeft, .0001, 0.000, 0.000, -0.15, 0.15);
+    InitializePID(&pidRight, .0001, 0.000, 0.000, -0.15, 0.15);
     
     BeginPublishing(.1);
     BeginSubscribing(.05); //while(1) contained within BeginSubscribing

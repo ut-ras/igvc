@@ -92,10 +92,10 @@ void SVLX_handler(void* data, char *jsonvalue) {
     int val;
     float speed;
 
-    signed long ticksLeft = GetEncoder(left_encoder);
-    signed long ticksRight = GetEncoder(right_encoder);
-    signed long deltaTicksLeft = ticksLeft - prevTicksLeft;
-    signed long deltaTicksRight = ticksRight - prevTicksRight;
+    static signed long ticksLeft = GetEncoder(left_encoder);
+    static signed long ticksRight = GetEncoder(right_encoder);
+    static signed long deltaTicksLeft = ticksLeft - prevTicksLeft;
+    static signed long deltaTicksRight = ticksRight - prevTicksRight;
         
     float motorCommandLeft = prevCommandLeft + RunPID(&pidLeft, goalDeltaTicks, deltaTicksLeft);
     float motorCommandRight = prevCommandRight + RunPID(&pidRight, goalDeltaTicks, deltaTicksRight);
