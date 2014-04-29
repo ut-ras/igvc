@@ -16,6 +16,8 @@
 #include "handlers.h"
 #include "pid.h"
 
+#include "atospf.h"
+
 /**
 *	Message Buffers for subscribers/publishers
 */
@@ -40,24 +42,30 @@ extern tMotor *left_motor, *right_motor;
 extern tEncoder *left_encoder, *right_encoder;
 extern tPID pidLeft, pidRight;
 
+float parseSpeed(char* jsonvalue) 
+{
+    float speed = atospf(jsonvalue);
+    
+    if (speed < 0) {
+        if(speed < -MAXPWM) 
+            speed = -MAXPWM;
+    } else {
+        if(speed > MAXPWM) 
+            speed = MAXPWM;
+    }
+
+	return speed;
+}
+
+
+
 /**
 *	Subscriber Handlers
 *   
 */								   
 void SPLM_handler(void* data, char *jsonvalue) {
-    float speed;
-    if(jsonvalue[0] == '-') {
-        speed = (float)(jsonvalue[1]-0x30);
-        speed += (float)(jsonvalue[3]-0x30)/10;
-        speed *= -1;
-        if(speed < -MAXPWM) 
-            speed = -MAXPWM;
-    } else {
-        speed = (float)(jsonvalue[0]-0x30);
-        speed += (float)(jsonvalue[2]-0x30)/10;
-        if(speed > MAXPWM) 
-            speed = MAXPWM;
-    }
+    float speed = parseSpeed(jsonvalue);
+
     SPrintf(msgBuffSPLM, "%f",speed);
 
     SetPin(PIN_F1, false);
@@ -66,25 +74,14 @@ void SPLM_handler(void* data, char *jsonvalue) {
 }
 
 void SPRM_handler(void* data, char *jsonvalue) {
-    float speed;
+	float speed = parseSpeed(jsonvalue);
 
-    if(jsonvalue[0] == '-') {
-        speed = (float)(jsonvalue[1]-0x30);
-        speed += (float)(jsonvalue[3]-0x30)/10;
-        speed *= -1;
-        if(speed < -MAXPWM) 
-            speed = -MAXPWM;
-    } else {
-        speed = (float)(jsonvalue[0]-0x30);
-        speed += (float)(jsonvalue[2]-0x30)/10;
-        if(speed > MAXPWM) 
-            speed = MAXPWM;
-    }
+	Printf("speed %s -> %f\n", jsonvalue, speed);
+
     SPrintf(msgBuffSPRM, "%f",speed);
 
     SetPin(PIN_F1, false);
     WatchdogReloadSet(WATCHDOG_BASE, 25000000);    
-    
     SetMotor(right_motor, speed);
 }
 
