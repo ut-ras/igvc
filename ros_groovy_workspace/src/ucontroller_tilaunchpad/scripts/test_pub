@@ -8,7 +8,7 @@ from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 
 def talker():
-    pub = rospy.Publisher('lm4f', Twist)
+    pub = rospy.Publisher('vel_cmd', Twist)
     rospy.init_node('talker', anonymous=True)
     r = rospy.Rate(10) # 10hz
     msg = Twist()

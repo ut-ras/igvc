@@ -45,11 +45,9 @@ def lm4f_handler(data, pub):
         # Parse and send data to LM4F
         sendCommand(data) 
         # Read response and print to logs/debug topic
-        #response = comm.readline()
         response = ''
         while comm.inWaiting() > 0:
             response += comm.read(1)
-        #comm.flush()
         rospy.loginfo(rospy.get_name()+": LM4F response: "+response)      
         pub.publish(response) 
     except:
@@ -59,15 +57,19 @@ def lm4f_handler(data, pub):
         sys.exit()
 ##################################
 
-def sendCommand(data):
-    linearVelocity = round(data.linear.x, 3) #ignore y,z for linear vel
-    angularVelocity = round(data.angular.z, 3) #ignore x,y for ang vel
+def sendCommand(data): 
+    try:
+        linearVelocity = round(data.linear.x, 3) #ignore y,z for linear vel
+        angularVelocity = round(data.angular.z, 3) #ignore x,y for ang vel
     # linear velocity in m/s
     # angular velocity in rad/s
-    mesg = json.dumps({'SVLX':linearVelocity, 'SVAX':angularVelocity})
-    comm.write(mesg+'\n')
-    comm.flush()
-    return
+        mesg = json.dumps({'SVLX':linearVelocity, 'SVAX':angularVelocity})
+        comm.write(mesg+'\n')
+        comm.flush()
+        return
+    except:
+        print 'Error Writing to LM4F'
+        comm.close()
 
 def lm4fNode():
     pub = rospy.Publisher(TOPIC, String)

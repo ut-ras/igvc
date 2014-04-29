@@ -69,6 +69,9 @@ def sendCommand(data):
         left -= data.angular.z/2
     # linear velocity in m/s
     # angular velocity in rad/s
+    right = round(right, 3)
+    left = round(left, 3)
+
     mesg = json.dumps({'SPLM':left, 'SPRM':right})
     comm.write(mesg+'\n')
     comm.flush()
