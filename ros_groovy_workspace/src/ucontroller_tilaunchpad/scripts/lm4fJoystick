@@ -70,8 +70,10 @@ def sendCommand(data):
     	    left -= data.angular.z/2.0
         # linear velocity in m/s
         # angular velocity in rad/s
-        right = round(right*.125*2, 3)
-        left = round(left*.125*2, 3)
+
+	PWMMAX = .125
+        right = min(max(round(right*PWMMAX*2, 3), -PWMMAX), PWMMAX)
+        left = min(max(round(left*PWMMAX*2, 3), -PWMMAX), PWMMAX)
         
         print "sent: " + str(left) + "," + str(right)
 
