@@ -60,22 +60,29 @@ def lm4f_handler(data, pub):
 ##################################
 
 def sendCommand(data):
-    left = data.linear.x
-    right = data.linear.x
+    try:
+        left = data.linear.x
+        right = data.linear.x
+    
+        if data.angular.z > 0:
+    	    right += data.angular.z/2.0
+        if data.angular.z < 0:
+    	    left -= data.angular.z/2.0
+        # linear velocity in m/s
+        # angular velocity in rad/s
+        right = round(right*.125*2, 3)
+        left = round(left*.125*2, 3)
+        
+        print "sent: " + str(left) + "," + str(right)
 
-    if data.angular.z > 0:
-        right += data.angular.z/2
-    if data.angular.z < 0:
-        left -= data.angular.z/2
-    # linear velocity in m/s
-    # angular velocity in rad/s
-    right = round(right, 3)
-    left = round(left, 3)
+        mesg = json.dumps({'SPLM':left, 'SPRM':right})
+        comm.write(mesg+'\n')
+        comm.flush()
+        return
+    except:
+        print 'Error writing to LM4F'
+        comm.close()
 
-    mesg = json.dumps({'SPLM':left, 'SPRM':right})
-    comm.write(mesg+'\n')
-    comm.flush()
-    return
 
 def lm4fNode():
     pub = rospy.Publisher(TOPIC, String)
