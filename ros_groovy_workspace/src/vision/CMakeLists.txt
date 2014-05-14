@@ -112,6 +112,9 @@ include_directories(
 add_executable(vision_node src/vision_node.cpp)
 target_link_libraries(vision_node ${catkin_LIBRARIES})
 
+add_executable(color_vision_node src/color_vision_node.cpp)
+target_link_libraries(color_vision_node ${catkin_LIBRARIES})
+
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(vision_node vision_generate_messages_cpp)

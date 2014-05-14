@@ -1,0 +1,19 @@
+<launch>
+  <node pkg="vision" type="color_vision_node" name="vision" output="screen">
+  	<param name="x_min" value="0.0"/>
+  	<param name="x_max" value="5.0"/>
+  	<param name="y_min" value="-5"/>
+  	<param name="y_max" value="5"/>
+    <param name="resolution" value="0.05"/>
+    
+    <param name="white_threshold" value="60"/>
+    <param name="lightness_threshold" value="180"/>
+    <param name="match_threshold" value="2"/>
+  
+    <remap from="/camera_info_0" to="/left_camera/camera_info"/>
+    <remap from="/image_0" to="/left_camera/image_raw"/>
+    <remap from="/camera_info_1" to="/right_camera/camera_info"/>
+    <remap from="/image_1" to="/right_camera/image_raw"/>
+  </node>
+
+</launch>

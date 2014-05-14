@@ -1,5 +1,5 @@
-#ifndef VISION_NODE_H
-#define VISION_NODE_H
+#ifndef COLOR_VISION_NODE_H
+#define COLOR_VISION_NODE_H
 
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
@@ -14,6 +14,7 @@
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/filters/radius_outlier_removal.h>
 #include <pcl_ros/transforms.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <laser_geometry/laser_geometry.h>
 #include <image_geometry/pinhole_camera_model.h>
 #include <image_transport/image_transport.h>
@@ -27,11 +28,23 @@
 
 namespace vision
 {
-  class VisionNode
+  class ColorRegion
   {
   public:
-    VisionNode(const ros::NodeHandle& nh);
-    ~VisionNode();
+    cv::Vec3b min;
+    cv::Vec3b max;
+
+    bool isWithin(cv::Vec3b color)
+    {
+      return (color.val[0] >= min.val[0]) && (color.val[0] <= max.val[0]) && (color.val[1] >= min.val[1]) && (color.val[1] <= max.val[1]) && (color.val[2] >= min.val[2]) && (color.val[2] <= max.val[2]);
+    }
+  };
+
+  class ColorVisionNode
+  {
+  public:
+    ColorVisionNode(const ros::NodeHandle& nh);
+    ~ColorVisionNode();
     void spin();
 
   private:
@@ -48,15 +61,23 @@ namespace vision
     double m_y_min;
     double m_y_max;
 
+    double m_sample_period;
+    double m_sample_resolution;
+    double m_sample_x_min;
+    double m_sample_x_max;
+    double m_sample_y_min;
+    double m_sample_y_max;
+    int m_num_color_regions;
+
     double m_max_image_time_lag;
 
     ros::Publisher m_ground_cloud_pub;
     ros::Publisher m_obstacle_cloud_pub;
-    ros::Publisher m_sensed_area_cloud_pub;
 
     bool m_have_clouds;
 
-    pcl::PointCloud<pcl::PointXYZRGB> m_ground_grid;
+    pcl::PointCloud<pcl::PointXYZ> m_ground_grid;
+    pcl::PointCloud<pcl::PointXYZ> m_sample_grid;
 
     tf::TransformListener m_tf_listener;
 
@@ -65,10 +86,15 @@ namespace vision
 
     sensor_msgs::PointCloud2 m_obstacle_cloud_msg;
     sensor_msgs::PointCloud2 m_ground_cloud_msg;
-    sensor_msgs::PointCloud2 m_sensed_area_cloud_msg;
 
     std::vector<sensor_msgs::Image> m_images;
     std::vector<bool> m_images_valid;
+
+    std::vector<std::vector<ColorRegion> > m_drivable_regions;
+
+    ros::Time m_last_sample_time;
+
+    bool sampleKnownGround(std::vector<sensor_msgs::Image>& images, std::vector<IplImage*> cv_images);
 
     bool allImagesValid();
     bool imagesSynced();
@@ -79,11 +105,11 @@ namespace vision
 
     void processImages(std::vector<sensor_msgs::Image>& images);
     bool colorsMatch(std::vector<CvScalar> colors, std::vector<sensor_msgs::Image>& images, CvScalar& matched_color);
-    bool transformGridToCameras(std::vector<sensor_msgs::Image>& images, std::vector<pcl::PointCloud<pcl::PointXYZRGB> >& clouds);
+    bool transformGridToCameras(std::vector<sensor_msgs::Image>& images, pcl::PointCloud<pcl::PointXYZ> grid, std::vector<pcl::PointCloud<pcl::PointXYZ> >& clouds);
     double colorDistance(CvScalar a, CvScalar b);
     void parseEncoding(CvScalar s, std::string encoding, unsigned char& red, unsigned char& green, unsigned char& blue);
-    void generateGroundGrid(double resolution, double x_min, double x_max, double y_min, double y_max);
+    void generateGroundGrid(double resolution, double x_min, double x_max, double y_min, double y_max, pcl::PointCloud<pcl::PointXYZ>& grid);
   };
 }
 
-#endif //VISION_NODE_H
+#endif //COLOR_VISION_NODE_H

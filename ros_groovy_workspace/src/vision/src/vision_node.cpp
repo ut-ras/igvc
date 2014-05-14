@@ -1,6 +1,6 @@
 #include "vision/vision_node.h"
 
-namespace vision_node
+namespace vision
 {
   VisionNode::VisionNode(const ros::NodeHandle& nh) :
       m_nh(nh)
@@ -375,7 +375,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "vision_node");
   ros::NodeHandle nh("~");
 
-  vision_node::VisionNode node(nh);
+  vision::VisionNode node(nh);
   node.spin();
 
   return 0;
