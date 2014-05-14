@@ -40,9 +40,20 @@ namespace vision
       initialized = false;
     }
 
+    void expand(unsigned char c0, unsigned char c1, unsigned char c2)
+    {
+      min.val[0] = (min.val[0] > c0)? min.val[0] - c0 : 0;
+      min.val[1] = (min.val[1] > c1)? min.val[1] - c1 : 0;
+      min.val[2] = (min.val[2] > c2)? min.val[2] - c2 : 0;
+
+      max.val[0] = ((255 - max.val[0]) > c0)? max.val[0] + c0 : 255;
+      max.val[1] = ((255 - max.val[1]) > c1)? max.val[1] + c1 : 255;
+      max.val[2] = ((255 - max.val[2]) > c2)? max.val[2] + c2 : 255;
+    }
+
     void print()
     {
-      std::cerr << "c0:[" << (int)min.val[0] << "," << (int)max.val[0] << "], c1:[" << (int)min.val[1] << "," << (int)max.val[1] << "], c2:[" << (int)min.val[2] << "," << (int)max.val[2] << "]\n";
+      std::cerr << "c0:[" << (int) min.val[0] << "," << (int) max.val[0] << "], c1:[" << (int) min.val[1] << "," << (int) max.val[1] << "], c2:[" << (int) min.val[2] << "," << (int) max.val[2] << "]\n";
     }
 
     bool contains(cv::Vec3b color)

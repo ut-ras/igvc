@@ -448,7 +448,7 @@ namespace vision
     }
 
     cv::Mat best_labels, centers, clustered;
-    int K = 20; //m_num_color_regions;
+    int K = 50; //m_num_color_regions;
     cv::kmeans(p, K, best_labels, cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 10, 1.0), 3, cv::KMEANS_PP_CENTERS, centers);
 
     regions.clear();
@@ -460,13 +460,16 @@ namespace vision
       regions[cluster_index].addColor(color_palette[i]);
     }
 
-//    regions[0].print();
-//    regions[1].print();
+    //add more leeway
+    for(unsigned int i = 0; i < regions.size(); i++)
+    {
+      regions[i].expand(10, 5, 5);
+    }
   }
 
   void thresholdImage(cv::Mat mat, std::vector<ColorRegion> regions, cv::Mat& thresholded)
   {
-    thresholded = cv::Mat(mat.rows, mat.cols, CV_8U, cv::Scalar(0));
+    thresholded = cv::Mat(mat.rows, mat.cols, CV_8U, cv::Scalar(255));
     for(unsigned int i = 0; i < mat.rows * mat.cols; i++)
     {
       cv::Vec3b color = mat.at<cv::Vec3b>(i);
@@ -474,7 +477,7 @@ namespace vision
       {
         if(regions[j].contains(color))
         {
-          thresholded.at<unsigned char>(i) = 255;
+          thresholded.at<unsigned char>(i) = 0;
           break;
         }
       }
@@ -511,11 +514,11 @@ namespace vision
     cv::Mat rgb_mat = cv::cvarrToMat(cv_image);
 
     cv::Mat bgr_mat, hsv_mat, rgb_mat_blur;
-    cv::GaussianBlur(rgb_mat, rgb_mat_blur, cv::Size(5, 5), 0, 0);
+//    cv::GaussianBlur(rgb_mat, rgb_mat_blur, cv::Size(5, 5), 0, 0);
 //    cv::pyrDown(rgb_mat, rgb_mat_blur);
 //    cv::pyrDown(rgb_mat_blur, rgb_mat_blur);
-    cvtColor(rgb_mat_blur, hsv_mat, CV_RGB2HSV);
-    cvtColor(rgb_mat_blur, bgr_mat, CV_RGB2BGR);
+    cvtColor(rgb_mat, hsv_mat, CV_RGB2HSV);
+    cvtColor(rgb_mat, bgr_mat, CV_RGB2BGR);
 
     cv::vector<cv::Point> contour; //TODO: generate the contour from the parameters
     contour.push_back(cv::Point(0.375 * hsv_mat.cols, hsv_mat.rows));
@@ -532,13 +535,15 @@ namespace vision
     std::vector<ColorRegion> regions;
     findColorHeuristic(hsv_mat, contour, regions);
 
-    cv::Mat hsv_mat_down;
+//    cv::Mat hsv_mat_down;
 //    cv::pyrDown(hsv_mat, hsv_mat_down);
 
     cv::Mat thresholded;
     thresholdImage(hsv_mat, regions, thresholded);
 //    cv::pyrUp(thresholded, thresholded);
 //    cv::pyrUp(thresholded, thresholded);
+
+//    cv::erode(thresholded, thresholded, cv::Mat(), cv::Point(-1, -1), 2, 1, 1);
 
     cv::namedWindow("Raw", 0);
     cv::imshow("Raw", bgr_mat);
