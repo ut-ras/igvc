@@ -380,49 +380,6 @@ namespace vision
     return true;
   }
 
-  void findRegionsKMeans(IplImage* cv_img)
-  {
-//    int pixel_index = 0;
-//    cv::Mat p = cv::Mat::zeros(cv_img->width * cv_img->height, 5, CV_32F);
-//    for(int y = 0; y < cv_img->height; y++)
-//    {
-//      for(int x = 0; x < cv_img->width; x++)
-//      {
-//        CvScalar color = cvGet2D(cv_img, y, x);
-//        p[pixel_index][0] = (float) x / cv_img->width;
-//        p[pixel_index][1] = (float) y / cv_img->height;
-//        p[pixel_index][2] = (float) color.val[0] / 255.0f; //verify that the image is rgb
-//        p[pixel_index][3] = (float) color.val[1] / 255.0f;
-//        p[pixel_index][4] = (float) color.val[2] / 255.0f;
-//      }
-//    }
-//
-//    cv::Mat bestLabels, centers, clustered;
-//    int K = 8;
-//    cv::kmeans(p, K, bestLabels, cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 10, 1.0), 3, cv::KMEANS_PP_CENTERS, centers);
-//
-//    int colors[K];
-//    for(int i = 0; i < K; i++)
-//    {
-//      colors[i] = 255 / (i + 1);
-//    }
-//
-//    clustered = cv::Mat(cv_img->height, cv_img->width, CV_8U);
-//    for(int y = 0; y < cv_img->height; y++)
-//    {
-//      for(int x = 0; x < cv_img->width; x++)
-//      {
-//        int index = y * cv_img->width + x;
-//        int cluster_index = bestLabels[index];
-//        int color = colors[cluster_index];
-//        clustered[y][x] = color;
-//      }
-//    }
-//
-//    imshow("clustered", clustered);
-//    cv::waitKey();
-  }
-
   void drawRegion(cv::Mat mat, cv::vector<cv::Point> contour, CvScalar line_color)
   {
     for(unsigned int i = 0; i < contour.size(); i++)
@@ -431,9 +388,8 @@ namespace vision
     }
   }
 
-  void findColorHeuristic(cv::Mat mat, cv::vector<cv::Point> contour, cv::Mat& color_space, ColorRegion& region)
+  void findColorHeuristic(cv::Mat mat, cv::vector<cv::Point> contour, std::vector<ColorRegion>& regions)
   {
-//    std::cerr << "wat" << std::endl;
     //find roi
     unsigned int min_x = std::numeric_limits<unsigned int>::max();
     unsigned int min_y = std::numeric_limits<unsigned int>::max();
@@ -459,113 +415,68 @@ namespace vision
       }
     }
 
-//    std::cerr << "wati" << std::endl;
-
     //generate mask
     cv::Mat mask(mat.rows, mat.cols, CV_8U, cv::Scalar(0));
-//    std::cerr << "watf" <</ contour.size() << &contour[0] << std::endl;
-//    cv::fillConvexPoly(mask, &contour[0], 1, cv::Scalar(255));
 
     const cv::Point* contours[1] = {&contour[0]};
     int contours_n[1] = {contour.size()};
 
     cv::fillPoly(mask, contours, contours_n, 1, cv::Scalar(255));
-    //invalid conversion from ‘cv::Point** {aka cv::Point_<int>**}’
-    //                   to ‘const Point** {aka const cv::Point_<int>**}
 
-//    std::cerr << "wato" << std::endl;
-
-    //look through all the pixels in the polygon
-    std::vector<CvScalar> colors;
-    unsigned int min_h = std::numeric_limits<unsigned int>::max();
-    unsigned int min_s = std::numeric_limits<unsigned int>::max();
-    unsigned int min_v = std::numeric_limits<unsigned int>::max();
-    unsigned int max_h = -std::numeric_limits<unsigned int>::max();
-    unsigned int max_s = -std::numeric_limits<unsigned int>::max();
-    unsigned int max_v = -std::numeric_limits<unsigned int>::max();
+    //gather all the pixels in the polygon
+    std::vector<cv::Vec3b> color_palette;
     for(unsigned int y = min_y; y <= max_y; y++)
     {
       for(unsigned int x = min_x; x <= max_x; x++)
       {
-//        std::cerr << "o\n";
-//        CvScalar mask_color = cvGet2D(&mask, y, x);
         unsigned char val = mask.at<unsigned char>(y, x); //
         if(val > 0)
         {
-//          std::cerr << "m\n";
-//          CvScalar color = cvGet2D(&mat, y, x);
           cv::Vec3b color = mat.at<cv::Vec3b>(y, x);
-          colors.push_back(color);
-          if(color.val[0] < min_h)
-          {
-            min_h = color.val[0];
-          }
-          if(color.val[1] < min_s)
-          {
-            min_s = color.val[1];
-          }
-          if(color.val[2] < min_v)
-          {
-            min_v = color.val[2];
-          }
-          if(color.val[0] > max_h)
-          {
-            max_h = color.val[0];
-          }
-          if(color.val[1] > max_s)
-          {
-            max_s = color.val[1];
-          }
-          if(color.val[2] > max_v)
-          {
-            max_v = color.val[2];
-          }
+          color_palette.push_back(color);
         }
       }
     }
-    //TODO: cluster into many smaller ranges to increase identification fidelity
 
-    //make color space image for debugging
-    long num_colors = (max_h - min_h) * (max_s - min_s) * (max_v - min_v);
-    std::cerr << num_colors << " colors\n";
-    long side = ceil(sqrt(num_colors)) + 1;
-    color_space = cv::Mat(side, side, CV_8UC3, cv::Scalar(0, 0, 0));
-    std::cerr << "size: " << color_space.total() << std::endl;
+    //cluster into many smaller ranges to increase identification fidelity
+    cv::Mat p = cv::Mat::zeros(color_palette.size(), 3, CV_32F);
+    for(int i = 0; i < color_palette.size(); i++)
+    {
+      p.at<float>(i, 0) = (float) color_palette[i].val[0] / 255.0f;
+      p.at<float>(i, 1) = (float) color_palette[i].val[1] / 255.0f;
+      p.at<float>(i, 2) = (float) color_palette[i].val[2] / 255.0f;
+    }
 
-    std::cerr << "h:[" << min_h << "," << max_h << "]," << "s:[" << min_s << "," << max_s << "]," << "v:[" << min_v << "," << max_v << "]\n";
+    cv::Mat best_labels, centers, clustered;
+    int K = 20; //m_num_color_regions;
+    cv::kmeans(p, K, best_labels, cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 10, 1.0), 3, cv::KMEANS_PP_CENTERS, centers);
 
-    region.min.val[0] = min_h;
-    region.min.val[1] = min_s;
-    region.min.val[2] = min_v;
-    region.max.val[0] = max_h;
-    region.max.val[1] = max_s;
-    region.max.val[2] = max_v;
+    regions.clear();
+    regions.resize(K);
+    for(int i = 0; i < color_palette.size(); i++)
+    {
+      int cluster_index = best_labels.at<int>(0, i);
+//      std::cerr << "Adding color (" << (int)color_palette[i].val[0] << ", " << (int)color_palette[i].val[1] << ", " << (int)color_palette[i].val[2] << ") to cluster " << cluster_index << std::endl;
+      regions[cluster_index].addColor(color_palette[i]);
+    }
 
-//    long idx = 0;
-//    for(unsigned int h = min_h; h < max_h; h++)
-//    {
-//      for(unsigned int s = min_s; s < max_s; s++)
-//      {
-//        for(unsigned int v = min_v; v < max_v; v++)
-//        {
-//          color_space.data[idx + 0] = h;
-//          color_space.data[idx + 1] = s;
-//          color_space.data[idx + 2] = v;
-//          idx += 3;
-//        }
-//      }
-//    }
+//    regions[0].print();
+//    regions[1].print();
   }
 
-  void thresholdImage(cv::Mat mat, ColorRegion region, cv::Mat& thresholded)
+  void thresholdImage(cv::Mat mat, std::vector<ColorRegion> regions, cv::Mat& thresholded)
   {
     thresholded = cv::Mat(mat.rows, mat.cols, CV_8U, cv::Scalar(0));
-    for(unsigned int i = 0; i < mat.rows*mat.cols; i++)
+    for(unsigned int i = 0; i < mat.rows * mat.cols; i++)
     {
       cv::Vec3b color = mat.at<cv::Vec3b>(i);
-      if(region.isWithin(color))
+      for(unsigned int j = 0; j < regions.size(); j++)
       {
-        thresholded.at<unsigned char>(i) = 255;
+        if(regions[j].contains(color))
+        {
+          thresholded.at<unsigned char>(i) = 255;
+          break;
+        }
       }
     }
   }
@@ -599,9 +510,12 @@ namespace vision
     IplImage* cv_image = new IplImage(bridge_img->image);
     cv::Mat rgb_mat = cv::cvarrToMat(cv_image);
 
-    cv::Mat bgr_mat, hsv_mat;
-    cvtColor(rgb_mat, hsv_mat, CV_RGB2HSV);
-    cvtColor(rgb_mat, bgr_mat, CV_RGB2BGR);
+    cv::Mat bgr_mat, hsv_mat, rgb_mat_blur;
+    cv::GaussianBlur(rgb_mat, rgb_mat_blur, cv::Size(5, 5), 0, 0);
+//    cv::pyrDown(rgb_mat, rgb_mat_blur);
+//    cv::pyrDown(rgb_mat_blur, rgb_mat_blur);
+    cvtColor(rgb_mat_blur, hsv_mat, CV_RGB2HSV);
+    cvtColor(rgb_mat_blur, bgr_mat, CV_RGB2BGR);
 
     cv::vector<cv::Point> contour; //TODO: generate the contour from the parameters
     contour.push_back(cv::Point(0.375 * hsv_mat.cols, hsv_mat.rows));
@@ -615,22 +529,19 @@ namespace vision
     line_color.val[2] = 255;
     drawRegion(bgr_mat, contour, line_color);
 
-    cv::Mat color_space;
-    ColorRegion region;
-    findColorHeuristic(hsv_mat, contour, color_space, region);
-    cvtColor(color_space, color_space, CV_HSV2BGR);
+    std::vector<ColorRegion> regions;
+    findColorHeuristic(hsv_mat, contour, regions);
 
     cv::Mat hsv_mat_down;
-    cv::pyrDown(hsv_mat, hsv_mat_down);
+//    cv::pyrDown(hsv_mat, hsv_mat_down);
 
     cv::Mat thresholded;
-    thresholdImage(hsv_mat_down, region, thresholded);
-    cv::pyrUp(thresholded, thresholded);
+    thresholdImage(hsv_mat, regions, thresholded);
+//    cv::pyrUp(thresholded, thresholded);
+//    cv::pyrUp(thresholded, thresholded);
 
     cv::namedWindow("Raw", 0);
     cv::imshow("Raw", bgr_mat);
-    cv::namedWindow("Detected color space", 0);
-    cv::imshow("Detected color space", color_space);
     cv::namedWindow("Thresholded", 0);
     cv::imshow("Thresholded", thresholded);
     cv::waitKey(0);

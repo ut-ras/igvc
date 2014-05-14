@@ -33,10 +33,58 @@ namespace vision
   public:
     cv::Vec3b min;
     cv::Vec3b max;
+    bool initialized;
 
-    bool isWithin(cv::Vec3b color)
+    ColorRegion()
+    {
+      initialized = false;
+    }
+
+    void print()
+    {
+      std::cerr << "c0:[" << (int)min.val[0] << "," << (int)max.val[0] << "], c1:[" << (int)min.val[1] << "," << (int)max.val[1] << "], c2:[" << (int)min.val[2] << "," << (int)max.val[2] << "]\n";
+    }
+
+    bool contains(cv::Vec3b color)
     {
       return (color.val[0] >= min.val[0]) && (color.val[0] <= max.val[0]) && (color.val[1] >= min.val[1]) && (color.val[1] <= max.val[1]) && (color.val[2] >= min.val[2]) && (color.val[2] <= max.val[2]);
+    }
+
+    void addColor(cv::Vec3b color)
+    {
+      if(!initialized)
+      {
+        min = color;
+        max = color;
+        initialized = true;
+      }
+      else
+      {
+        if(color.val[0] < min.val[0])
+        {
+          min.val[0] = color.val[0];
+        }
+        if(color.val[1] < min.val[1])
+        {
+          min.val[1] = color.val[1];
+        }
+        if(color.val[2] < min.val[2])
+        {
+          min.val[2] = color.val[2];
+        }
+        if(color.val[0] > max.val[0])
+        {
+          max.val[0] = color.val[0];
+        }
+        if(color.val[1] > max.val[1])
+        {
+          max.val[1] = color.val[1];
+        }
+        if(color.val[2] > max.val[2])
+        {
+          max.val[2] = color.val[2];
+        }
+      }
     }
   };
 
