@@ -109,9 +109,6 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-add_executable(vision_node src/vision_node.cpp)
-target_link_libraries(vision_node ${catkin_LIBRARIES})
-
 add_executable(color_vision_node src/color_vision_node.cpp)
 target_link_libraries(color_vision_node ${catkin_LIBRARIES})
 

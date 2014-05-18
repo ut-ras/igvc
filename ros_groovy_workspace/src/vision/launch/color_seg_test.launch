@@ -1,19 +1,35 @@
 <launch>
-  <node pkg="vision" type="color_vision_node" name="vision" output="screen">
-  	<param name="x_min" value="0.0"/>
-  	<param name="x_max" value="5.0"/>
-  	<param name="y_min" value="-5"/>
-  	<param name="y_max" value="5"/>
+  <node pkg="vision" type="color_vision_node" name="vision_left" output="screen" ns="left_camera">
+    <param name="x_min" value="0.0"/>
+    <param name="x_max" value="4.0"/>
+    <param name="y_min" value="-4"/>
+    <param name="y_max" value="4"/>
     <param name="resolution" value="0.05"/>
     
-    <param name="white_threshold" value="60"/>
-    <param name="lightness_threshold" value="180"/>
-    <param name="match_threshold" value="2"/>
-  
-    <remap from="/camera_info_0" to="/left_camera/camera_info"/>
-    <remap from="/image_0" to="/left_camera/image_raw"/>
-    <remap from="/camera_info_1" to="/right_camera/camera_info"/>
-    <remap from="/image_1" to="/right_camera/image_raw"/>
+    <param name="num_color_regions" value="6"/>
+    <param name="h_expansion" value="0"/>
+    <param name="s_expansion" value="0"/>
+    <param name="v_expansion" value="0"/>
+    
+    <param name="std_dev_factor" value="2.5"/>
+    
+    <param name="publish_debug_images" value="false"/>
   </node>
-
+  
+  <node pkg="vision" type="color_vision_node" name="vision_right" output="screen" ns="right_camera">
+    <param name="x_min" value="0.0"/>
+    <param name="x_max" value="4.0"/>
+    <param name="y_min" value="-4"/>
+    <param name="y_max" value="4"/>
+    <param name="resolution" value="0.05"/>
+    
+    <param name="num_color_regions" value="6"/>
+    <param name="h_expansion" value="0"/>
+    <param name="s_expansion" value="0"/>
+    <param name="v_expansion" value="0"/>
+    
+    <param name="std_dev_factor" value="2.5"/>
+    
+    <param name="publish_debug_images" value="false"/>
+  </node>
 </launch>

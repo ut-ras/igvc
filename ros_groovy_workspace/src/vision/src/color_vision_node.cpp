@@ -3,18 +3,10 @@
 namespace vision
 {
   ColorVisionNode::ColorVisionNode(const ros::NodeHandle& nh) :
-      m_nh(nh)
+      m_nh(nh), m_tf_listener(ros::Duration(30.0))
   {
     m_nh.param("loop_rate", m_loop_rate, 10.0);
-    m_nh.param("white_threshold", m_white_threshold, 10);
-    m_nh.param("lightness_threshold", m_lightness_threshold, 180);
     m_nh.param("base_frame_id", m_base_frame_id, std::string("/base_link"));
-    m_nh.param("num_cameras", m_num_cameras, 2);
-    m_nh.param("max_image_time_lag", m_max_image_time_lag, 0.1);
-    m_nh.param("match_threshold", m_match_threshold, 10.0);
-
-    m_ground_cloud_pub = m_nh.advertise<sensor_msgs::PointCloud2>("/ground", 1, true);
-    m_obstacle_cloud_pub = m_nh.advertise<sensor_msgs::PointCloud2>("/obstacles", 1, true);
 
     m_nh.param("resolution", m_resolution, 0.05);
     m_nh.param("x_min", m_x_min, 0.0);
@@ -22,38 +14,46 @@ namespace vision
     m_nh.param("y_min", m_y_min, -0.75);
     m_nh.param("y_max", m_y_max, 0.75);
 
-    m_nh.param("sample_resolution", m_sample_resolution, 0.01);
     m_nh.param("sample_x_min", m_sample_x_min, 0.0);
-    m_nh.param("sample_x_max", m_sample_x_max, 2.0);
-    m_nh.param("sample_y_min", m_sample_y_min, -1.0);
-    m_nh.param("sample_y_max", m_sample_y_max, 1.0);
-    m_nh.param("sample_period", m_sample_period, 2.0);
+    m_nh.param("sample_x_max", m_sample_x_max, 0.5);
+    m_nh.param("sample_y_min", m_sample_y_min, -0.5);
+    m_nh.param("sample_y_max", m_sample_y_max, 0.5);
+    m_nh.param("sample_period", m_sample_period, 1.0);
 
-    generateGroundGrid(m_resolution, m_x_min, m_x_max, m_y_min, m_y_max, m_ground_grid);
-    generateGroundGrid(m_sample_resolution, m_sample_x_min, m_sample_x_max, m_sample_y_min, m_sample_y_max, m_sample_grid);
+    m_nh.param("std_dev_factor", m_std_dev_factor, 2.5);
+    m_nh.param("num_color_regions", m_num_color_regions, 50);
+    m_nh.param("h_expansion", m_h_expansion, 5);
+    m_nh.param("s_expansion", m_s_expansion, 5);
+    m_nh.param("v_expansion", m_v_expansion, 5);
+
+    m_nh.param("publish_debug_images", m_publish_debug_images, true);
+
+    int subscriber_queue_size = 1;
+    m_nh.param("subscriber_queue_size", subscriber_queue_size, 1);
+
+    generateGroundGrid();
+    generateSampleRegion();
 
     m_have_clouds = false;
+    m_image_coordinate_lists_initialized = false;
 
-    m_image_subs.resize(m_num_cameras);
-    for(unsigned int i = 0; i < m_num_cameras; i++)
+    ros::NodeHandle ns_nh;
+    sensor_msgs::CameraInfoConstPtr camera_info_ptr;
+    while(!camera_info_ptr && ros::ok())
     {
-      std::stringstream image_topic, info_topic, frame;
-      image_topic << "/image_" << i;
-      info_topic << "/camera_info_" << i;
+      camera_info_ptr = ros::topic::waitForMessage<sensor_msgs::CameraInfo>("camera_info", ns_nh, ros::Duration(1.0));
+      ROS_WARN_THROTTLE(1.0, "Waiting for camera info");
+    }
+    m_cam_model.fromCameraInfo(camera_info_ptr);
 
-      sensor_msgs::CameraInfoConstPtr camera_info_ptr;
-      while(!camera_info_ptr && ros::ok())
-      {
-        camera_info_ptr = ros::topic::waitForMessage<sensor_msgs::CameraInfo>(info_topic.str(), m_nh, ros::Duration(0.1));
-        ROS_WARN_THROTTLE(1.0, "Waiting for camera #%d's info", i);
-      }
-      image_geometry::PinholeCameraModel model;
-      model.fromCameraInfo(camera_info_ptr);
-      m_cam_models.push_back(model);
+    m_ground_cloud_pub = ns_nh.advertise<sensor_msgs::PointCloud2>("ground", 1, true);
+    m_obstacle_cloud_pub = ns_nh.advertise<sensor_msgs::PointCloud2>("obstacles", 1, true);
+    m_image_sub = ns_nh.subscribe<sensor_msgs::Image>("image_raw", subscriber_queue_size, boost::bind(&ColorVisionNode::imageCallback, this, _1));
 
-      ros::SubscribeOptions input_options = ros::SubscribeOptions::create<sensor_msgs::Image>(image_topic.str(), 1, boost::bind(&ColorVisionNode::imageCallback, this, _1, i), ros::VoidPtr(), m_nh.getCallbackQueue());
-      m_image_subs.at(i) = m_nh.subscribe(input_options);
-      ROS_INFO_STREAM("Subscribed to " << m_image_subs.at(i).getTopic());
+    if(m_publish_debug_images)
+    {
+      m_sampled_region_pub = ns_nh.advertise<sensor_msgs::Image>("sampled_region", 1, true);
+      m_thresholded_image_pub = ns_nh.advertise<sensor_msgs::Image>("thresholded_image", 1, true);
     }
 
     m_last_sample_time = ros::Time(0);
@@ -63,324 +63,98 @@ namespace vision
   {
   }
 
-  void ColorVisionNode::generateGroundGrid(double resolution, double x_min, double x_max, double y_min, double y_max, pcl::PointCloud<pcl::PointXYZ>& grid)
+  bool ColorVisionNode::transformCloudToCamera(std_msgs::Header image_header, pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<cv::Point>& image_points)
   {
-    grid.points.clear();
-    for(double x = x_min; x <= x_max; x += resolution)
+    cloud.header.stamp = image_header.stamp;
+    if(!m_tf_listener.waitForTransform(image_header.frame_id, cloud.header.frame_id, cloud.header.stamp, ros::Duration(0.05), ros::Duration(0.001)))
     {
-      for(double y = y_min; y <= y_max; y += resolution)
+      ROS_ERROR_STREAM_THROTTLE(1.0, "Transform between " << image_header.frame_id << " and " <<cloud.header.frame_id << " at time " << cloud.header.stamp << " failed!");
+      return false;
+    }
+    pcl::PointCloud<pcl::PointXYZ> camera_cloud;
+    pcl_ros::transformPointCloud(image_header.frame_id, cloud, camera_cloud, m_tf_listener);
+
+    image_points.resize(cloud.size());
+    for(unsigned int i = 0; i < cloud.size(); i++)
+    {
+      cv::Point3d cloud_point(camera_cloud.points[i].x, camera_cloud.points[i].y, camera_cloud.points[i].z);
+      image_points[i] = m_cam_model.project3dToPixel(cloud_point);
+    }
+
+    return true;
+  }
+
+  void ColorVisionNode::generateGroundGrid()
+  {
+    m_ground_grid.points.clear();
+    for(double x = m_x_min; x <= m_x_max; x += m_resolution)
+    {
+      for(double y = m_y_min; y <= m_y_max; y += m_resolution)
       {
         pcl::PointXYZ point;
         point.x = x;
         point.y = y;
         point.z = 0;
-        grid.points.push_back(point);
+        m_ground_grid.points.push_back(point);
       }
     }
-    grid.header.frame_id = m_base_frame_id;
-    grid.height = 1;
-    grid.width = grid.points.size();
+    m_ground_grid.header.frame_id = m_base_frame_id;
+    m_ground_grid.height = 1;
+    m_ground_grid.width = m_ground_grid.points.size();
   }
 
-  double ColorVisionNode::colorDistance(CvScalar a, CvScalar b)
+  void ColorVisionNode::generateSampleRegion()
   {
-    double dist = 0;
-    for(int i = 0; i < 4; i++)
-    {
-      double diff = a.val[i] - b.val[i];
-      dist += diff * diff;
-    }
-    return dist;
-  }
-
-  void ColorVisionNode::parseEncoding(CvScalar s, std::string encoding, unsigned char& red, unsigned char& green, unsigned char& blue)
-  {
-    if(!encoding.compare("rgb") || !encoding.compare("rgb8"))
-    {
-      red = s.val[0];
-      green = s.val[1];
-      blue = s.val[2];
-    }
-    else if(!encoding.compare("bgr") || !encoding.compare("bgr8"))
-    {
-      red = s.val[2];
-      green = s.val[1];
-      blue = s.val[0];
-    }
-    else if(!encoding.compare("mono") || !encoding.compare("mono8"))
-    {
-      red = s.val[0];
-      green = s.val[0];
-      blue = s.val[0];
-    }
-    else
-    {
-      ROS_ERROR("Unknown image encoding: %s", encoding.c_str());
-    }
-  }
-
-  bool ColorVisionNode::transformGridToCameras(std::vector<sensor_msgs::Image>& images, pcl::PointCloud<pcl::PointXYZ> grid, std::vector<pcl::PointCloud<pcl::PointXYZ> >& clouds)
-  {
-    for(unsigned int i = 0; i < images.size(); i++)
-    {
-      grid.header.stamp = images[i].header.stamp;
-      if(!m_tf_listener.waitForTransform(images[i].header.frame_id, grid.header.frame_id, grid.header.stamp, ros::Duration(0.05), ros::Duration(0.001)))
-      {
-        ROS_ERROR_THROTTLE(1.0, "Transform between %s and %s failed!", images[i].header.frame_id.c_str(), grid.header.frame_id.c_str());
-        return false;
-      }
-      pcl::PointCloud<pcl::PointXYZ> camera_cloud;
-      pcl_ros::transformPointCloud(images[i].header.frame_id, grid, camera_cloud, m_tf_listener);
-      clouds.push_back(camera_cloud);
-    }
-
-    return true;
-  }
-
-  bool ColorVisionNode::colorsMatch(std::vector<CvScalar> colors, std::vector<sensor_msgs::Image>& images, CvScalar& matched_color)
-  {
-    if(colors.size() == 1)
-    {
-      return false; //can't match with only one point
-    }
-
-    for(unsigned int i = 0; i < colors.size(); i++)
-    {
-      double distance = colorDistance(colors[i], colors[colors.size() - 1]); //only need to compare everything to the last point, since we're doing this on every push
-      if(distance < m_match_threshold)
-      {
-        unsigned char r1, b1, g1, r2, b2, g2;
-        parseEncoding(colors[i], images[i].encoding, r1, g1, b1);
-        parseEncoding(colors[colors.size() - 1], images[colors.size() - 1].encoding, r2, g2, b2);
-        matched_color.val[0] = (r1 + r2) / 2;
-        matched_color.val[1] = (g1 + g2) / 2;
-        matched_color.val[2] = (b1 + b2) / 2;
-        return true;
-      }
-    }
-
-    return false;
+    m_sample_boundaries.points.clear();
+    m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_min, m_sample_y_min, 0));
+    m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_min, m_sample_y_max, 0));
+    m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_max, m_sample_y_max, 0));
+    m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_max, m_sample_y_min, 0));
+    m_sample_boundaries.header.frame_id = m_base_frame_id;
+    m_sample_boundaries.height = 1;
+    m_sample_boundaries.width = m_sample_boundaries.points.size();
   }
 
   void ColorVisionNode::filterCloud(pcl::PointCloud<pcl::PointXYZ> in, pcl::PointCloud<pcl::PointXYZ>& out)
   {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr in_cloud_ptr = in.makeShared();
-
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-    kdtree.setInputCloud(in_cloud_ptr);
-
-    std::vector<int> pointIdxRadiusSearch;
-    std::vector<float> pointRadiusSquaredDistance;
-    double radius = m_resolution * 5.0;
-    for(unsigned int i = 0; i < in.size(); i++)
-    {
-      int num_neighbors = kdtree.radiusSearch(in.points[i], radius, pointIdxRadiusSearch, pointRadiusSquaredDistance);
-      if(num_neighbors > 5)
-      {
-        out.points.push_back(in.points[i]);
-      }
-    }
-    out.height = 1;
-    out.width = out.points.size();
-
-    //    pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
-    //    sor.setInputCloud(obstacle_cloud_ptr);
-    //    sor.setMeanK(3);
-    //    sor.setStddevMulThresh(1.0);
-    //    sor.filter(obstacle_cloud_filtered);
-
-    //    pcl::RadiusOutlierRemoval<pcl::PointXYZ> outrem;
-    //    outrem.setInputCloud(obstacle_cloud_ptr);
-    //    outrem.setRadiusSearch(3000.0);
-    //    outrem.setMinNeighborsInRadius(1);
-    //    outrem.filter(obstacle_cloud_filtered);
-
-    if(out.size() / in_cloud_ptr->size() < 0.5)
-    {
-      ROS_WARN_THROTTLE(1.0, "Filtered all but %d/%d (%g%%) of obstacle points", (int) out.size(), (int) in_cloud_ptr->size(), 100.0 * out.size() / in_cloud_ptr->size());
-    }
-  }
-
-  bool ColorVisionNode::sampleKnownGround(std::vector<sensor_msgs::Image>& images, std::vector<IplImage*> cv_images)
-  {
-    ROS_INFO("Sampling ground patch!");
-    std::vector<pcl::PointCloud<pcl::PointXYZ> > camera_clouds;
-    if(!transformGridToCameras(images, m_sample_grid, camera_clouds))
-    {
-      ROS_ERROR_THROTTLE(1.0, "Unable to transform cameras!");
-      return false; //bad transform!
-    }
-
-    //gather color information from all cameras
-    std::vector<pcl::PointCloud<pcl::PointXYZ> > colors; //x==r, y==g, z==b
-    colors.resize(camera_clouds.size());
-    for(unsigned int j = 0; j < camera_clouds.size(); j++)
-    {
-      for(unsigned int i = 0; i < m_sample_grid.size(); i++)
-      {
-        cv::Point3d cloud_point(camera_clouds[j].points[i].x, camera_clouds[j].points[i].y, camera_clouds[j].points[i].z);
-        cv::Point2d image_point = m_cam_models[j].project3dToPixel(cloud_point);
-
-        if(!(image_point.y < cv_images[j]->height && image_point.x < cv_images[j]->width && image_point.y >= 0 && image_point.x >= 0))
-        {
-          continue; //point is not on the image, so skip to the next one
-        }
-
-        CvScalar color = cvGet2D(cv_images[j], image_point.y, image_point.x);
-        pcl::PointXYZ color_point(color.val[0], color.val[1], color.val[2]);
-        colors[j].push_back(color_point);
-      }
-    }
-
-    //cluster color data to generate color regions
-    std::vector<int> pointIdxNKNSearch(m_num_color_regions);
-    std::vector<float> pointNKNSquaredDistance(m_num_color_regions);
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-
-    for(unsigned int i = 0; i < camera_clouds.size(); i++)
-    {
-      pcl::PointCloud<pcl::PointXYZ>::Ptr color_cloud_ptr = colors[i].makeShared();
-      kdtree.setInputCloud(color_cloud_ptr);
-      pcl::PointXYZ searchPoint;
-      if(!kdtree.nearestKSearch(searchPoint, m_num_color_regions, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
-      {
-        return false;
-      }
-//      for(size_t i = 0; i < pointIdxNKNSearch.size(); ++i)
-//        std::cout << "    " << cloud->points[pointIdxNKNSearch[i]].x << " " << cloud->points[pointIdxNKNSearch[i]].y << " " << cloud->points[pointIdxNKNSearch[i]].z << " (squared distance: " << pointNKNSquaredDistance[i] << ")" << std::endl;
-    }
-
-    m_last_sample_time = ros::Time::now();
-    return true;
-  }
-
-  void ColorVisionNode::processImages(std::vector<sensor_msgs::Image>& images)
-  {
-//    ROS_DEBUG("Processing image set");
-//    std::vector<pcl::PointCloud<pcl::PointXYZ> > camera_clouds;
-//    if(!transformGridToCameras(images, m_ground_grid, camera_clouds))
-//    {
-//      ROS_ERROR_THROTTLE(1.0, "Unable to transform cameras!");
-//      return; //bad transform!
-//    }
+//    pcl::PointCloud<pcl::PointXYZ>::Ptr in_cloud_ptr = in.makeShared();
 //
-//    std::vector<cv_bridge::CvImagePtr> imgs;
-//    std::vector<IplImage*> cv_images;
-//    for(unsigned int i = 0; i < images.size(); i++)
-//    {
-//      imgs.push_back(cv_bridge::toCvCopy(images[i], images[i].encoding));
-//      cv_images.push_back(new IplImage(imgs[i]->image));
-//    }
+//    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+//    kdtree.setInputCloud(in_cloud_ptr);
 //
-//    if((ros::Time::now() - m_last_sample_time) > ros::Duration(m_sample_period))
+//    std::vector<int> pointIdxRadiusSearch;
+//    std::vector<float> pointRadiusSquaredDistance;
+//    double radius = m_resolution * 5.0;
+//    for(unsigned int i = 0; i < in.size(); i++)
 //    {
-//      if(!sampleKnownGround(images, cv_images))
+//      int num_neighbors = kdtree.radiusSearch(in.points[i], radius, pointIdxRadiusSearch, pointRadiusSquaredDistance);
+//      if(num_neighbors > 5)
 //      {
-//        ROS_ERROR("Ground sampling failed!");
-//        return;
+//        out.points.push_back(in.points[i]);
 //      }
 //    }
+//    out.height = 1;
+//    out.width = out.points.size();
 //
-//    pcl::PointCloud<pcl::PointXYZRGB> obstacle_cloud;
-//    pcl::PointCloud<pcl::PointXYZ> obstacle_cloud_no_color;
-//    pcl::PointCloud<pcl::PointXYZRGB> ground_cloud;
-//    for(unsigned int i = 0; i < m_ground_grid.size(); i++)
+//    //    pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
+//    //    sor.setInputCloud(obstacle_cloud_ptr);
+//    //    sor.setMeanK(3);
+//    //    sor.setStddevMulThresh(1.0);
+//    //    sor.filter(obstacle_cloud_filtered);
+//
+//    //    pcl::RadiusOutlierRemoval<pcl::PointXYZ> outrem;
+//    //    outrem.setInputCloud(obstacle_cloud_ptr);
+//    //    outrem.setRadiusSearch(3000.0);
+//    //    outrem.setMinNeighborsInRadius(1);
+//    //    outrem.filter(obstacle_cloud_filtered);
+//
+//    if(out.size() / in_cloud_ptr->size() < 0.5)
 //    {
-//      int num_matches = 0;
-//      int num_image_hits = 0;
-//      std::vector<CvScalar> colors;
-//      for(unsigned int j = 0; j < camera_clouds.size(); j++)
-//      {
-//        //todo: match 9-cell (or param) instead of one pixel
-//        cv::Point3d cloud_point(camera_clouds[j].points[i].x, camera_clouds[j].points[i].y, camera_clouds[j].points[i].z);
-//        cv::Point2d image_point = m_cam_models[j].project3dToPixel(cloud_point);
-//
-//        if(!(image_point.y < cv_images[j]->height && image_point.x < cv_images[j]->width && image_point.y >= 0 && image_point.x >= 0))
-//        {
-//          continue; //point is not on the image, so skip to the next one
-//        }
-//        else
-//        {
-//          num_image_hits++;
-//        }
-//
-//        colors.push_back(cvGet2D(cv_images[j], image_point.y, image_point.x));
-//
-//        CvScalar matching_color;
-//        if(colorsMatch(colors, images, matching_color))
-//        {
-//          pcl::PointXYZRGB point = m_ground_grid[i];
-//          point.r = matching_color.val[0];
-//          point.g = matching_color.val[1];
-//          point.b = matching_color.val[2];
-//          ground_cloud.points.push_back(point);
-//          break;
-//        }
-//        else if(j == camera_clouds.size() - 1 && num_image_hits > 2) //the point was on more than one camera, but no match was found for any pair of cameras (the point must not be on the ground)
-//        {
-//          obstacle_cloud_no_color.points.push_back(m_ground_grid[i]);
-//        }
-//      }
+//      ROS_WARN_THROTTLE(1.0, "Filtered all but %d/%d (%g%%) of obstacle points", (int) out.size(), (int) in_cloud_ptr->size(), 100.0 * out.size() / in_cloud_ptr->size());
 //    }
-//
-//    ground_cloud.header = m_ground_grid.header;
-//    pcl::toROSMsg(ground_cloud, m_ground_cloud_msg);
-//
-//    //find white points on the ground and add them to the obstacle_cloud
-//    for(unsigned int i = 0; i < ground_cloud.size(); i++)
-//    {
-//      double lightness = ((ground_cloud.points[i].r + ground_cloud.points[i].g + ground_cloud.points[i].b) / 3);
-//      bool light_enough = (lightness > m_lightness_threshold);
-//      bool r_close = abs(ground_cloud.points[i].r - lightness) < m_white_threshold;
-//      bool g_close = abs(ground_cloud.points[i].g - lightness) < m_white_threshold;
-//      bool b_close = abs(ground_cloud.points[i].b - lightness) < m_white_threshold;
-//      if(light_enough && r_close && g_close && b_close)
-//      {
-//        obstacle_cloud.points.push_back(ground_cloud.points[i]);
-//        obstacle_cloud_no_color.points.push_back(pcl::PointXYZ(ground_cloud.points[i].x, ground_cloud.points[i].y, ground_cloud.points[i].z));
-//      }
-//    }
-//
-//    //remove outliers from obstacle cloud
-//    pcl::PointCloud<pcl::PointXYZ> obstacle_cloud_filtered;
-//    filterCloud(obstacle_cloud_no_color, obstacle_cloud_filtered);
-//
-//    obstacle_cloud_filtered.header = m_ground_grid.header;
-//    pcl::toROSMsg(obstacle_cloud_filtered, m_obstacle_cloud_msg);
-//
-//    m_have_clouds = true;
   }
 
-  bool ColorVisionNode::allImagesValid()
-  {
-    for(unsigned int i = 0; i < m_images_valid.size(); i++)
-    {
-      if(!m_images_valid[i])
-      {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  bool ColorVisionNode::imagesSynced()
-  {
-    for(unsigned int i = 0; i < m_images.size(); i++)
-    {
-      for(unsigned int j = i + 1; j < m_images.size(); j++)
-      {
-        ros::Duration time_diff = m_images[i].header.stamp - m_images[j].header.stamp;
-        if(time_diff.toSec() > m_max_image_time_lag)
-        {
-          ROS_WARN_THROTTLE(1.0, "Images not synchronized!");
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  void drawRegion(cv::Mat mat, cv::vector<cv::Point> contour, CvScalar line_color)
+  void ColorVisionNode::drawRegion(cv::Mat mat, cv::vector<cv::Point> contour, CvScalar line_color)
   {
     for(unsigned int i = 0; i < contour.size(); i++)
     {
@@ -388,7 +162,12 @@ namespace vision
     }
   }
 
-  void findColorHeuristic(cv::Mat mat, cv::vector<cv::Point> contour, std::vector<ColorRegion>& regions)
+  bool ColorVisionNode::isOnImage(cv::Mat mat, unsigned int x, unsigned int y)
+  {
+    return (x < mat.cols) && (y < mat.rows);
+  }
+
+  void ColorVisionNode::updateColorRegions(cv::Mat mat, cv::vector<cv::Point> contour)
   {
     //find roi
     unsigned int min_x = std::numeric_limits<unsigned int>::max();
@@ -424,136 +203,227 @@ namespace vision
     cv::fillPoly(mask, contours, contours_n, 1, cv::Scalar(255));
 
     //gather all the pixels in the polygon
-    std::vector<cv::Vec3b> color_palette;
+//    std::vector<cv::Vec3b> color_palette;
     for(unsigned int y = min_y; y <= max_y; y++)
     {
       for(unsigned int x = min_x; x <= max_x; x++)
       {
+        if(!isOnImage(mat, x, y))
+        {
+          ROS_WARN_ONCE("Some parts of the sample space are not on the image!");
+          continue;
+        }
+
         unsigned char val = mask.at<unsigned char>(y, x); //
         if(val > 0)
         {
-          cv::Vec3b color = mat.at<cv::Vec3b>(y, x);
-          color_palette.push_back(color);
+          cv::Vec3b rgb_color = mat.at<cv::Vec3b>(y, x);
+          cv::Vec3b hsv_color = rgb2hsv(rgb_color);
+//          color_palette.push_back(hsv_color); //TODO: add colors to a global set instead
+          m_color_palette.insert(hsv_color);
         }
       }
     }
 
     //cluster into many smaller ranges to increase identification fidelity
-    cv::Mat p = cv::Mat::zeros(color_palette.size(), 3, CV_32F);
-    for(int i = 0; i < color_palette.size(); i++)
-    {
-      p.at<float>(i, 0) = (float) color_palette[i].val[0] / 255.0f;
-      p.at<float>(i, 1) = (float) color_palette[i].val[1] / 255.0f;
-      p.at<float>(i, 2) = (float) color_palette[i].val[2] / 255.0f;
-    }
+    cv::Mat p = cv::Mat::zeros(m_color_palette.size(), 3, CV_32F);
 
+    int p_idx = 0;
+    for(ColorPaletteIterator iter = m_color_palette.begin(); iter != m_color_palette.end(); iter++)
+    {
+      p.at<float>(p_idx, 0) = (float) iter->val[0] / 255.0f;
+      p.at<float>(p_idx, 1) = (float) iter->val[1] / 255.0f;
+      p.at<float>(p_idx, 2) = (float) iter->val[2] / 255.0f;
+      p_idx++;
+    }
+//    for(int i = 0; i < m_color_palette.size(); i++)
+//    {
+//      p.at<float>(i, 0) = (float) m_color_palette[i].val[0] / 255.0f;
+//      p.at<float>(i, 1) = (float) m_color_palette[i].val[1] / 255.0f;
+//      p.at<float>(i, 2) = (float) m_color_palette[i].val[2] / 255.0f;
+//    }
+
+    //(re)cluster the color set into K groups
     cv::Mat best_labels, centers, clustered;
-    int K = 50; //m_num_color_regions;
+    int K = m_num_color_regions;
     cv::kmeans(p, K, best_labels, cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 10, 1.0), 3, cv::KMEANS_PP_CENTERS, centers);
 
-    regions.clear();
-    regions.resize(K);
-    for(int i = 0; i < color_palette.size(); i++)
+    m_color_regions.clear();
+    m_color_regions.resize(K);
+    p_idx = 0;
+    for(ColorPaletteIterator iter = m_color_palette.begin(); iter != m_color_palette.end(); iter++)
     {
-      int cluster_index = best_labels.at<int>(0, i);
-//      std::cerr << "Adding color (" << (int)color_palette[i].val[0] << ", " << (int)color_palette[i].val[1] << ", " << (int)color_palette[i].val[2] << ") to cluster " << cluster_index << std::endl;
-      regions[cluster_index].addColor(color_palette[i]);
+      int cluster_index = best_labels.at<int>(0, p_idx);
+      m_color_regions[cluster_index].addProbableColor(*iter, m_std_dev_factor);
+      p_idx++;
     }
+
+//    for(int i = 0; i < color_palette.size(); i++)
+//    {
+//      int cluster_index = best_labels.at<int>(0, i);
+//      m_color_regions[cluster_index].addColor(color_palette[i]);
+//    }
 
     //add more leeway
-    for(unsigned int i = 0; i < regions.size(); i++)
+    if(m_h_expansion > 0 || m_s_expansion > 0 || m_v_expansion > 0)
     {
-      regions[i].expand(10, 5, 5);
-    }
-  }
-
-  void thresholdImage(cv::Mat mat, std::vector<ColorRegion> regions, cv::Mat& thresholded)
-  {
-    thresholded = cv::Mat(mat.rows, mat.cols, CV_8U, cv::Scalar(255));
-    for(unsigned int i = 0; i < mat.rows * mat.cols; i++)
-    {
-      cv::Vec3b color = mat.at<cv::Vec3b>(i);
-      for(unsigned int j = 0; j < regions.size(); j++)
+      for(unsigned int i = 0; i < m_color_regions.size(); i++)
       {
-        if(regions[j].contains(color))
-        {
-          thresholded.at<unsigned char>(i) = 0;
-          break;
-        }
+        m_color_regions[i].expand(m_h_expansion, m_s_expansion, m_v_expansion);
       }
     }
   }
 
-  void ColorVisionNode::imageCallback(const sensor_msgs::ImageConstPtr& image, int idx)
+  bool ColorVisionNode::isGroundColor(cv::Vec3b color)
   {
-    if(idx > 0)
+    for(unsigned int j = 0; j < m_color_regions.size(); j++)
     {
-      return;
+      if(m_color_regions[j].contains(color))
+      {
+        return true;
+      }
     }
-//    if(m_images.size() < m_image_subs.size())
-//    {
-//      m_images.resize(m_image_subs.size());
-//      m_images_valid.resize(m_image_subs.size(), false);
-//    }
-//
-//    m_images[idx] = *image;
-//    m_images_valid[idx] = true;
-//
-//    ROS_DEBUG("Image %d get", idx);
-//
-//    if(allImagesValid() && imagesSynced())
-//    {
-//      processImages(m_images);
-//      m_images_valid.clear();
-//      m_images_valid.resize(m_image_subs.size(), false);
-//    }
+    return false;
+  }
+
+  void ColorVisionNode::thresholdImage(cv::Mat rgb_mat, std::vector<ColorRegion> regions, cv::Mat& thresholded)
+  {
+    cv::Mat hsv_mat;
+    cvtColor(rgb_mat, hsv_mat, CV_RGB2HSV);
+
+    thresholded = cv::Mat(hsv_mat.rows, hsv_mat.cols, CV_8U, cv::Scalar(255));
+    for(unsigned int i = 0; i < hsv_mat.rows * hsv_mat.cols; i++)
+    {
+      cv::Vec3b color = hsv_mat.at<cv::Vec3b>(i);
+      if(isGroundColor(color))
+      {
+        thresholded.at<unsigned char>(i) = 0;
+      }
+    }
+  }
+
+  cv::Vec3b ColorVisionNode::rgb2hsv(cv::Vec3b rgb)
+  {
+    unsigned char r = rgb.val[0];
+    unsigned char g = rgb.val[1];
+    unsigned char b = rgb.val[2];
+
+    unsigned char rgbMin, rgbMax, h, s, v;
+
+    rgbMin = r < g? (r < b? r : b) : (g < b? g : b);
+    rgbMax = r > g? (r > b? r : b) : (g > b? g : b);
+
+    v = rgbMax;
+    if(v == 0)
+    {
+      h = 0;
+      s = 0;
+      return cv::Vec3b(h, s, v);
+    }
+
+    s = 255 * long(rgbMax - rgbMin) / v;
+    if(s == 0)
+    {
+      h = 0;
+      return cv::Vec3b(h, s, v);
+    }
+
+    if(rgbMax == r)
+    {
+      h = 0 + 43 * (g - b) / (rgbMax - rgbMin);
+    }
+    else if(rgbMax == g)
+    {
+      h = 85 + 43 * (b - r) / (rgbMax - rgbMin);
+    }
+    else
+    {
+      h = 171 + 43 * (r - g) / (rgbMax - rgbMin);
+    }
+
+    return cv::Vec3b(h, s, v);
+  }
+
+  void ColorVisionNode::classifyGroundGrid(cv::Mat& rgb_mat, std_msgs::Header image_header)
+  {
+    pcl::PointCloud<pcl::PointXYZRGB> ground_cloud;
+    pcl::PointCloud<pcl::PointXYZRGB> obstacle_cloud;
+    for(unsigned int i = 0; i < m_ground_image_points.size(); i++)
+    {
+      if(!isOnImage(rgb_mat, m_ground_image_points[i].x, m_ground_image_points[i].y))
+      {
+        continue;
+      }
+      cv::Vec3b rgb_color = rgb_mat.at<cv::Vec3b>(m_ground_image_points[i].y, m_ground_image_points[i].x);
+      cv::Vec3b hsv_color = rgb2hsv(rgb_color);
+
+      pcl::PointXYZRGB point;
+      point.x = m_ground_grid[i].x;
+      point.y = m_ground_grid[i].y;
+      point.z = m_ground_grid[i].z;
+      point.r = rgb_color.val[0];
+      point.g = rgb_color.val[1];
+      point.b = rgb_color.val[2];
+      if(isGroundColor(hsv_color))
+      {
+        ground_cloud.points.push_back(point);
+      }
+      else
+      {
+        obstacle_cloud.points.push_back(point);
+      }
+    }
+
+    //TODO: filter?
+
+    sensor_msgs::PointCloud2 ground_cloud_msg;
+    pcl::toROSMsg(ground_cloud, ground_cloud_msg);
+    ground_cloud_msg.header.frame_id = m_ground_grid.header.frame_id;
+    ground_cloud_msg.header.stamp = image_header.stamp;
+    m_ground_cloud_pub.publish(ground_cloud_msg);
+
+    sensor_msgs::PointCloud2 obstacle_cloud_msg;
+    pcl::toROSMsg(obstacle_cloud, obstacle_cloud_msg);
+    obstacle_cloud_msg.header.frame_id = m_ground_grid.header.frame_id;
+    obstacle_cloud_msg.header.stamp = image_header.stamp;
+    m_obstacle_cloud_pub.publish(obstacle_cloud_msg);
+  }
+
+  void ColorVisionNode::imageCallback(const sensor_msgs::ImageConstPtr& image)
+  {
+    if(!m_image_coordinate_lists_initialized)
+    {
+      if(!transformCloudToCamera(image->header, m_ground_grid, m_ground_image_points) || !transformCloudToCamera(image->header, m_sample_boundaries, m_sample_area_contour))
+      {
+        return;
+      }
+      m_image_coordinate_lists_initialized = true;
+    }
 
     sensor_msgs::Image ros_img = *image;
     cv_bridge::CvImagePtr bridge_img = cv_bridge::toCvCopy(ros_img, ros_img.encoding);
     IplImage* cv_image = new IplImage(bridge_img->image);
     cv::Mat rgb_mat = cv::cvarrToMat(cv_image);
 
-    cv::Mat bgr_mat, hsv_mat, rgb_mat_blur;
-//    cv::GaussianBlur(rgb_mat, rgb_mat_blur, cv::Size(5, 5), 0, 0);
-//    cv::pyrDown(rgb_mat, rgb_mat_blur);
-//    cv::pyrDown(rgb_mat_blur, rgb_mat_blur);
-    cvtColor(rgb_mat, hsv_mat, CV_RGB2HSV);
-    cvtColor(rgb_mat, bgr_mat, CV_RGB2BGR);
+    if((ros::Time::now() - m_last_sample_time) > ros::Duration(m_sample_period))
+    {
+      updateColorRegions(rgb_mat, m_sample_area_contour);
+    }
 
-    cv::vector<cv::Point> contour; //TODO: generate the contour from the parameters
-    contour.push_back(cv::Point(0.375 * hsv_mat.cols, hsv_mat.rows));
-    contour.push_back(cv::Point(0.4375 * hsv_mat.cols, 0.75 * hsv_mat.rows));
-    contour.push_back(cv::Point((1 - 0.4375) * hsv_mat.cols, 0.75 * hsv_mat.rows));
-    contour.push_back(cv::Point((1 - 0.375) * hsv_mat.cols, hsv_mat.rows));
+    classifyGroundGrid(rgb_mat, image->header);
 
-    CvScalar line_color;
-    line_color.val[0] = 0;
-    line_color.val[1] = 255;
-    line_color.val[2] = 255;
-    drawRegion(bgr_mat, contour, line_color);
+    if(m_publish_debug_images)
+    {
+      CvScalar line_color;
+      line_color.val[0] = 255;
+      line_color.val[1] = 255;
+      line_color.val[2] = 0;
+      drawRegion(rgb_mat, m_sample_area_contour, line_color);
+      //TODO: actually publish
 
-    std::vector<ColorRegion> regions;
-    findColorHeuristic(hsv_mat, contour, regions);
-
-//    cv::Mat hsv_mat_down;
-//    cv::pyrDown(hsv_mat, hsv_mat_down);
-
-    cv::Mat thresholded;
-    thresholdImage(hsv_mat, regions, thresholded);
-//    cv::pyrUp(thresholded, thresholded);
-//    cv::pyrUp(thresholded, thresholded);
-
-//    cv::erode(thresholded, thresholded, cv::Mat(), cv::Point(-1, -1), 2, 1, 1);
-
-    cv::namedWindow("Raw", 0);
-    cv::imshow("Raw", bgr_mat);
-    cv::namedWindow("Thresholded", 0);
-    cv::imshow("Thresholded", thresholded);
-    cv::waitKey(0);
-
-//    findRegionsKMeans(cv_image);
-
-//    findColors(cv_image, region);
+      cv::Mat thresholded;
+      thresholdImage(rgb_mat, m_color_regions, thresholded);
+    }
   }
 
   void ColorVisionNode::spin()
@@ -562,18 +432,6 @@ namespace vision
     ros::Rate loop_rate(m_loop_rate);
     while(ros::ok())
     {
-      if(m_have_clouds)
-      {
-        m_ground_cloud_msg.header.stamp = ros::Time::now();
-        m_obstacle_cloud_msg.header.stamp = m_ground_cloud_msg.header.stamp;
-        m_ground_cloud_pub.publish(m_ground_cloud_msg);
-        m_obstacle_cloud_pub.publish(m_obstacle_cloud_msg);
-      }
-      else
-      {
-        ROS_WARN_THROTTLE(5.0, "No clouds!");
-      }
-
       ros::spinOnce();
       loop_rate.sleep();
     }
