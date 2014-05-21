@@ -5,7 +5,6 @@ project(igvc_sim)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  gazebo_ros
   roscpp
   urdf
   urdf_parser
@@ -88,7 +87,7 @@ include_directories(include ${SDF_INCLUDE_DIRS})
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES igvc_sim
-#  CATKIN_DEPENDS gazebo_ros roscpp urdf urdf_parser
+#  CATKIN_DEPENDS roscpp urdf urdf_parser
 #  DEPENDS system_lib
 )
 
