@@ -31,6 +31,7 @@ add_service_files(
   FILES
     Point.srv
     Waypoints.srv
+    GetZero.srv
 )
 
 ## Generate added messages and services with any dependencies listed here

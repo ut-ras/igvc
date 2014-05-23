@@ -3,6 +3,7 @@
 #include <nav_msgs/Odometry.h>
 #include <gps_trimble_driver/Point.h>
 #include <gps_trimble_driver/Waypoints.h>
+#include <gps_trimble_driver/GetZero.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseWithCovariance.h>
 #include <gps_common/conversions.h>
@@ -28,6 +29,13 @@ bool zero ( std_srvs::Empty::Request  &req,
 	    std_srvs::Empty::Response &res ) {
   TrustFix = false;
   return true; }
+
+bool get_zero_point ( gps_trimble_driver::GetZero::Request &req,
+		      gps_trimble_driver::GetZero::Response &res ) {
+  res.point.x=firstFix.point.x ;
+  res.point.y=firstFix.point.y ;
+  res.point.z=firstFix.point.z ;
+  return TrustFix; }
 
 void relativeizeOdometry ( const nav_msgs::OdometryConstPtr &msg ) {
   if ( TrustFix ) {
@@ -86,6 +94,7 @@ int main(int argc, char**argv, char**envp) {
   ros::ServiceServer Zero = node.advertiseService( "reset_zero_zero", &zero );
   ros::ServiceServer ZeroAtPoint = node.advertiseService( "set_zero_zero", &zero_at_point );
   ros::ServiceServer getWaypoints = node.advertiseService( "get_relative_waypoints", &get_relative_waypoints );
+  ros::ServiceServer getZeroZero = node.advertiseService( "get_zero_zero", &get_zero_point );
 
   while ( ros::ok() ) {
     ros::spinOnce();
