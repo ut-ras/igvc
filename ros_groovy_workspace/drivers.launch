@@ -22,7 +22,7 @@
 
   <node pkg="ucontroller_tilaunchpad" type="lm4fNode" name="lm4fNode"/>
 
-  <node pkg="imu_vn200" type="imu_vn200_driver.py" name="imu_vn200_driver.py"/>
+  <node pkg="imu_vn200" type="imu_vn200_driver.py" name="imu_vn200_driver"/>
 
   <include file="$(find gps_trimble_driver)/launch/launch.launch"/>
 
