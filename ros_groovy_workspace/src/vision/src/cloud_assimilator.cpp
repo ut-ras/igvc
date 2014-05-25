@@ -6,8 +6,8 @@ namespace vision
       m_nh(nh), m_tf_listener(ros::Duration(30.0))
   {
     m_nh.param("loop_rate", m_loop_rate, 10.0);
-    m_nh.param("neighborhood_radius", m_neighborhood_radius, 0.25);
-    m_nh.param("min_neighbors", m_min_neighbors, 5);
+    m_nh.param("neighborhood_radius", m_neighborhood_radius, 0.2);
+    m_nh.param("min_neighbors", m_min_neighbors, 3);
     m_nh.param("sensor_frame_id", m_sensor_frame_id, std::string("/base_link"));
 
     m_have_new_left_cloud = false;
@@ -16,7 +16,7 @@ namespace vision
     m_left_sub = m_nh.subscribe<sensor_msgs::PointCloud2>("/left_camera/obstacles", 10, boost::bind(&CloudAssimilator::leftCallback, this, _1));
     m_right_sub = m_nh.subscribe<sensor_msgs::PointCloud2>("/right_camera/obstacles", 10, boost::bind(&CloudAssimilator::rightCallback, this, _1));
 
-    m_cloud_pub = m_nh.advertise<sensor_msgs::PointCloud2>("/obstacles", 1);
+    m_cloud_pub = m_nh.advertise<sensor_msgs::PointCloud>("/obstacles", 1);
   }
 
   CloudAssimilator::~CloudAssimilator()
@@ -77,9 +77,11 @@ namespace vision
       ROS_WARN_THROTTLE(1.0, "%d/%d (%g%%) cloud points remaining after filtering", (int) filtered_cloud.size(), (int) combined_cloud_ptr->size(), 100.0 * filtered_cloud.size() / combined_cloud_ptr->size());
     }
 
-    sensor_msgs::PointCloud2 filtered_cloud_msg;
-    pcl::toROSMsg(filtered_cloud, filtered_cloud_msg);
-    filtered_cloud_msg.header = m_left_cloud.header;
+    sensor_msgs::PointCloud2 filtered_cloud_msg2;
+    pcl::toROSMsg(filtered_cloud, filtered_cloud_msg2);
+    filtered_cloud_msg2.header = m_left_cloud.header;
+    sensor_msgs::PointCloud filtered_cloud_msg;
+    convertPointCloud2ToPointCloud(filtered_cloud_msg2, filtered_cloud_msg);
     m_cloud_pub.publish(filtered_cloud_msg);
 
     m_have_new_left_cloud = false;
