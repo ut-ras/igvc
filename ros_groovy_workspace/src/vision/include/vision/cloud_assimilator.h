@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/PointCloud.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -14,6 +15,8 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <laser_geometry/laser_geometry.h>
 #include <string.h>
+
+#include "point_cloud_conversion.h"
 
 namespace vision
 {
@@ -34,7 +37,6 @@ namespace vision
     ros::Subscriber m_left_sub;
     ros::Subscriber m_right_sub;
     ros::Publisher m_cloud_pub;
-    ros::Publisher m_scan_pub;
 
     tf::TransformListener m_tf_listener;
 
