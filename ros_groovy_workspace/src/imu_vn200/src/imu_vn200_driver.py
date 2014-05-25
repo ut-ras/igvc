@@ -18,7 +18,8 @@ IMU_MSG_LEN = 12
 GPS_SOLN_MSG_LEN = 16
 INS_SOL_MSG_LEN = 16
 
-ser = serial.Serial(port = '/dev/VN-200', baudrate=921600)
+#ser = serial.Serial(port = '/dev/VN-200', baudrate=921600)
+ser = serial.Serial(port = '/dev/ttyUSB0', baudrate=921600)
 
 imu_pub = rospy.Publisher('vn_200_accel_gyro_compass', vn_200_accel_gyro_compass)
 gps_pub = rospy.Publisher('vn_200_gps_soln', vn_200_gps_soln)
@@ -249,7 +250,8 @@ def vn200():
     global READ_CMDS
     global ser
 
-    rospy.init_node('vn_200_imu')
+    #rospy.init_node('vn_200_imu')
+    rospy.init_node('imu_vn200')
     rospy.loginfo("VN-200 IMU listener is running on " + ser.portstr )
 
     ser.flush()
