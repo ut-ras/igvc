@@ -292,10 +292,10 @@ namespace gazebo
     odom_.pose.pose.position.y = odomPose[1];
     odom_.pose.pose.position.z = 0;
   
-    odom_.pose.pose.orientation = tf::createQuaternionMsgFromYaw(odomPose[1]);
+    odom_.pose.pose.orientation = tf::createQuaternionMsgFromYaw(odomPose[2]);
 
-    odom_.twist.twist.linear.x = odomVel[0] * cos(odomPose[1]);
-    odom_.twist.twist.linear.y = odomVel[0] * sin(odomPose[1]);
+    odom_.twist.twist.linear.x = odomVel[0] * cos(odomPose[2]);
+    odom_.twist.twist.linear.y = odomVel[0] * sin(odomPose[2]);
     odom_.twist.twist.angular.z = odomVel[2];
   
     odom_.header.stamp = ros::Time::now();

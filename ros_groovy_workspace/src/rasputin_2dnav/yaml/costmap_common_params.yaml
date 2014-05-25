@@ -1,10 +1,8 @@
-bstacle_range: 2.5
+obstacle_range: 2.5
 raytrace_range: 3.0
-#footprint: [[x0, y0], [x1, y1], ... [xn, yn]]
-robot_radius: 1.0 # TODO find footprint
-inflation_radius: 0.55
+footprint: [[0.5, 0.4], [0.5, -0.4], [-0.8, -0.4], [-0.8, 0.4]]
+#robot_radius: 1.0
+inflation_radius: 0.9
 
 observation_sources: point_cloud_sensor
-
-# TODO fill this out according to vision output
-point_cloud_sensor: {sensor_frame: frame_name, data_type: PointCloud, topic: topic_name, marking: true, clearing: true}
+point_cloud_sensor: {sensor_frame: base_link, data_type: PointCloud, topic: /obstacles, marking: true, clearing: true}
