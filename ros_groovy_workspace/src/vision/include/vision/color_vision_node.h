@@ -161,7 +161,18 @@ namespace vision
     double m_sample_x_max;
     double m_sample_y_min;
     double m_sample_y_max;
+    double m_initial_sample_x_min;
+    double m_initial_sample_x_max;
+    double m_initial_sample_y_min;
+    double m_initial_sample_y_max;
     int m_num_color_regions;
+
+    int m_known_bad_h_min;
+    int m_known_bad_s_min;
+    int m_known_bad_v_min;
+    int m_known_bad_h_max;
+    int m_known_bad_s_max;
+    int m_known_bad_v_max;
 
     double m_std_dev_factor;
 
@@ -169,13 +180,18 @@ namespace vision
     int m_s_expansion;
     int m_v_expansion;
 
+    bool m_first_sample;
+
     bool m_publish_debug_images;
 
     ros::Publisher m_ground_cloud_pub;
     ros::Publisher m_obstacle_cloud_pub;
 
+    ros::Publisher m_initially_sampled_region_pub;
     ros::Publisher m_sampled_region_pub;
     ros::Publisher m_thresholded_image_pub;
+
+    sensor_msgs::Image m_initial_sample_image;
 
     bool m_have_clouds;
     bool m_image_coordinate_lists_initialized;
@@ -207,13 +223,13 @@ namespace vision
 
     ros::Time m_last_sample_time;
 
-    void filterCloud(pcl::PointCloud<pcl::PointXYZ> in, pcl::PointCloud<pcl::PointXYZ>& out);
     void drawRegion(cv::Mat mat, cv::vector<cv::Point> contour, CvScalar line_color);
     void updateColorRegions(cv::Mat mat, cv::vector<cv::Point> contour);
     void thresholdImage(cv::Mat mat, std::vector<ColorRegion> regions, cv::Mat& thresholded);
     bool transformGridToCamera(std::vector<sensor_msgs::Image>& images, pcl::PointCloud<pcl::PointXYZ> grid, std::vector<pcl::PointCloud<pcl::PointXYZ> >& clouds);
     void generateGroundGrid();
-    void generateSampleRegion();
+    void generateSampleRegion(bool initial);
+    bool isKnownObstacleColor(cv::Vec3b color);
     bool isGroundColor(cv::Vec3b color);
     void classifyGroundGrid(cv::Mat& mat, std_msgs::Header image_header);
     bool transformCloudToCamera(std_msgs::Header image_header, pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<cv::Point>& image_points);
