@@ -9,6 +9,8 @@ namespace vision
     m_nh.param("neighborhood_radius", m_neighborhood_radius, 0.2);
     m_nh.param("min_neighbors", m_min_neighbors, 3);
     m_nh.param("sensor_frame_id", m_sensor_frame_id, std::string("/base_link"));
+    m_nh.param("fixed_frame_id", m_fixed_frame_id, std::string("/map"));
+    m_nh.param("sync_clouds", m_sync_clouds, true);
 
     m_have_new_left_cloud = false;
     m_have_new_right_cloud = false;
@@ -35,10 +37,32 @@ namespace vision
     m_have_new_right_cloud = true;
   }
 
+  bool CloudAssimilator::timeSyncCloud(std_msgs::Header header, pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud<pcl::PointXYZ>& synced_cloud)
+  {
+    if(!m_tf_listener.waitForTransform(header.frame_id, cloud.header.frame_id, header.stamp, ros::Duration(0.05), ros::Duration(0.001)))
+    {
+      ROS_ERROR_STREAM_THROTTLE(1.0, "Transform between " << header.frame_id << " and " << cloud.header.frame_id << " at time " << header.stamp << " failed!");
+      return false;
+    }
+    pcl_ros::transformPointCloud(header.frame_id, header.stamp, cloud, m_fixed_frame_id, synced_cloud, m_tf_listener);
+
+    return true;
+  }
+
   void CloudAssimilator::processClouds()
   {
     pcl::PointCloud<pcl::PointXYZ> combined_cloud = m_left_cloud;
-    combined_cloud += m_right_cloud;
+
+    if(m_sync_clouds)
+    {
+      pcl::PointCloud<pcl::PointXYZ> synced_right_cloud;
+      timeSyncCloud(m_left_cloud.header, m_right_cloud, synced_right_cloud);
+      combined_cloud += synced_right_cloud;
+    }
+    else
+    {
+      combined_cloud += m_right_cloud;
+    }
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr combined_cloud_ptr = combined_cloud.makeShared();
 
@@ -82,6 +106,7 @@ namespace vision
     filtered_cloud_msg2.header = m_left_cloud.header;
     sensor_msgs::PointCloud filtered_cloud_msg;
     convertPointCloud2ToPointCloud(filtered_cloud_msg2, filtered_cloud_msg);
+    filtered_cloud_msg.header = m_left_cloud.header;
     m_cloud_pub.publish(filtered_cloud_msg);
 
     m_have_new_left_cloud = false;

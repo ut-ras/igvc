@@ -33,6 +33,8 @@ namespace vision
     double m_neighborhood_radius;
     int m_min_neighbors;
     std::string m_sensor_frame_id;
+    std::string m_fixed_frame_id;
+    bool m_sync_clouds;
 
     ros::Subscriber m_left_sub;
     ros::Subscriber m_right_sub;
@@ -49,6 +51,7 @@ namespace vision
     ros::Time m_last_sample_time;
 
     void processClouds();
+    bool timeSyncCloud(std_msgs::Header header, pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud<pcl::PointXYZ>& synced_cloud);
 
     void leftCallback(const sensor_msgs::PointCloud2ConstPtr& image);
     void rightCallback(const sensor_msgs::PointCloud2ConstPtr& image);
