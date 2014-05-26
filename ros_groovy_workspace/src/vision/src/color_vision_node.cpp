@@ -11,14 +11,26 @@ namespace vision
     m_nh.param("resolution", m_resolution, 0.05);
     m_nh.param("x_min", m_x_min, 0.0);
     m_nh.param("x_max", m_x_max, 2.0);
-    m_nh.param("y_min", m_y_min, -0.75);
-    m_nh.param("y_max", m_y_max, 0.75);
+    m_nh.param("y_min", m_y_min, -1.0);
+    m_nh.param("y_max", m_y_max, 1.0);
 
     m_nh.param("sample_x_min", m_sample_x_min, 0.0);
-    m_nh.param("sample_x_max", m_sample_x_max, 0.5);
-    m_nh.param("sample_y_min", m_sample_y_min, -0.5);
-    m_nh.param("sample_y_max", m_sample_y_max, 0.5);
+    m_nh.param("sample_x_max", m_sample_x_max, 0.75);
+    m_nh.param("sample_y_min", m_sample_y_min, -0.4);
+    m_nh.param("sample_y_max", m_sample_y_max, 0.4);
     m_nh.param("sample_period", m_sample_period, 1.0);
+
+    m_nh.param("initial_sample_x_min", m_initial_sample_x_min, 0.0);
+    m_nh.param("initial_sample_x_max", m_initial_sample_x_max, 3.0);
+    m_nh.param("initial_sample_y_min", m_initial_sample_y_min, -0.6);
+    m_nh.param("initial_sample_y_max", m_initial_sample_y_max, 0.6);
+
+    m_nh.param("known_bad_h_min", m_known_bad_h_min, 0);
+    m_nh.param("known_bad_h_max", m_known_bad_h_max, 255);
+    m_nh.param("known_bad_s_min", m_known_bad_s_min, 0);
+    m_nh.param("known_bad_s_max", m_known_bad_s_max, 30);
+    m_nh.param("known_bad_v_min", m_known_bad_v_min, 225);
+    m_nh.param("known_bad_v_max", m_known_bad_v_max, 255);
 
     m_nh.param("std_dev_factor", m_std_dev_factor, 2.5);
     m_nh.param("num_color_regions", m_num_color_regions, 50);
@@ -32,7 +44,8 @@ namespace vision
     m_nh.param("subscriber_queue_size", subscriber_queue_size, 1);
 
     generateGroundGrid();
-    generateSampleRegion();
+    generateSampleRegion(true);
+    m_first_sample = true;
 
     m_have_clouds = false;
     m_image_coordinate_lists_initialized = false;
@@ -52,6 +65,7 @@ namespace vision
 
     if(m_publish_debug_images)
     {
+      m_initially_sampled_region_pub = ns_nh.advertise<sensor_msgs::Image>("initially_sampled_region", 1, true);
       m_sampled_region_pub = ns_nh.advertise<sensor_msgs::Image>("sampled_region", 1, true);
       m_thresholded_image_pub = ns_nh.advertise<sensor_msgs::Image>("thresholded_image", 1, true);
     }
@@ -63,12 +77,17 @@ namespace vision
   {
   }
 
+  bool ColorVisionNode::isKnownObstacleColor(cv::Vec3b color)
+  {
+    return (color.val[0] >= m_known_bad_h_min) && (color.val[0] <= m_known_bad_h_max) && (color.val[1] >= m_known_bad_s_min) && (color.val[1] <= m_known_bad_s_max) && (color.val[2] >= m_known_bad_v_min) && (color.val[2] <= m_known_bad_v_max);
+  }
+
   bool ColorVisionNode::transformCloudToCamera(std_msgs::Header image_header, pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<cv::Point>& image_points)
   {
     cloud.header.stamp = image_header.stamp;
     if(!m_tf_listener.waitForTransform(image_header.frame_id, cloud.header.frame_id, cloud.header.stamp, ros::Duration(0.05), ros::Duration(0.001)))
     {
-      ROS_ERROR_STREAM_THROTTLE(1.0, "Transform between " << image_header.frame_id << " and " <<cloud.header.frame_id << " at time " << cloud.header.stamp << " failed!");
+      ROS_ERROR_STREAM_THROTTLE(1.0, "Transform between " << image_header.frame_id << " and " << cloud.header.frame_id << " at time " << cloud.header.stamp << " failed!");
       return false;
     }
     pcl::PointCloud<pcl::PointXYZ> camera_cloud;
@@ -103,55 +122,29 @@ namespace vision
     m_ground_grid.width = m_ground_grid.points.size();
   }
 
-  void ColorVisionNode::generateSampleRegion()
+  void ColorVisionNode::generateSampleRegion(bool initial)
   {
     m_sample_boundaries.points.clear();
-    m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_min, m_sample_y_min, 0));
-    m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_min, m_sample_y_max, 0));
-    m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_max, m_sample_y_max, 0));
-    m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_max, m_sample_y_min, 0));
+    if(initial)
+    {
+      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_min, m_initial_sample_y_min, 0));
+      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_min, m_initial_sample_y_max, 0));
+      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_max, m_initial_sample_y_max, 0));
+      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_max, m_initial_sample_y_min, 0));
+    }
+    else
+    {
+      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_min, m_sample_y_min, 0));
+      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_min, m_sample_y_max, 0));
+      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_max, m_sample_y_max, 0));
+      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_max, m_sample_y_min, 0));
+    }
     m_sample_boundaries.header.frame_id = m_base_frame_id;
     m_sample_boundaries.height = 1;
     m_sample_boundaries.width = m_sample_boundaries.points.size();
-  }
 
-  void ColorVisionNode::filterCloud(pcl::PointCloud<pcl::PointXYZ> in, pcl::PointCloud<pcl::PointXYZ>& out)
-  {
-//    pcl::PointCloud<pcl::PointXYZ>::Ptr in_cloud_ptr = in.makeShared();
-//
-//    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-//    kdtree.setInputCloud(in_cloud_ptr);
-//
-//    std::vector<int> pointIdxRadiusSearch;
-//    std::vector<float> pointRadiusSquaredDistance;
-//    double radius = m_resolution * 5.0;
-//    for(unsigned int i = 0; i < in.size(); i++)
-//    {
-//      int num_neighbors = kdtree.radiusSearch(in.points[i], radius, pointIdxRadiusSearch, pointRadiusSquaredDistance);
-//      if(num_neighbors > 5)
-//      {
-//        out.points.push_back(in.points[i]);
-//      }
-//    }
-//    out.height = 1;
-//    out.width = out.points.size();
-//
-//    //    pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
-//    //    sor.setInputCloud(obstacle_cloud_ptr);
-//    //    sor.setMeanK(3);
-//    //    sor.setStddevMulThresh(1.0);
-//    //    sor.filter(obstacle_cloud_filtered);
-//
-//    //    pcl::RadiusOutlierRemoval<pcl::PointXYZ> outrem;
-//    //    outrem.setInputCloud(obstacle_cloud_ptr);
-//    //    outrem.setRadiusSearch(3000.0);
-//    //    outrem.setMinNeighborsInRadius(1);
-//    //    outrem.filter(obstacle_cloud_filtered);
-//
-//    if(out.size() / in_cloud_ptr->size() < 0.5)
-//    {
-//      ROS_WARN_THROTTLE(1.0, "Filtered all but %d/%d (%g%%) of obstacle points", (int) out.size(), (int) in_cloud_ptr->size(), 100.0 * out.size() / in_cloud_ptr->size());
-//    }
+    ROS_INFO("Setting sample bounds to (%g,%g) (%g,%g) (%g,%g) (%g,%g) (%s)", m_sample_boundaries.points[0].x, m_sample_boundaries.points[0].y, m_sample_boundaries.points[1].x, m_sample_boundaries.points[1].y, m_sample_boundaries.points[2].x, m_sample_boundaries.points[2].y, m_sample_boundaries.points[3].x, m_sample_boundaries.points[3].y,
+        initial? "true" : "false");
   }
 
   void ColorVisionNode::drawRegion(cv::Mat mat, cv::vector<cv::Point> contour, CvScalar line_color)
@@ -219,10 +212,22 @@ namespace vision
         {
           cv::Vec3b rgb_color = mat.at<cv::Vec3b>(y, x);
           cv::Vec3b hsv_color = rgb2hsv(rgb_color);
-//          color_palette.push_back(hsv_color); //TODO: add colors to a global set instead
-          m_color_palette.insert(hsv_color);
+          if(!isKnownObstacleColor(hsv_color)) //don't look at colors we know are bad
+          {
+            m_color_palette.insert(hsv_color);
+          }
+          else
+          {
+            ROS_WARN_THROTTLE(1.0, "Bad color excluded!");
+          }
         }
       }
+    }
+
+    if(m_color_palette.size() == 0)
+    {
+      ROS_WARN_THROTTLE(1.0, "Color palette is empty!");
+      return;
     }
 
     //cluster into many smaller ranges to increase identification fidelity
@@ -254,6 +259,7 @@ namespace vision
     for(ColorPaletteIterator iter = m_color_palette.begin(); iter != m_color_palette.end(); iter++)
     {
       int cluster_index = best_labels.at<int>(0, p_idx);
+
       m_color_regions[cluster_index].addProbableColor(*iter, m_std_dev_factor);
       p_idx++;
     }
@@ -371,10 +377,9 @@ namespace vision
       else
       {
         obstacle_cloud.points.push_back(point);
+//        std::cerr << (int) hsv_color.val[0] << ", " << (int)  hsv_color.val[1] << ", " << (int)  hsv_color.val[2] << std::endl;
       }
     }
-
-    //TODO: filter?
 
     sensor_msgs::PointCloud2 ground_cloud_msg;
     pcl::toROSMsg(ground_cloud, ground_cloud_msg);
@@ -391,6 +396,15 @@ namespace vision
 
   void ColorVisionNode::imageCallback(const sensor_msgs::ImageConstPtr& image)
   {
+//    if(m_first_sample)
+//    {
+//      ROS_INFO_ONCE("(first) Getting contour from (%g,%g) (%g,%g) (%g,%g) (%g,%g)", m_sample_boundaries.points[0].x, m_sample_boundaries.points[0].y, m_sample_boundaries.points[1].x, m_sample_boundaries.points[1].y, m_sample_boundaries.points[2].x, m_sample_boundaries.points[2].y, m_sample_boundaries.points[3].x, m_sample_boundaries.points[3].y);
+//    }
+//    else
+//    {
+//      ROS_INFO_ONCE("Getting contour from (%g,%g) (%g,%g) (%g,%g) (%g,%g)", m_sample_boundaries.points[0].x, m_sample_boundaries.points[0].y, m_sample_boundaries.points[1].x, m_sample_boundaries.points[1].y, m_sample_boundaries.points[2].x, m_sample_boundaries.points[2].y, m_sample_boundaries.points[3].x, m_sample_boundaries.points[3].y);
+//    }
+
     if(!m_image_coordinate_lists_initialized)
     {
       if(!transformCloudToCamera(image->header, m_ground_grid, m_ground_image_points) || !transformCloudToCamera(image->header, m_sample_boundaries, m_sample_area_contour))
@@ -402,8 +416,7 @@ namespace vision
 
     sensor_msgs::Image ros_img = *image;
     cv_bridge::CvImagePtr bridge_img = cv_bridge::toCvCopy(ros_img, ros_img.encoding);
-    IplImage* cv_image = new IplImage(bridge_img->image);
-    cv::Mat rgb_mat = cv::cvarrToMat(cv_image);
+    cv::Mat rgb_mat = bridge_img->image;
 
     if((ros::Time::now() - m_last_sample_time) > ros::Duration(m_sample_period))
     {
@@ -418,11 +431,28 @@ namespace vision
       line_color.val[0] = 255;
       line_color.val[1] = 255;
       line_color.val[2] = 0;
-      drawRegion(rgb_mat, m_sample_area_contour, line_color);
-      //TODO: actually publish
+      drawRegion(bridge_img->image, m_sample_area_contour, line_color);
 
-      cv::Mat thresholded;
-      thresholdImage(rgb_mat, m_color_regions, thresholded);
+      if(m_first_sample)
+      {
+//        ROS_INFO_ONCE("Contour points are (%d,%d) (%d,%d) (%d,%d) (%d,%d)", m_sample_area_contour[0].x, m_sample_area_contour[0].y, m_sample_area_contour[1].x, m_sample_area_contour[1].y, m_sample_area_contour[2].x, m_sample_area_contour[2].y, m_sample_area_contour[3].x, m_sample_area_contour[3].y);
+        m_initial_sample_image = *bridge_img->toImageMsg();
+      }
+      else
+      {
+//        ROS_INFO_ONCE("Contour points are (%d,%d) (%d,%d) (%d,%d) (%d,%d)", m_sample_area_contour[0].x, m_sample_area_contour[0].y, m_sample_area_contour[1].x, m_sample_area_contour[1].y, m_sample_area_contour[2].x, m_sample_area_contour[2].y, m_sample_area_contour[3].x, m_sample_area_contour[3].y);
+        m_sampled_region_pub.publish(bridge_img->toImageMsg());
+      }
+
+//      cv::Mat thresholded;
+//      thresholdImage(rgb_mat, m_color_regions, thresholded);
+    }
+
+    if(m_first_sample)
+    {
+      generateSampleRegion(false);
+      transformCloudToCamera(image->header, m_sample_boundaries, m_sample_area_contour);
+      m_first_sample = false;
     }
   }
 
@@ -432,6 +462,8 @@ namespace vision
     ros::Rate loop_rate(m_loop_rate);
     while(ros::ok())
     {
+      m_initial_sample_image.header.stamp = ros::Time::now();
+      m_initially_sampled_region_pub.publish(m_initial_sample_image);
       ros::spinOnce();
       loop_rate.sleep();
     }

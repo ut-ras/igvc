@@ -24,10 +24,10 @@
     <remap from="base_pose_ground_truth" to="/odom"/>
   </node>
     
-  <node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher">
+  <!--<node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher">
     <param name="publish_frequency" type="double" value="50.0" />
     <param name="tf_prefix" type="string" value="" />
-  </node>
+  </node>-->
   
   <param name="robot_description" textfile="$(find igvc_sim)/models/hal/model.urdf"/>
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
