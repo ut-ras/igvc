@@ -26,11 +26,11 @@ namespace vision
     m_nh.param("initial_sample_y_max", m_initial_sample_y_max, 0.6);
 
     m_nh.param("known_bad_h_min", m_known_bad_h_min, 0);
-    m_nh.param("known_bad_h_max", m_known_bad_h_max, 255);
+    m_nh.param("known_bad_h_max", m_known_bad_h_max, 0);
     m_nh.param("known_bad_s_min", m_known_bad_s_min, 0);
-    m_nh.param("known_bad_s_max", m_known_bad_s_max, 30);
-    m_nh.param("known_bad_v_min", m_known_bad_v_min, 225);
-    m_nh.param("known_bad_v_max", m_known_bad_v_max, 255);
+    m_nh.param("known_bad_s_max", m_known_bad_s_max, 0);
+    m_nh.param("known_bad_v_min", m_known_bad_v_min, 0);
+    m_nh.param("known_bad_v_max", m_known_bad_v_max, 0);
 
     m_nh.param("std_dev_factor", m_std_dev_factor, 2.5);
     m_nh.param("num_color_regions", m_num_color_regions, 50);
@@ -79,7 +79,7 @@ namespace vision
 
   bool ColorVisionNode::isKnownObstacleColor(cv::Vec3b color)
   {
-    return (color.val[0] >= m_known_bad_h_min) && (color.val[0] <= m_known_bad_h_max) && (color.val[1] >= m_known_bad_s_min) && (color.val[1] <= m_known_bad_s_max) && (color.val[2] >= m_known_bad_v_min) && (color.val[2] <= m_known_bad_v_max);
+    return (color.val[0] > m_known_bad_h_min) && (color.val[0] < m_known_bad_h_max) && (color.val[1] > m_known_bad_s_min) && (color.val[1] < m_known_bad_s_max) && (color.val[2] > m_known_bad_v_min) && (color.val[2] < m_known_bad_v_max);
   }
 
   bool ColorVisionNode::transformCloudToCamera(std_msgs::Header image_header, pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<cv::Point>& image_points)
