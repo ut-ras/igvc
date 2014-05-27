@@ -70,7 +70,7 @@ add_executable(relativeizeOdometry src/relativePosition.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(relativeizeOdometry gps_trimble_generate_messages_cpp)
+add_dependencies(relativeizeOdometry gps_trimble_generate_messages_cpp gps_trimble_generate_services_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(relativeizeOdometry
