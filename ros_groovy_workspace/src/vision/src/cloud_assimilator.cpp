@@ -11,6 +11,13 @@ namespace vision
     m_nh.param("sensor_frame_id", m_sensor_frame_id, std::string("/base_link"));
     m_nh.param("fixed_frame_id", m_fixed_frame_id, std::string("/map"));
     m_nh.param("sync_clouds", m_sync_clouds, true);
+    m_nh.param("double_filter", m_double_filter, true);
+
+    m_nh.param("output_laser_scan", m_output_laser_scan, true);
+    m_nh.param("angle_min", m_angle_min, -1.75);
+    m_nh.param("angle_max", m_angle_max, 1.75);
+    m_nh.param("angle_increment", m_angle_increment, 0.005);
+    m_nh.param("max_range", m_max_range, 10.0);
 
     m_have_new_left_cloud = false;
     m_have_new_right_cloud = false;
@@ -19,6 +26,7 @@ namespace vision
     m_right_sub = m_nh.subscribe<sensor_msgs::PointCloud2>("/right_camera/obstacles", 10, boost::bind(&CloudAssimilator::rightCallback, this, _1));
 
     m_cloud_pub = m_nh.advertise<sensor_msgs::PointCloud>("/obstacles", 1);
+    m_scan_pub = m_nh.advertise<sensor_msgs::LaserScan>("/scan", 1);
   }
 
   CloudAssimilator::~CloudAssimilator()
@@ -49,21 +57,53 @@ namespace vision
     return true;
   }
 
-  void CloudAssimilator::processClouds()
+  struct sort_angle
   {
-    pcl::PointCloud<pcl::PointXYZ> combined_cloud = m_left_cloud;
-
-    if(m_sync_clouds)
+    inline bool operator()(const std::pair<double, double>& left, const std::pair<double, double>& right)
     {
-      pcl::PointCloud<pcl::PointXYZ> synced_right_cloud;
-      timeSyncCloud(m_left_cloud.header, m_right_cloud, synced_right_cloud);
-      combined_cloud += synced_right_cloud;
+      return (left.first < right.first);
     }
-    else
-    {
-      combined_cloud += m_right_cloud;
-    }
+  };
 
+  void CloudAssimilator::pointCloudToLaserScan(sensor_msgs::PointCloud cloud, sensor_msgs::LaserScan& scan)
+  {
+    std::vector<std::pair<double, double> > full_scan;
+    for(unsigned int i = 0; i < cloud.points.size(); i++)
+    {
+      double angle = atan2(cloud.points[i].y, cloud.points[i].x);
+      double distance = sqrt(cloud.points[i].x * cloud.points[i].x + cloud.points[i].y * cloud.points[i].y);
+      full_scan.push_back(std::pair<double, double>(angle, distance));
+    }
+    std::sort(full_scan.begin(), full_scan.end(), sort_angle());
+
+    int num_bins = (m_angle_max - m_angle_min) / m_angle_increment;
+
+    scan.header = cloud.header;
+    scan.angle_min = m_angle_min;
+    scan.angle_max = m_angle_max;
+    scan.angle_increment = m_angle_increment;
+    scan.ranges.resize(num_bins, m_max_range);
+    scan.range_max = m_max_range;
+
+    int current_bin = 0;
+    for(unsigned int i = 0; i < full_scan.size(); i++)
+    {
+      double bin_change_threshold = m_angle_min + m_angle_increment * (current_bin + 0.5);
+      while(full_scan[i].first > bin_change_threshold)
+      {
+        current_bin++;
+        bin_change_threshold = m_angle_min + m_angle_increment * (current_bin + 1);
+      }
+
+      if(full_scan[i].second < scan.ranges[current_bin])
+      {
+        scan.ranges[current_bin] = full_scan[i].second;
+      }
+    }
+  }
+
+  void CloudAssimilator::filterCloud(pcl::PointCloud<pcl::PointXYZ>& combined_cloud, pcl::PointCloud<pcl::PointXYZ> filtered_cloud)
+  {
     pcl::PointCloud<pcl::PointXYZ>::Ptr combined_cloud_ptr = combined_cloud.makeShared();
 
     pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
@@ -72,7 +112,8 @@ namespace vision
     std::vector<int> pointIdxRadiusSearch;
     std::vector<float> pointRadiusSquaredDistance;
     double radius = m_neighborhood_radius;
-    pcl::PointCloud<pcl::PointXYZ> filtered_cloud;
+
+    filtered_cloud.points.clear();
     for(unsigned int i = 0; i < combined_cloud.size(); i++)
     {
       int num_neighbors = kdtree.radiusSearch(combined_cloud.points[i], radius, pointIdxRadiusSearch, pointRadiusSquaredDistance);
@@ -95,10 +136,35 @@ namespace vision
     //    outrem.setRadiusSearch(3000.0);
     //    outrem.setMinNeighborsInRadius(1);
     //    outrem.filter(obstacle_cloud_filtered);
+  }
 
-    if(filtered_cloud.size() / combined_cloud_ptr->size() < 0.5)
+  void CloudAssimilator::processClouds()
+  {
+    pcl::PointCloud<pcl::PointXYZ> combined_cloud = m_left_cloud;
+
+    if(m_sync_clouds)
     {
-      ROS_WARN_THROTTLE(1.0, "%d/%d (%g%%) cloud points remaining after filtering", (int) filtered_cloud.size(), (int) combined_cloud_ptr->size(), 100.0 * filtered_cloud.size() / combined_cloud_ptr->size());
+      pcl::PointCloud<pcl::PointXYZ> synced_right_cloud;
+      timeSyncCloud(m_left_cloud.header, m_right_cloud, synced_right_cloud);
+      combined_cloud += synced_right_cloud;
+    }
+    else
+    {
+      combined_cloud += m_right_cloud;
+    }
+
+    pcl::PointCloud<pcl::PointXYZ> filtered_cloud;
+    filterCloud(combined_cloud, filtered_cloud);
+    if(m_double_filter)
+    {
+      pcl::PointCloud<pcl::PointXYZ> double_filtered_cloud;
+      filterCloud(filtered_cloud, double_filtered_cloud);
+      filtered_cloud = double_filtered_cloud;
+    }
+
+    if((((double) filtered_cloud.size()) / ((double) combined_cloud.size())) < 0.5)
+    {
+      ROS_WARN_THROTTLE(1.0, "%d/%d (%g%%) cloud points remaining after filtering", (int) filtered_cloud.size(), (int) combined_cloud.size(), 100.0 * filtered_cloud.size() / combined_cloud.size());
     }
 
     sensor_msgs::PointCloud2 filtered_cloud_msg2;
@@ -108,6 +174,13 @@ namespace vision
     convertPointCloud2ToPointCloud(filtered_cloud_msg2, filtered_cloud_msg);
     filtered_cloud_msg.header = m_left_cloud.header;
     m_cloud_pub.publish(filtered_cloud_msg);
+
+    if(m_output_laser_scan)
+    {
+      sensor_msgs::LaserScan scan;
+      pointCloudToLaserScan(filtered_cloud_msg, scan);
+      m_scan_pub.publish(scan);
+    }
 
     m_have_new_left_cloud = false;
     m_have_new_right_cloud = false; //TODO: actually look at timestamps for approximate sync

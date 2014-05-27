@@ -4,5 +4,8 @@ footprint: [[0.75, 0.4], [0.75, -0.4], [-0.8, -0.4], [-0.8, 0.4]]
 #robot_radius: 1.0
 inflation_radius: 0.9
 
-observation_sources: point_cloud_sensor
-point_cloud_sensor: {sensor_frame: base_link, data_type: PointCloud, topic: /obstacles, marking: true, clearing: true}
+#observation_sources: point_cloud_sensor
+#point_cloud_sensor: {sensor_frame: base_link, data_type: PointCloud, topic: /obstacles, marking: true, clearing: true}
+
+observation_sources: laser_scan
+laser_scan: {sensor_frame: base_link, data_type: LaserScan, topic: /scan, marking: true, clearing: true}

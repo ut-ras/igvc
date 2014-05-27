@@ -218,7 +218,7 @@ namespace vision
           }
           else
           {
-            ROS_WARN_THROTTLE(1.0, "Bad color excluded!");
+            ROS_DEBUG_THROTTLE(1.0, "Bad color excluded!");
           }
         }
       }
