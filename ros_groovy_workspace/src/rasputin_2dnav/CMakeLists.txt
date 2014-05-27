@@ -7,7 +7,6 @@ project(rasputin_2dnav)
 find_package(catkin REQUIRED COMPONENTS
   ekf
   ucontroller_tilaunchpad
-  vision
 )
 
 ## System dependencies are found with CMake's conventions
@@ -82,7 +81,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES rasputin_2dnav
-#  CATKIN_DEPENDS ekf ucontroller_tilaunchpad vision
+#  CATKIN_DEPENDS ekf ucontroller_tilaunchpad
 #  DEPENDS system_lib
 )
 

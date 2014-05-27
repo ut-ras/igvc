@@ -42,10 +42,8 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>ekf</build_depend>
   <build_depend>ucontroller_tilaunchpad</build_depend>
-  <build_depend>vision</build_depend>
   <run_depend>ekf</run_depend>
   <run_depend>ucontroller_tilaunchpad</run_depend>
-  <run_depend>vision</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
