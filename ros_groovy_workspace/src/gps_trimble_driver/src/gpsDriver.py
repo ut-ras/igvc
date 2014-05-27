@@ -6,6 +6,7 @@
 
 import socket 
 import struct
+import time
 
 def gpsDriver( ip_address, port_number, callback ) :
     
@@ -35,6 +36,8 @@ def gpsDriver( ip_address, port_number, callback ) :
             record_data = trimble.recv( record_length )
             if record_type in typeJumpTable :
                 assert record_length == struct.calcsize(typeJumpTable[record_type][1])
+		time.sleep(.001)
+		#print( "type {0}, length {1}, got {2}".format(record_type, record_length, len(record_data)))
                 packetHash.update( { name : value for name, value in zip( typeJumpTable[record_type][0],
                                                                           struct.unpack_from( typeJumpTable[record_type][1], record_data ) ) } ) 
             else :
