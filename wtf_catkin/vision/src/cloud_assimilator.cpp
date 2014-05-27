@@ -102,7 +102,7 @@ namespace vision
     }
   }
 
-  void CloudAssimilator::filterCloud(pcl::PointCloud<pcl::PointXYZ>& combined_cloud, pcl::PointCloud<pcl::PointXYZ> filtered_cloud)
+  void CloudAssimilator::filterCloud(pcl::PointCloud<pcl::PointXYZ>& combined_cloud, pcl::PointCloud<pcl::PointXYZ>& filtered_cloud)
   {
     pcl::PointCloud<pcl::PointXYZ>::Ptr combined_cloud_ptr = combined_cloud.makeShared();
 
@@ -113,8 +113,10 @@ namespace vision
     std::vector<float> pointRadiusSquaredDistance;
     double radius = m_neighborhood_radius;
 
+//    ROS_INFO("Filtering based on %d neighbors in a %g radius", m_min_neighbors, m_neighborhood_radius);
+
     filtered_cloud.points.clear();
-    for(unsigned int i = 0; i < combined_cloud.size(); i++)
+    for(unsigned int i = 0; i < combined_cloud.points.size(); i++)
     {
       int num_neighbors = kdtree.radiusSearch(combined_cloud.points[i], radius, pointIdxRadiusSearch, pointRadiusSquaredDistance);
       if(num_neighbors > m_min_neighbors)
@@ -124,6 +126,12 @@ namespace vision
     }
     filtered_cloud.height = 1;
     filtered_cloud.width = filtered_cloud.points.size();
+
+//    double dx = combined_cloud.points[0].x - combined_cloud.points[1].x;
+//    double dy = combined_cloud.points[0].y - combined_cloud.points[1].y;
+//    double dz = combined_cloud.points[0].z - combined_cloud.points[1].z;
+//    double sanity_distance = sqrt(dx*dx+dy*dy+dz*dz);
+//    std::cerr << sanity_distance << std::endl;
 
     //    pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
     //    sor.setInputCloud(obstacle_cloud_ptr);
@@ -145,7 +153,12 @@ namespace vision
     if(m_sync_clouds)
     {
       pcl::PointCloud<pcl::PointXYZ> synced_right_cloud;
-      timeSyncCloud(m_left_cloud.header, m_right_cloud, synced_right_cloud);
+      if(!timeSyncCloud(m_left_cloud.header, m_right_cloud, synced_right_cloud))
+      {
+        m_have_new_left_cloud = false;
+        m_have_new_right_cloud = false;
+        return;
+      }
       combined_cloud += synced_right_cloud;
     }
     else
@@ -153,14 +166,20 @@ namespace vision
       combined_cloud += m_right_cloud;
     }
 
+    if(combined_cloud.points.size() == 0)
+    {
+      ROS_WARN("Input clouds had no points!");
+      return;
+    }
+
     pcl::PointCloud<pcl::PointXYZ> filtered_cloud;
     filterCloud(combined_cloud, filtered_cloud);
-    if(m_double_filter)
-    {
-      pcl::PointCloud<pcl::PointXYZ> double_filtered_cloud;
-      filterCloud(filtered_cloud, double_filtered_cloud);
-      filtered_cloud = double_filtered_cloud;
-    }
+//    if(m_double_filter && filtered_cloud.points.size() != 0)
+//    {
+//      pcl::PointCloud<pcl::PointXYZ> double_filtered_cloud;
+//      filterCloud(filtered_cloud, double_filtered_cloud);
+//      filtered_cloud = double_filtered_cloud;
+//    }
 
     if((((double) filtered_cloud.size()) / ((double) combined_cloud.size())) < 0.5)
     {
@@ -183,7 +202,7 @@ namespace vision
     }
 
     m_have_new_left_cloud = false;
-    m_have_new_right_cloud = false; //TODO: actually look at timestamps for approximate sync
+    m_have_new_right_cloud = false;
   }
 
   void CloudAssimilator::spin()

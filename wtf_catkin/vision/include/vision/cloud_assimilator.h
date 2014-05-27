@@ -59,7 +59,7 @@ namespace vision
     ros::Time m_last_sample_time;
 
     void processClouds();
-    void filterCloud(pcl::PointCloud<pcl::PointXYZ>& combined_cloud, pcl::PointCloud<pcl::PointXYZ> filtered_cloud);
+    void filterCloud(pcl::PointCloud<pcl::PointXYZ>& combined_cloud, pcl::PointCloud<pcl::PointXYZ>& filtered_cloud);
     bool timeSyncCloud(std_msgs::Header header, pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud<pcl::PointXYZ>& synced_cloud);
     void pointCloudToLaserScan(sensor_msgs::PointCloud cloud, sensor_msgs::LaserScan& scan);
 

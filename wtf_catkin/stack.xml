@@ -1,0 +1,10 @@
+<stack>
+  <description brief="IGVC">
+    IGVC
+  </description>
+  <author>RAS</author>
+  <license>BSD,LGPL,Apache 2.0</license>
+  <review status="" notes=""/>
+  <url>http://ros.org/wiki/IGVC</url>
+
+</stack>
