@@ -74,9 +74,9 @@ void SPLM_handler(void* data, char *jsonvalue) {
 }
 
 void SPRM_handler(void* data, char *jsonvalue) {
-	float speed = parseSpeed(jsonvalue);
+    float speed = parseSpeed(jsonvalue);
 
-	Printf("speed %s -> %f\n", jsonvalue, speed);
+	//Printf("speed %s -> %f\n", jsonvalue, speed);
 
     SPrintf(msgBuffSPRM, "%f",speed);
 
@@ -128,8 +128,7 @@ void RSTE_handler(void* data, char *jsonvalue) {
 }
 
 void (*subHandlers[NUMSUB])(void*,char*) = {SPLM_handler, SPRM_handler,
-									           SVLX_handler, SVAX_handler, 
-									           RSTE_handler};
+			                    SVLX_handler, SVAX_handler, RSTE_handler};
 
 /**
 * 	Publisher Handlers
@@ -152,5 +151,5 @@ char* SVAXdebug_handler(void* data) {
 }
 
 char* (*pubHandlers[NUMPUB])(void*) = {SPLMdebug_handler, SPRMdebug_handler,
-									           SVLXdebug_handler, SVAXdebug_handler};
+			               SVLXdebug_handler, SVAXdebug_handler};
 									           

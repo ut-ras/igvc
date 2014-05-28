@@ -105,10 +105,10 @@ int main(void) {
 	// subHandlers Array located in handlers.c
     for(i=0;i<NUMSUB;i++) {
 	    InitializeSubscriber(subArray[i], subKey[i], 0, subHandlers[i]);
-	}
+    }
   
 	// Initialize publishers
-	for(i=0;i<NUMPUB;i++) {
+    for(i=0;i<NUMPUB;i++) {
     	InitializePublisher(pubArray[i], pubKey[i], 0, pubHandlers[i]);
     }
 
@@ -119,6 +119,6 @@ int main(void) {
     InitializePID(&pidRight, .00015, 0.000, 0.0001, -0.15, 0.15);
     
     BeginPublishing(.1);
-    BeginSubscribing(.05); //while(1) contained within BeginSubscribing
+    BeginSubscribing(.1); //while(1) contained within BeginSubscribing
     while(1);
 }

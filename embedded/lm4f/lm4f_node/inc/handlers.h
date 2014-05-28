@@ -7,7 +7,7 @@
 #define NUMSUB 5
 #define NUMPUB 4
 #define BUFFERSIZE 25
-#define MAXPWM 0.125
+#define MAXPWM 0.20
 #define MAXMOTOR 0.15
 #define MINMOTOR -0.15
 
