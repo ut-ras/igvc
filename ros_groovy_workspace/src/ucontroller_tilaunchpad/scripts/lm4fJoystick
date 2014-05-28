@@ -8,7 +8,7 @@
 #
 # IGVC 2014 IEEE RAS UT Austin
 # December 19 2013
-# Last Update: January 23 2014
+# Last Update: May 26 2014
 # Kevin Gilbert
 #################
 import roslib; roslib.load_manifest('ucontroller_tilaunchpad')
@@ -49,14 +49,14 @@ def lm4f_handler(data, pub):
         response = ''
         while comm.inWaiting() > 0:
             response += comm.read(1)
-        #comm.flush()
         rospy.loginfo(rospy.get_name()+": LM4F response: "+response)      
         pub.publish(response) 
     except:
         rospy.loginfo(traceback.format_exc())
         rospy.loginfo('Closing LM4F Node due to exception...')
         comm.close()
-        sys.exit()
+        rospy.signal_shutdown('Couldnt close node, ros signal shutdown. Nuts')
+	
 ##################################
 
 def sendCommand(data):
@@ -71,13 +71,14 @@ def sendCommand(data):
         # linear velocity in m/s
         # angular velocity in rad/s
 
-	PWMMAX = .125
-        right = min(max(round(right*PWMMAX*2, 3), -PWMMAX), PWMMAX)
-        left = min(max(round(left*PWMMAX*2, 3), -PWMMAX), PWMMAX)
+	#PWMMAX = .125
+        #right = min(max(round(right*PWMMAX*2, 3), -PWMMAX), PWMMAX)
+        #left = min(max(round(left*PWMMAX*2, 3), -PWMMAX), PWMMAX)
         
-        print "sent: " + str(left) + "," + str(right)
+        #print "sent: " + str(left) + "," + str(right)
 
         mesg = json.dumps({'SPLM':left, 'SPRM':right})
+        print 'GAH %s\n' % mesg
         comm.write(mesg+'\n')
         comm.flush()
         return
@@ -87,9 +88,9 @@ def sendCommand(data):
 
 
 def lm4fNode():
+    rospy.init_node('lm4f_node', anonymous=True)
     pub = rospy.Publisher(TOPIC, String)
     sub = rospy.Subscriber(SUBSCRIBER, Twist, lm4f_handler, pub)
-    rospy.init_node('lm4f_node', anonymous=True)
     print 'printing debug info...'
     rospy.spin()
 
