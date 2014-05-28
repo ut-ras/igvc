@@ -233,7 +233,7 @@ namespace vision
     bool isGroundColor(cv::Vec3b color);
     void classifyGroundGrid(cv::Mat& mat, std_msgs::Header image_header);
     bool transformCloudToCamera(std_msgs::Header image_header, pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<cv::Point>& image_points);
-    bool isOnImage(cv::Mat mat, unsigned int x, unsigned int y);
+    bool isOnImage(cv::Mat mat, int x, int y);
     cv::Vec3b rgb2hsv(cv::Vec3b rgb);
 
     void imageCallback(const sensor_msgs::ImageConstPtr& image);

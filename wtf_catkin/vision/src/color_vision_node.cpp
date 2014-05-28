@@ -155,7 +155,7 @@ namespace vision
     }
   }
 
-  bool ColorVisionNode::isOnImage(cv::Mat mat, unsigned int x, unsigned int y)
+  bool ColorVisionNode::isOnImage(cv::Mat mat, int x, int y)
   {
     return (x < mat.cols) && (y < mat.rows);
   }
@@ -163,10 +163,10 @@ namespace vision
   void ColorVisionNode::updateColorRegions(cv::Mat mat, cv::vector<cv::Point> contour)
   {
     //find roi
-    unsigned int min_x = std::numeric_limits<unsigned int>::max();
-    unsigned int min_y = std::numeric_limits<unsigned int>::max();
-    unsigned int max_x = 0;
-    unsigned int max_y = 0;
+    int min_x = std::numeric_limits<unsigned int>::max();
+    int min_y = std::numeric_limits<unsigned int>::max();
+    int max_x = 0;
+    int max_y = 0;
     for(unsigned int i = 0; i < contour.size(); i++)
     {
       if(contour[i].x < min_x)
@@ -197,9 +197,9 @@ namespace vision
 
     //gather all the pixels in the polygon
 //    std::vector<cv::Vec3b> color_palette;
-    for(unsigned int y = min_y; y <= max_y; y++)
+    for(int y = min_y; y <= max_y; y++)
     {
-      for(unsigned int x = min_x; x <= max_x; x++)
+      for(int x = min_x; x <= max_x; x++)
       {
         if(!isOnImage(mat, x, y))
         {
@@ -298,7 +298,7 @@ namespace vision
     cvtColor(rgb_mat, hsv_mat, CV_RGB2HSV);
 
     thresholded = cv::Mat(hsv_mat.rows, hsv_mat.cols, CV_8U, cv::Scalar(255));
-    for(unsigned int i = 0; i < hsv_mat.rows * hsv_mat.cols; i++)
+    for(int i = 0; i < hsv_mat.rows * hsv_mat.cols; i++)
     {
       cv::Vec3b color = hsv_mat.at<cv::Vec3b>(i);
       if(isGroundColor(color))
