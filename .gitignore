@@ -1,3 +1,4 @@
+*.bag
 .cproject
 .project
 ros_groovy_workspace/devel
