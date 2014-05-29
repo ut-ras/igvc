@@ -11,7 +11,7 @@ import serial
 import struct
 import time
 
-
+PRINT_MESSAGES = False
 DO_SCALING = True
 
 IMU_MSG_LEN = 12
@@ -24,6 +24,27 @@ ser = serial.Serial(port = '/dev/ttyUSB0', baudrate=921600)
 imu_pub = rospy.Publisher('vn_200_accel_gyro_compass', vn_200_accel_gyro_compass)
 gps_pub = rospy.Publisher('vn_200_gps_soln', vn_200_gps_soln)
 ins_pub = rospy.Publisher('vn_200_ins_soln', vn_200_ins_soln)
+
+class Throttler:
+    def __init__(self, f, period):
+        self.cache = {}
+        self.f = f
+        self.period = period
+    
+    def __call__(self, msg):
+        t = time.time()
+        if msg in self.cache:
+            prevT = self.cache[msg]
+        else:
+            prevT = 0
+            self.cache[msg] = t
+        
+        delta = t - prevT
+        if delta > self.period:
+            self.f(msg)
+            self.cache[msg] = t
+
+logwarn_throttled = Throttler(rospy.logwarn, 2.0)
 
 def read_data() :
 
@@ -77,7 +98,8 @@ def publish_imu_data (imu_data) :
 
     global imu_pub
 
-    rospy.loginfo("IMU: " + str(imu_data))
+    if PRINT_MESSAGES:
+        rospy.loginfo("IMU: " + str(imu_data))
 
     imu_msg = vn_200_accel_gyro_compass()
     imu_msg.header.stamp = rospy.get_rostime()
@@ -99,8 +121,9 @@ def publish_imu_data (imu_data) :
 def publish_gps_data (gps_data) :
 
     global gps_pub
-
-    rospy.loginfo("GPS: " + str(gps_data))
+    
+    if PRINT_MESSAGES:
+        rospy.loginfo("GPS: " + str(gps_data))
 
     gps_msg = vn_200_gps_soln()
     gps_msg.header.stamp = rospy.get_rostime()
@@ -110,7 +133,7 @@ def publish_gps_data (gps_data) :
     gps_fix = int(gps_data[3])
 
     if gps_fix == 0:
-        rospy.logwarn("GPS: No GPS fix")
+        logwarn_throttled("GPS: No GPS fix")
         gps_msg.error_present = True
         gps_msg.error_string += "No GPS fix.\n"
     elif gps_fix == 1:
@@ -124,7 +147,7 @@ def publish_gps_data (gps_data) :
 
     if gps_msg.num_satellites < 3:
         gps_msg.error_present = True
-        rospy.logwarn("GPS: Solution is has connection to less than 3 satellites. Please move to an open area")
+        logwarn_throttled("GPS: Solution is has connection to less than 3 satellites. Please move to an open area")
         gps_msg.error_string += "Less than 3 satellites found\n"
 
     gps_msg.latitude  = float(gps_data[5])
@@ -147,7 +170,8 @@ def publish_ins_data (ins_data) :
 
     global ins_pub
 
-    rospy.loginfo("INS: " + str(ins_data) + '\n')
+    if PRINT_MESSAGES:
+        rospy.loginfo("INS: " + str(ins_data) + '\n')
 
     ins_msg = vn_200_ins_soln()
     ins_msg.header.stamp = rospy.get_rostime()
@@ -162,7 +186,7 @@ def publish_ins_data (ins_data) :
 
     if ins_mode == 0:
         ins_msg.error_present = True
-        rospy.logwarn("INS: Not tracking. Insufficient dynamic motion")
+        logwarn_throttled("INS: Not tracking. Insufficient dynamic motion")
         ins_msg.error_string += "Not tracking. Insufficient dynamic motion\n"
     elif ins_mode == 1:
         rospy.logwarn("INS: Sufficient dynamic motion, but solution was not within performence specs.")
@@ -170,7 +194,7 @@ def publish_ins_data (ins_data) :
 
     if ins_gps_fix != 1:
         ins_msg.error_present = True
-        rospy.logwarn("INS: No GPS fix")
+        #rospy.logwarn("INS: No GPS fix")
         ins_msg.error_string += "No GPS fix\n"
 
     if ins_error & 0x0001:
@@ -238,7 +262,6 @@ def process_and_publish(data):
         if len(ins_data) is not INS_SOL_MSG_LEN:
            rospy.logwarn("ERROR reading INS message")
            return
-        rospy.loginfo('!!!!INS' + data)
         publish_ins_data(ins_data)
 
     else:
@@ -250,7 +273,6 @@ def vn200():
     global READ_CMDS
     global ser
 
-    #rospy.init_node('vn_200_imu')
     rospy.init_node('imu_vn200')
     rospy.loginfo("VN-200 IMU listener is running on " + ser.portstr )
 
