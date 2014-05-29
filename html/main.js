@@ -11,15 +11,22 @@
         mapOptions);
  
     var image = {
-      url: 'circle.png',
-      size: new google.maps.Size(20, 20),
+      url: 'skull.png',
+      size: new google.maps.Size(64, 64),
       origin: new google.maps.Point(0,0),
+      rotation: 180
+    };
+
+    var icon = {
+      path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
+      scale: 10,
+      rotation: 90
     };
       
     var marker = new google.maps.Marker({
       position: centerLatLng,
       map: map,
-      icon: image
+      icon: icon
     });
   
     // Connect to ROS
@@ -35,7 +42,6 @@
     });
 
     listener.subscribe(function(message) {
-      console.log('Received message on ' + listener.name + ': ' + message);
       marker.setPosition(new google.maps.LatLng(message.latitude, message.longitude));
     }); 
   
@@ -47,7 +53,14 @@
     });
 
     ylistener.subscribe(function(message) {
-      console.log('Received message on ' + listener.name + ': ' + message);
+      var dir = message.data;
+      marker.setIcon({
+        path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
+        scale: 10,
+        rotation: dir*180/Math.PI
+      });
+
+
     }); 
     
   }
