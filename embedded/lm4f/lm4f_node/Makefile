@@ -28,11 +28,6 @@ LDS = lm4f.ld
 OBJ := $(SRC:.c=.o)
 ASM := $(SRC:.c=.s)
 
-LDDIR += $(RASLIB)/output
-LDDIR += $(STELLARIS)/driverlib/gcc-cm4f
-LDDIR += $(ARMCLIB)/$(PREFIX)/lib/thumb/cortex-m4
-LDDIR += $(wildcard $(ARMCLIB)/lib/gcc/$(PREFIX)/*/thumb/cortex-m4)
-LDDIR += $(CORTEXM4)
 
 # Flag Definitions
 CFLAGS += -g
@@ -48,6 +43,11 @@ CFLAGS += -std=c99
 CFLAGS += -Dgcc
 CFLAGS += -DPART_LM4F120H5QR
 CFLAGS += -DTARGET_IS_BLIZZARD_RA1
+
+LDDIR += $(RASLIB)/output
+LDDIR += $(STELLARIS)/driverlib/gcc-cm4f
+LDDIR += $(CORTEXM4)
+LDDIR += $(shell ${CC} ${CFLAGS} -print-search-dirs | grep libraries | sed -e 's/libraries:\ =//' -e 's/:/ /g')
 
 LDFLAGS += --entry ResetHandler
 LDFLAGS += --gc-sections
