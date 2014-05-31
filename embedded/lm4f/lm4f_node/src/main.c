@@ -20,6 +20,7 @@
 #include "pid.h"
 #include "vel_control.h"
 #include "handlers.h"
+#include "atospf.h"
 
 /**
 *	Publisher array for IGVC 2014 LM4F uController.
@@ -87,10 +88,42 @@ void WatchDog_Init(void) {
     WatchdogEnable(WATCHDOG_BASE);
 }
 
+static int ReadLine(char *line, int max_len) {
+    int i = 0;
+    char ch = 0;
+    
+    while (i < max_len && ch != '\n') {
+        ch = Getc();
+        line[i] = ch;
+        i += 1;
+    }
+    
+    line[max_len] = 0;
+    return i;
+}
+
+int checkFormat(char* buf, int numbytes) {
+    int i;
+    int knownis[3] = {0, 1+6, 1+6+1+6};
+    char knowncs[3] = {'#', ',', '#'};
+    
+    if (numbytes != 1 + 6 + 1 + 6 + 1 + 1) {
+        return 0;
+    }
+
+    for (i = 0; i < 3; i++) {
+        if (buf[knownis[i]] != knowncs[i]) {
+            return false;
+        } 
+    }
+    
+    return 1;
+}
+
 int main(void) {
     int i;
     InitializeMCU();
-
+     
     left_motor = InitializeServoMotor(PIN_A6, false);
     right_motor = InitializeServoMotor(PIN_A7, false);
 
@@ -101,6 +134,42 @@ int main(void) {
     ResetEncoder(right_encoder);
 
     CallEvery(blinkLED,0,0.25f);
+    
+    // Initialize PID and velocity control 
+    InitializePID(&pidLeft, .00015, 0.000, 0.0001, -0.15, 0.15);
+    InitializePID(&pidRight, .00015, 0.000, 0.0001, -0.15, 0.15);
+    
+    WatchDog_Init();
+    
+    // this is a very import line. do not delete.
+    //Printf("hi");
+
+    while (1) {
+        char buf[100] = {0};
+        int numbytes = ReadLine(buf, 100);
+        if (!checkFormat(buf, numbytes)) {
+            Puts("bad format!\n");
+        } else {
+            float right, left;    
+        
+            buf[0] = 0;
+            buf[1+6] = 0;
+            buf[1+6+1+6] = 0;
+           
+            right = atospf(&buf[1]);
+            left = atospf(&buf[1+6+1]);
+
+            SetMotor(right_motor, right);
+            SetMotor(left_motor, left);
+ 
+            Printf("{\"motors\":[%.3f,%.3f],\"encs:\":[%d,%d]}\n", 
+                right, left, GetEncoder(right_encoder), GetEncoder(left_encoder));
+    
+            WatchdogReloadSet(WATCHDOG_BASE, 25000000);    
+        }
+    }
+    
+    /*
 	// Initialize subscribers
 	// subHandlers Array located in handlers.c
     for(i=0;i<NUMSUB;i++) {
@@ -112,13 +181,8 @@ int main(void) {
     	InitializePublisher(pubArray[i], pubKey[i], 0, pubHandlers[i]);
     }
 
-    WatchDog_Init();
-    
-    // Initialize PID and velocity control 
-    InitializePID(&pidLeft, .00015, 0.000, 0.0001, -0.15, 0.15);
-    InitializePID(&pidRight, .00015, 0.000, 0.0001, -0.15, 0.15);
-    
     BeginPublishing(.1);
     BeginSubscribing(.1); //while(1) contained within BeginSubscribing
     while(1);
+    */
 }
