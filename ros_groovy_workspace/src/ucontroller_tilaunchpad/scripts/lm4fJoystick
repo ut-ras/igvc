@@ -72,31 +72,10 @@ def sendCommand(data):
         if data.angular.z < 0:
     	    left -= data.angular.z/2.0
 
-        """
-        # scale, round, and bound
-        PWMMAX = .125
-        right = min(max(round(right*PWMMAX*2, 3), -PWMMAX), PWMMAX)
-        left = min(max(round(left*PWMMAX*2, 3), -PWMMAX), PWMMAX)
-        mesg = "#%1.3f,%1.3f#" % (right, left) 
-       
-        if right > 0:
-            mesg = '#%1.4f,' % right
-        elif right < 0:
-            mesg = '#%1.3f,' % right
-        else:
-            mesg = '#%1.4f,' % 0 # stupid negative zeros...
-
-        if left > 0:
-            mesg += '%1.4f#' % left
-        elif right < 0:
-            mesg += '%1.3f#' % left
-        else:
-            mesg += '%1.4f#' % 0
-        """
         left = int(left*1000)
         right = int(right*1000)
         mesg = "#%07d,%07d#" % (left, right)
-
+        
         print 'sending: [%s]\n' % mesg
 
         comm.write(mesg+"\n")
