@@ -102,12 +102,14 @@ static int ReadLine(char *line, int max_len) {
     return i;
 }
 
+int CSIZE = 7;
+
 int checkFormat(char* buf, int numbytes) {
     int i;
-    int knownis[3] = {0, 1+6, 1+6+1+6};
+    int knownis[3] = {0, 1+CSIZE, 1+CSIZE+1+CSIZE};
     char knowncs[3] = {'#', ',', '#'};
     
-    if (numbytes != 1 + 6 + 1 + 6 + 1 + 1) {
+    if (numbytes != 1 + CSIZE + 1 + CSIZE + 1 + 1) {
         return 0;
     }
 
@@ -136,13 +138,17 @@ int main(void) {
     CallEvery(blinkLED,0,0.25f);
     
     // Initialize PID and velocity control 
-    InitializePID(&pidLeft, .00015, 0.000, 0.0001, -0.15, 0.15);
-    InitializePID(&pidRight, .00015, 0.000, 0.0001, -0.15, 0.15);
+    InitializePID(&pidLeft, .0001, 0.000, 0.000, -1, 1);
+    InitializePID(&pidRight, .0001, 0.000, 0.000, -1, 1);
     
     WatchDog_Init();
     
     // this is a very import line. do not delete.
     //Printf("hi");
+    {
+    float prevCommand = 0;
+    signed long prevTicks = 0;
+    float prevErr = 0; 
 
     while (1) {
         char buf[100] = {0};
@@ -150,23 +156,44 @@ int main(void) {
         if (!checkFormat(buf, numbytes)) {
             Puts("bad format!\n");
         } else {
-            float right, left;    
-        
-            buf[0] = 0;
-            buf[1+6] = 0;
-            buf[1+6+1+6] = 0;
-           
-            right = atospf(&buf[1]);
-            left = atospf(&buf[1+6+1]);
+            signed long ticks, deltaTicks;
+            int goalDeltaTicks;
+            float motorCommand, pidOutput;
+            float err;
 
-            SetMotor(right_motor, right);
-            SetMotor(left_motor, left);
+            int right, left;
  
-            Printf("{\"motors\":[%.3f,%.3f],\"encs:\":[%d,%d]}\n", 
-                right, left, GetEncoder(right_encoder), GetEncoder(left_encoder));
+            buf[1 + CSIZE] = 0;
+            goalDeltaTicks = atoi(&buf[1])/10;
+            buf[1 + CSIZE + 1 + CSIZE] = 0;
+            left = atoi(&buf[1 + CSIZE + 1]);
+
+            goalDeltaTicks = atoi(&buf[1]);
+            //buf[1+6+1+6] = 0;
+            //left = atoi(&buf[1+6+1]);
+
+            ticks = -GetEncoder(right_encoder);
+            deltaTicks = ticks - prevTicks;
+           
     
+            err = goalDeltaTicks - deltaTicks;
+            
+            pidOutput = err*.0001 + (err-prevErr)*.0005;
+            motorCommand = prevCommand + pidOutput;
+            if (motorCommand > .15) motorCommand = .15;
+            if (motorCommand < -.15) motorCommand = -.15;
+ 
+            SetMotor(right_motor, motorCommand);
+           
+            prevTicks = ticks;
+            prevErr = err;
+            prevCommand = motorCommand;
+ 
+            Printf("input: %08d    pidOutput: %f   command: %f   deltaTicks: %08d\n", goalDeltaTicks, pidOutput, motorCommand, deltaTicks);
+            //Printf("{\"motors\":[%d,%d],\"encs:\":[%d,%d]}\n", right, left, GetEncoder(right_encoder), GetEncoder(left_encoder));
             WatchdogReloadSet(WATCHDOG_BASE, 25000000);    
         }
+    }
     }
     
     /*
