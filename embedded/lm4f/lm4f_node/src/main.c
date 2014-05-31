@@ -132,6 +132,8 @@ struct PIDStruct {
 #define PIDP (0.00003)
 #define PIDD (0.00013)
 #define PIDI (0.000001)
+#define MAX_MOTOR (.5)
+#define MIN_MOTOR (-.5)
 
 void runPID(PIDStruct* s, int goalDeltaTicks, tMotor* motor) {
     signed long ticks = -GetEncoder(s->enc);
@@ -143,8 +145,8 @@ void runPID(PIDStruct* s, int goalDeltaTicks, tMotor* motor) {
     float pidOutput = err*PIDP + (err - s->prevErr)*PIDD + s->accumErr*PIDI;
     float motorCommand = s->prevCommand + pidOutput;
     
-    if (motorCommand > .5) motorCommand = .5;
-    if (motorCommand < -.5) motorCommand = -.5;
+    if (motorCommand > MAX_MOTOR) motorCommand = MAX_MOTOR;
+    if (motorCommand < MIN_MOTOR) motorCommand = MIN_MOTOR;
 
     SetMotor(motor, motorCommand);
    
@@ -172,8 +174,8 @@ int main(void) {
     WatchDog_Init();
     
     {
-    PIDStruct right = {right_motor, right_encoder, 0.0, 0L, 0.0, 0.0};
-    PIDStruct left = {left_motor, left_encoder, 0.0, 0L, 0.0, 0.0};
+    PIDStruct right = {right_motor, right_encoder, 0.0, 0L, 0.0, 0.0, 0L};
+    PIDStruct left = {left_motor, left_encoder, 0.0, 0L, 0.0, 0.0, 0L};
 
     while (1) {
         char buf[100] = {0};
@@ -191,11 +193,10 @@ int main(void) {
             runPID(&right, goalDeltaTicksRight, right_motor);
             runPID(&left, goalDeltaTicksLeft, left_motor);
             
-            Printf("{\
-                \"received\":{\"right\":%d,\"left\":%d},\
-                \"motors\":{\"right\":%f,\"left\":%f},\
-                \"deltas\":{\"right\":%d,\"left\":%d}\
-            }\n", 
+            Printf(
+                "{\"received\":{\"right\":%d,\"left\":%d},"
+                "motors\":{\"right\":%f,\"left\":%f},"
+                "deltas\":{\"right\":%d,\"left\":%d}}\n",
                 goalDeltaTicksRight, goalDeltaTicksLeft, 
                 right.prevCommand, left.prevCommand, 
                 right.deltaTicks, left.deltaTicks);
