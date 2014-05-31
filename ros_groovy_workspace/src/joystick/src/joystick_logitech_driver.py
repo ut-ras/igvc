@@ -5,6 +5,7 @@ from geometry_msgs.msg import Twist
 from threading import Thread
 from math import pi
 
+DEFAULT_DEVICE = "/dev/input/js0"
 MAX_X_SPEED = float(1)
 MAX_W_SPEED = pi/2
 xOut = 0
@@ -59,7 +60,7 @@ def joystick():
   global wOut
   global right_state
   msgs = []
-  with open("/dev/input/js0",'r') as pipe:
+  with open(device,'r') as pipe:
     for i in range(144): #there's ~144 bytes (18 packets of data) on initialization. dropping them
        pipe.read(1)
     while not rospy.is_shutdown():
@@ -88,6 +89,7 @@ def joystick():
 
 if __name__ == "__main__":
   try:
+    device = rospy.get_param('~device', DEFAULT_DEVICE)
     init()
   except rospy.ROSInterruptException:
     pass
