@@ -166,6 +166,7 @@ namespace vision
     double m_initial_sample_y_min;
     double m_initial_sample_y_max;
     int m_num_color_regions;
+    bool m_only_use_initial_colors;
 
     int m_known_bad_h_min;
     int m_known_bad_s_min;
@@ -234,6 +235,7 @@ namespace vision
     void classifyGroundGrid(cv::Mat& mat, std_msgs::Header image_header);
     bool transformCloudToCamera(std_msgs::Header image_header, pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<cv::Point>& image_points);
     bool isOnImage(cv::Mat mat, int x, int y);
+    void clampContourToImage(cv::Mat& mat, cv::vector<cv::Point>& contour);
     cv::Vec3b rgb2hsv(cv::Vec3b rgb);
 
     void imageCallback(const sensor_msgs::ImageConstPtr& image);

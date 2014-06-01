@@ -7,46 +7,58 @@
   </node>
   
   <node pkg="vision" type="color_vision_node" name="vision_left" output="screen" ns="left_camera">
-    <param name="x_min" value="0.0"/>
+    <param name="x_min" value="-0.4"/>
     <param name="x_max" value="4.0"/>
     <param name="y_min" value="-4"/>
     <param name="y_max" value="4"/>
     <param name="resolution" value="0.05"/>
     
-    <param name="known_bad_h_min" value="0"/>
+    <param name="initial_sample_x_min" value="0.0"/>
+    <param name="initial_sample_x_max" value="3.0"/>
+    <param name="initial_sample_y_min" value="0"/>
+    <param name="initial_sample_y_max" value="1.35"/>
+    
+    <!--<param name="known_bad_h_min" value="0"/>
     <param name="known_bad_h_max" value="255"/>
     <param name="known_bad_s_min" value="0"/>
     <param name="known_bad_s_max" value="70"/>
     <param name="known_bad_v_min" value="190"/>
-    <param name="known_bad_v_max" value="255"/>
+    <param name="known_bad_v_max" value="255"/>-->
     
     <param name="num_color_regions" value="6"/>
-    <param name="h_expansion" value="0"/>
-    <param name="s_expansion" value="0"/>
-    <param name="v_expansion" value="0"/>
+    <param name="h_expansion" value="1"/>
+    <param name="s_expansion" value="1"/>
+    <param name="v_expansion" value="1"/>
     <param name="std_dev_factor" value="2.5"/>
     
     <param name="publish_debug_images" value="true"/>
   </node>
   
+  <!-- NOTE: color in right eye appears to be worse than in left -->
   <node pkg="vision" type="color_vision_node" name="vision_right" output="screen" ns="right_camera">
-    <param name="x_min" value="0.0"/>
+    <param name="x_min" value="-0.5"/>
     <param name="x_max" value="4.0"/>
     <param name="y_min" value="-4"/>
     <param name="y_max" value="4"/>
     <param name="resolution" value="0.05"/>
     
-    <param name="known_bad_h_min" value="0"/>
+    <param name="initial_sample_x_min" value="-0.5"/>
+    <param name="initial_sample_x_max" value="3.0"/>
+    <param name="initial_sample_y_min" value="-1.35"/>
+    <param name="initial_sample_y_max" value="0.4"/>
+    
+    <!--<param name="known_bad_h_min" value="0"/>
     <param name="known_bad_h_max" value="255"/>
     <param name="known_bad_s_min" value="0"/>
     <param name="known_bad_s_max" value="70"/>
     <param name="known_bad_v_min" value="190"/>
-    <param name="known_bad_v_max" value="255"/>
+    <param name="known_bad_v_max" value="255"/>-->
     
     <param name="num_color_regions" value="6"/>
-    <param name="h_expansion" value="0"/>
-    <param name="s_expansion" value="0"/>
-    <param name="v_expansion" value="0"/>
+    <param name="h_expansion" value="1"/>
+    <param name="s_expansion" value="1"/>
+    <param name="v_expansion" value="1"/>
+    <!--<param name="std_dev_factor" value="3.5"/>-->
     <param name="std_dev_factor" value="2.5"/>
     
     <param name="publish_debug_images" value="true"/>
