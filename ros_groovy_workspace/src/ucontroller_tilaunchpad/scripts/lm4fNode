@@ -12,14 +12,14 @@
 # Kevin Gilbert
 #################
 import roslib; roslib.load_manifest('ucontroller_tilaunchpad')
-import json, serial, sys, os, roslib.packages, time
+import json, serial, sys, os, roslib.packages, time, re
 import rospy, traceback,subprocess
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 ##################################
 # Node parameters
 #################
-TOPIC = 'lm4f_debug'
+TOPIC = 'speedometer/lm4f/vel_data'
 SUBSCRIBER = 'vel_cmd'
 SERIAL_LINE = '/dev/lm4f'
 BAUD_RATE = 115200
@@ -46,10 +46,25 @@ def lm4f_handler(data, pub):
         sendCommand(data) 
         # Read response and print to logs/debug topic
         response = ''
-        while comm.inWaiting() > 0:
-            response += comm.read(1)
+        next_char = comm.read(1)
+        while next_char != '}':
+            response += next_char
+            next_char = comm.read(1)
+        response += '}'
+
+	if not re.findall("^[\r\n]*\{[^{}]*\}", response):
+            #print "failed %s" % repr(response)
+            return
+
         rospy.loginfo(rospy.get_name()+": LM4F response: "+response)      
-        pub.publish(response) 
+        #pub.publish(response)
+        json_response = json.loads(response)
+        raw_enc_data = json_response['SVLXdebug']
+        if raw_enc_data != '-':
+            vel_data = float(raw_enc_data[2:7])
+        vel_data = Twist()
+        vel_data.linear.x = vel_data	
+        pub.publish(vel_data) 
     except:
         rospy.loginfo(traceback.format_exc())
         rospy.loginfo('Closing LM4F Node due to exception...')
@@ -72,9 +87,9 @@ def sendCommand(data):
         comm.close()
 
 def lm4fNode():
-    pub = rospy.Publisher(TOPIC, String)
-    sub = rospy.Subscriber(SUBSCRIBER, Twist, lm4f_handler, pub)
     rospy.init_node('lm4f_node', anonymous=True)
+    pub = rospy.Publisher(TOPIC, Twist)
+    sub = rospy.Subscriber(SUBSCRIBER, Twist, lm4f_handler, pub)
     print 'printing debug info...'
     rospy.spin()
 
@@ -97,4 +112,4 @@ if __name__ == '__main__':
         comm.close()
         print 'comm error'
         sys.exit()
-        
+       

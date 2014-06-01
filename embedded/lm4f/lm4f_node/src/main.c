@@ -20,6 +20,7 @@
 #include "pid.h"
 #include "vel_control.h"
 #include "handlers.h"
+#include "atospf.h"
 
 /**
 *	Publisher array for IGVC 2014 LM4F uController.
@@ -87,10 +88,44 @@ void WatchDog_Init(void) {
     WatchdogEnable(WATCHDOG_BASE);
 }
 
+static int ReadLine(char *line, int max_len) {
+    int i = 0;
+    char ch = 0;
+    
+    while (i < max_len && ch != '\n') {
+        ch = Getc();
+        line[i] = ch;
+        i += 1;
+    }
+    
+    line[max_len] = 0;
+    return i;
+}
+
+int CSIZE = 7;
+
+int checkFormat(char* buf, int numbytes) {
+    int i;
+    int knownis[3] = {0, 1+CSIZE, 1+CSIZE+1+CSIZE};
+    char knowncs[3] = {'#', ',', '#'};
+    
+    if (numbytes != 1 + CSIZE + 1 + CSIZE + 1 + 1) {
+        return 0;
+    }
+
+    for (i = 0; i < 3; i++) {
+        if (buf[knownis[i]] != knowncs[i]) {
+            return false;
+        } 
+    }
+    
+    return 1;
+}
+
 int main(void) {
     int i;
     InitializeMCU();
-
+     
     left_motor = InitializeServoMotor(PIN_A6, false);
     right_motor = InitializeServoMotor(PIN_A7, false);
 
@@ -101,24 +136,80 @@ int main(void) {
     ResetEncoder(right_encoder);
 
     CallEvery(blinkLED,0,0.25f);
+    
+    // Initialize PID and velocity control 
+    InitializePID(&pidLeft, .0001, 0.000, 0.000, -1, 1);
+    InitializePID(&pidRight, .0001, 0.000, 0.000, -1, 1);
+    
+    WatchDog_Init();
+    
+    // this is a very import line. do not delete.
+    //Printf("hi");
+    {
+    float prevCommand = 0;
+    signed long prevTicks = 0;
+    float prevErr = 0; 
+
+    while (1) {
+        char buf[100] = {0};
+        int numbytes = ReadLine(buf, 100);
+        if (!checkFormat(buf, numbytes)) {
+            Puts("bad format!\n");
+        } else {
+            signed long ticks, deltaTicks;
+            int goalDeltaTicks;
+            float motorCommand, pidOutput;
+            float err;
+
+            int right, left;
+ 
+            buf[1 + CSIZE] = 0;
+            goalDeltaTicks = atoi(&buf[1])/10;
+            buf[1 + CSIZE + 1 + CSIZE] = 0;
+            left = atoi(&buf[1 + CSIZE + 1]);
+
+            goalDeltaTicks = atoi(&buf[1]);
+            //buf[1+6+1+6] = 0;
+            //left = atoi(&buf[1+6+1]);
+
+            ticks = -GetEncoder(right_encoder);
+            deltaTicks = ticks - prevTicks;
+           
+    
+            err = goalDeltaTicks - deltaTicks;
+            
+            pidOutput = err*.0001 + (err-prevErr)*.0005;
+            motorCommand = prevCommand + pidOutput;
+            if (motorCommand > .15) motorCommand = .15;
+            if (motorCommand < -.15) motorCommand = -.15;
+ 
+            SetMotor(right_motor, motorCommand);
+           
+            prevTicks = ticks;
+            prevErr = err;
+            prevCommand = motorCommand;
+ 
+            Printf("input: %08d    pidOutput: %f   command: %f   deltaTicks: %08d\n", goalDeltaTicks, pidOutput, motorCommand, deltaTicks);
+            //Printf("{\"motors\":[%d,%d],\"encs:\":[%d,%d]}\n", right, left, GetEncoder(right_encoder), GetEncoder(left_encoder));
+            WatchdogReloadSet(WATCHDOG_BASE, 25000000);    
+        }
+    }
+    }
+    
+    /*
 	// Initialize subscribers
 	// subHandlers Array located in handlers.c
     for(i=0;i<NUMSUB;i++) {
 	    InitializeSubscriber(subArray[i], subKey[i], 0, subHandlers[i]);
-	}
+    }
   
 	// Initialize publishers
-	for(i=0;i<NUMPUB;i++) {
+    for(i=0;i<NUMPUB;i++) {
     	InitializePublisher(pubArray[i], pubKey[i], 0, pubHandlers[i]);
     }
 
-    WatchDog_Init();
-    
-    // Initialize PID and velocity control 
-    InitializePID(&pidLeft, .00015, 0.000, 0.0001, -0.15, 0.15);
-    InitializePID(&pidRight, .00015, 0.000, 0.0001, -0.15, 0.15);
-    
     BeginPublishing(.1);
-    BeginSubscribing(.05); //while(1) contained within BeginSubscribing
+    BeginSubscribing(.1); //while(1) contained within BeginSubscribing
     while(1);
+    */
 }

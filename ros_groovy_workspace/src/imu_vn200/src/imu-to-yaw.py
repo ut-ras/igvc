@@ -13,10 +13,8 @@ if __name__ == "__main__" :
     rate = rospy.Rate(10)
     pub = rospy.Publisher( 'yaw', Float64)
     def callback ( data, pub=pub) :
-        try :
-            angle = ((math.atan(data.compass.x/data.compass.y) + (math.pi / 2)) % (2*math.pi))
-            pub.publish( angle if data.compass.y > 0 else -(math.pi -angle))
-        except ZeroDivisionError : pub.publish (math.py/2)
+            angle = ((math.atan2(data.compass.y,data.compass.x) + (math.pi / 2)) % (2*math.pi)) 
+            pub.publish( angle )
     if test :
         testpub = rospy.Publisher( 'raw', vn_200_accel_gyro_compass)
         testangle = 0
