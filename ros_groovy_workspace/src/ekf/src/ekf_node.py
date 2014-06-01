@@ -35,8 +35,9 @@ def initSensors():
             lambda yaw: numpy.matrix([ [0.0], [0.0], [yaw.data] ]),
             numpy.eye(3) * 1e-4,
             EKF.orientation_jacobian_funct, 
-            EKF.orientation_observation_funct ),
-
+            EKF.orientation_observation_funct )
+    ]
+    """
         Sensor(
             "gps/trimble/pose", 
             PoseWithCovariance, 
@@ -45,7 +46,8 @@ def initSensors():
             EKF.position_jacobian_funct,
             EKF.position_observation_funct,
             lambda pose: numpy.reshape( pose.covariance[0:2] +
-                                        pose.covariance[6:8], (2,2) ) ) ]
+                                        pose.covariance[6:8], (2,2) ) ) 
+    """
 
     for index in range(len(sensors)):
         sensors[index].index = index

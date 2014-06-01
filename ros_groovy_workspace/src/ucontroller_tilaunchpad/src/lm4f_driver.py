@@ -52,12 +52,11 @@ PID_LOOP_RATE = 10.0
 #    Called when data received 
 #    from subscriber topic.
 ##################################
-mostRecentData = None
+mostRecentData = Twist()
 
 def lm4f_handler(data, pubs):
     global LISTENING_TO_NAVSTACK
     if LISTENING_TO_NAVSTACK:
-        print 'received data!'
         global mostRecentData
         mostRecentData = data
     else:
@@ -142,15 +141,12 @@ def lm4fNode():
     r = rospy.Rate(10)
     while not rospy.is_shutdown():
         if LISTENING_TO_NAVSTACK:
+            # Parse and send data to LM4F
             global mostRecentData
-            if mostRecentData == None:
-                rospy.loginfo("have not received any commands from navstack!"); 
-            else:
-                # Parse and send data to LM4F
-                sendCommand(mostRecentData) 
+            sendCommand(mostRecentData) 
             
-                # Read response and publish data from LM4F
-                processResponse(comm.readline(), debugPub, velPub)
+            # Read response and publish data from LM4F
+            processResponse(comm.readline(), debugPub, velPub)
         r.sleep() 
 
 if __name__ == '__main__':
