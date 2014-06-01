@@ -14,16 +14,22 @@ namespace vision
     m_nh.param("y_min", m_y_min, -1.0);
     m_nh.param("y_max", m_y_max, 1.0);
 
-    m_nh.param("sample_x_min", m_sample_x_min, 0.0);
-    m_nh.param("sample_x_max", m_sample_x_max, 0.75);
-    m_nh.param("sample_y_min", m_sample_y_min, -0.4);
-    m_nh.param("sample_y_max", m_sample_y_max, 0.4);
+    // m_nh.param("sample_x_min", m_sample_x_min, 0.0);
+    // m_nh.param("sample_x_max", m_sample_x_max, 0.75);
+    // m_nh.param("sample_y_min", m_sample_y_min, -0.4);
+    // m_nh.param("sample_y_max", m_sample_y_max, 0.4);
     m_nh.param("sample_period", m_sample_period, 1.0);
 
-    m_nh.param("initial_sample_x_min", m_initial_sample_x_min, 0.0);
-    m_nh.param("initial_sample_x_max", m_initial_sample_x_max, 3.0);
-    m_nh.param("initial_sample_y_min", m_initial_sample_y_min, -0.6);
-    m_nh.param("initial_sample_y_max", m_initial_sample_y_max, 0.6);
+    // m_nh.param("initial_sample_x_min", m_initial_sample_x_min, 0.0);
+    // m_nh.param("initial_sample_x_max", m_initial_sample_x_max, 3.0);
+    // m_nh.param("initial_sample_y_min", m_initial_sample_y_min, -0.6);
+    // m_nh.param("initial_sample_y_max", m_initial_sample_y_max, 0.6);
+
+    std::string sample_polygon, initial_sample_polygon;
+    m_nh.param("sample_polygon", sample_polygon, std::string(""));
+    m_nh.param("initial_sample_polygon", initial_sample_polygon, std::string(""));
+    parsePoints(sample_polygon, m_sample_polygon);
+    parsePoints(initial_sample_polygon, m_initial_sample_polygon);
 
     m_nh.param("known_bad_h_min", m_known_bad_h_min, 0);
     m_nh.param("known_bad_h_max", m_known_bad_h_max, 0);
@@ -79,6 +85,52 @@ namespace vision
   {
   }
 
+  std::vector<double> stringVectorToDoubleVector(std::vector<std::string> input)
+  {
+    std::vector<double> output;
+
+    for (unsigned int i = 0; i < input.size(); i++)
+    {
+      output.push_back(std::atof(input[i].c_str()));
+    }
+
+    return output;
+  }
+
+  void ColorVisionNode::parsePoints(std::string point_string, pcl::PointCloud<pcl::PointXYZ>& points)
+  {
+    boost::char_separator<char> sep(" ,()[]");
+    boost::tokenizer<boost::char_separator<char> > tokens(point_string, sep);
+    std::vector<double> values = stringVectorToDoubleVector(std::vector<std::string>(tokens.begin(), tokens.end()));
+
+    points.clear();
+    for(unsigned int i = 0; i < values.size(); i += 2)
+    {
+      pcl::PointXYZ point;
+      point.x = values.at(i + 0);
+      point.y = values.at(i + 1);
+      point.z = 0;
+      points.points.push_back(point);
+    }
+
+    points.header.frame_id = m_base_frame_id;
+    points.height = 1;
+    points.width = points.points.size();
+  }
+
+  void ColorVisionNode::parseColors(std::string point_string, std::vector<cv::Vec3b>& colors)
+  {
+    boost::char_separator<char> sep(" ,()[]");
+    boost::tokenizer<boost::char_separator<char> > tokens(point_string, sep);
+    std::vector<double> values = stringVectorToDoubleVector(std::vector<std::string>(tokens.begin(), tokens.end()));
+
+    colors.clear();
+    for(unsigned int i = 0; i < values.size(); i += 3)
+    {
+      colors.push_back(cv::Vec3b((int) values.at(i + 0), (int) values.at(i + 1), (int) values.at(i + 2)));
+    }
+  }
+
   bool ColorVisionNode::isKnownObstacleColor(cv::Vec3b color)
   {
     return (color.val[0] > m_known_bad_h_min) && (color.val[0] < m_known_bad_h_max) && (color.val[1] > m_known_bad_s_min) && (color.val[1] < m_known_bad_s_max) && (color.val[2] > m_known_bad_v_min) && (color.val[2] < m_known_bad_v_max);
@@ -126,24 +178,26 @@ namespace vision
 
   void ColorVisionNode::generateSampleRegion(bool initial)
   {
-    m_sample_boundaries.points.clear();
+    // m_sample_boundaries.points.clear();
     if(initial)
     {
-      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_min, m_initial_sample_y_min, 0));
-      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_min, m_initial_sample_y_max, 0));
-      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_max, m_initial_sample_y_max, 0));
-      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_max, m_initial_sample_y_min, 0));
+      m_sample_boundaries = m_initial_sample_polygon;
+      // m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_min, m_initial_sample_y_min, 0));
+      // m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_min, m_initial_sample_y_max, 0));
+      // m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_max, m_initial_sample_y_max, 0));
+      // m_sample_boundaries.points.push_back(pcl::PointXYZ(m_initial_sample_x_max, m_initial_sample_y_min, 0));
     }
     else
     {
-      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_min, m_sample_y_min, 0));
-      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_min, m_sample_y_max, 0));
-      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_max, m_sample_y_max, 0));
-      m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_max, m_sample_y_min, 0));
+      m_sample_boundaries = m_sample_polygon;
+      // m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_min, m_sample_y_min, 0));
+      // m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_min, m_sample_y_max, 0));
+      // m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_max, m_sample_y_max, 0));
+      // m_sample_boundaries.points.push_back(pcl::PointXYZ(m_sample_x_max, m_sample_y_min, 0));
     }
-    m_sample_boundaries.header.frame_id = m_base_frame_id;
-    m_sample_boundaries.height = 1;
-    m_sample_boundaries.width = m_sample_boundaries.points.size();
+    // m_sample_boundaries.header.frame_id = m_base_frame_id;
+    // m_sample_boundaries.height = 1;
+    // m_sample_boundaries.width = m_sample_boundaries.points.size();
 
     ROS_INFO("Setting sample bounds to (%g,%g) (%g,%g) (%g,%g) (%g,%g) (%s)", m_sample_boundaries.points[0].x, m_sample_boundaries.points[0].y, m_sample_boundaries.points[1].x, m_sample_boundaries.points[1].y, m_sample_boundaries.points[2].x, m_sample_boundaries.points[2].y, m_sample_boundaries.points[3].x, m_sample_boundaries.points[3].y,
         initial? "true" : "false");
