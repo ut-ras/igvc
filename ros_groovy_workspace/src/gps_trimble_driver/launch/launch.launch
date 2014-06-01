@@ -1,12 +1,14 @@
 <launch>
-  <node name="gps_trimble_driver" pkg="gps_trimble_driver" type="gpsPublisher.py" >
+  <node name="gps_trimble_driver" pkg="gps_trimble_driver" type="gpsPublisher.py" output="screen">
     <param name="GPS_IP" value="192.168.2.201" />
   </node>
-  <node name="utm_odometry_node" pkg="gps_common" type="utm_odometry_node" >
+
+  <node name="utm_odometry_node" pkg="gps_common" type="utm_odometry_node" output="screen">
     <remap from="fix" to="/gps/trimble/fix" />
     <param name="child_frame_id" value="UTM_global" />
     <remap from="odom" to="/gps/trimble/odom" />
   </node>		 
+
   <node name="utm_relativeizer" pkg="gps_trimble_driver" type="relativeizeOdometry" output="screen" >
     <remap from="relative" to="/gps/trimble/pose" />
     <remap from="absolute" to="/gps/trimble/odom" />

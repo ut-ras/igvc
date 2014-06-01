@@ -7,6 +7,13 @@ from geometry_msgs.msg import Twist, PoseWithCovariance
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64
 
+USING_GPS = False
+
+def wrapAngleUpdate(current, update):
+    # source: http://stackoverflow.com/a/2007279
+    diff = math.atan2(math.sin(current - update), math.cos(current - update))
+    return current - diff
+
 class Sensor:
     def __init__(self, topicName, msgType, getMeasurementVector, covariance, jacobian_funct, observation_funct, covariance_func=None):
         self.covariance = covariance
@@ -24,7 +31,7 @@ def initSensors():
         Sensor(
             "speedometer/lm4f/vel_data", 
             Twist,
-            lambda twist: numpy.matrix([ [twist.linear.x], [twist.angular.z] ]),
+            lambda twist, cur: numpy.matrix([ [twist.linear.x], [twist.angular.z] ]),
             numpy.eye(2) * 1e-6,
             EKF.velocity_jacobian_funct, 
             EKF.velocity_observation_funct ),
@@ -32,22 +39,24 @@ def initSensors():
         Sensor(
             "imu/vn200/heading", 
             Float64, 
-            lambda yaw: numpy.matrix([ [0.0], [0.0], [yaw.data] ]),
-            numpy.eye(3) * 1e-4,
+            lambda yaw, cur: numpy.matrix([ [0.0], [0.0], [wrapAngleUpdate(cur[2,0], yaw.data)] ]),
+            numpy.eye(3) * 1e-1,
             EKF.orientation_jacobian_funct, 
             EKF.orientation_observation_funct )
     ]
-    """
-        Sensor(
-            "gps/trimble/pose", 
-            PoseWithCovariance, 
-            lambda pose: numpy.matrix([ [pose.pose.position.x], [pose.pose.position.y] ]),
-            numpy.eye(2) * 5.0,
-            EKF.position_jacobian_funct,
-            EKF.position_observation_funct,
-            lambda pose: numpy.reshape( pose.covariance[0:2] +
-                                        pose.covariance[6:8], (2,2) ) ) 
-    """
+    
+    global USING_GPS
+    if USING_GPS:
+        sensors.append(
+            Sensor(
+                "gps/trimble/pose", 
+                PoseWithCovariance, 
+                lambda pose, cur: numpy.matrix([ [pose.pose.position.x], [pose.pose.position.y] ]),
+                numpy.eye(2) * 5.0,
+                EKF.position_jacobian_funct,
+                EKF.position_observation_funct,
+                lambda pose: numpy.reshape( pose.covariance[0:2] +
+                                            pose.covariance[6:8], (2,2) ) ) ) 
 
     for index in range(len(sensors)):
         sensors[index].index = index
@@ -104,13 +113,16 @@ def makeCallback(sensor, ekf):
         if sensor.covariance_func is not None :
             ekf.R_arr[sensor.index] = sensor.covariance_func(data)
         
-        measurement_vector = sensor.getMeasurementVector(data)
+        measurement_vector = sensor.getMeasurementVector(data, ekf.GetCurrentState())
         ekf.Step(sensor.index, measurement_vector)
  
     return callback
 
 def main():
     rospy.init_node('ekf_node', anonymous=False)
+
+    global USING_GPS
+    USING_GPS = rospy.get_param('~using_gps', True)
 
     sensors = initSensors()
     ekf = initEKF(sensors)
@@ -130,13 +142,18 @@ def main():
         rate.sleep()
     
     rospy.loginfo("EKF received sensor data and now publishing");
-    
+   
+    count = 0; 
     while not rospy.is_shutdown():
+        count += 1
+        print "predicting", count
         ekf.Predict()
 
+        print "creating & publishing msg"
         msg = createMsgFromEKF(ekf)
         pub.publish(msg)
 
+        print "sending tf transform"
         br.sendTransform(
             ( msg.pose.pose.position.x, 
               msg.pose.pose.position.y,
@@ -149,6 +166,7 @@ def main():
             "base_link",
             "map") 
 
+        print "sleeping"
         rate.sleep()
 
 if __name__ == "__main__":

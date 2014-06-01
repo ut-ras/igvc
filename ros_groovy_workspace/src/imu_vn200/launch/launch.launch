@@ -1,4 +1,4 @@
 <launch>
-    <node pkg="imu_vn200" type="imu_vn200_driver.py" name="imu_vn200_driver"/>
-    <node pkg="imu_vn200" type="imu-to-yaw.py" name="imu_to_yaw"/>
+    <node pkg="imu_vn200" type="imu_vn200_driver.py" name="imu_vn200_driver" output="screen"/>
+    <node pkg="imu_vn200" type="imu-to-yaw.py" name="imu_to_yaw" output="screen"/>
 </launch>
