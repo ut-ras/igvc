@@ -31,12 +31,12 @@
         </geometry>
       </collision>
 
-      <visual name='base2_v'>
+      <!--<visual name='base2_v'>
         <origin xyz="-0.2413 0 0.6588" rpy="0 0 0"/>
         <geometry>
           <box size="0.6858 0.6096 0.3302"/>
         </geometry>
-      </visual>
+      </visual>-->
 
       <!--<collision name='base3_c'>
         <origin xyz="0.0889 0 1.10965" rpy="0 0 0"/>
@@ -215,8 +215,15 @@
       </visual>
     </link>
     
+    <!-- x=0.19
+    y=0.21
+    z=0.73
+    49.3 pitch, 45 yaw -->
     <joint name="left_camera_joint" type="fixed">
-        <origin xyz="0.2667 0.0508 1.332" rpy="0 0.785398163 0"/>
+   
+      <!-- <origin xyz="0.2667 0.0508 1.332" rpy="0 0.785398163 0"/> -->
+      <origin xyz="0.19 0.21 0.73" rpy="0 0.860447321 0.785398163"/>
+      <!-- <origin xyz="0.1524 0.1524 0.7112" rpy="0 0.785 0.9"/> -->
       <parent link="base_link"/>
       <child link="left_camera_link"/>
     </joint>
@@ -263,8 +270,14 @@
       </visual>
     </link>
     
+
+    <!-- x=0.17
+    y=-0.215
+    z=0.73
+    57.45 pitch 45 yaw -->
     <joint name="right_camera_joint" type="fixed">
-        <origin xyz="0.2667 -0.05715 1.332" rpy="0 0.785398163 0"/>
+      <!-- <origin xyz="0.2667 -0.05715 1.332" rpy="0 0.785398163 0"/> -->
+      <origin xyz="0.17 -0.215 0.73" rpy="0 1.00269166 -0.785398163"/>
       <parent link="base_link"/>
       <child link="right_camera_link"/>
     </joint>

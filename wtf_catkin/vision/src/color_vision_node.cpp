@@ -38,6 +38,8 @@ namespace vision
     m_nh.param("s_expansion", m_s_expansion, 5);
     m_nh.param("v_expansion", m_v_expansion, 5);
 
+    m_nh.param("only_use_initial_colors", m_only_use_initial_colors, true);
+
     m_nh.param("publish_debug_images", m_publish_debug_images, true);
 
     int subscriber_queue_size = 1;
@@ -157,7 +159,7 @@ namespace vision
 
   bool ColorVisionNode::isOnImage(cv::Mat mat, int x, int y)
   {
-    return (x < mat.cols) && (y < mat.rows);
+    return (x >= 0) && (y >= 0) && (x < mat.cols) && (y < mat.rows);
   }
 
   void ColorVisionNode::updateColorRegions(cv::Mat mat, cv::vector<cv::Point> contour)
@@ -207,7 +209,10 @@ namespace vision
           continue;
         }
 
-        unsigned char val = mask.at<unsigned char>(y, x); //
+        assert(x >= 0);
+        assert(y >= 0);
+
+        unsigned char val = mask.at<unsigned char>(y, x);
         if(val > 0)
         {
           cv::Vec3b rgb_color = mat.at<cv::Vec3b>(y, x);
@@ -394,6 +399,249 @@ namespace vision
     m_obstacle_cloud_pub.publish(obstacle_cloud_msg);
   }
 
+  bool lineIntersection(cv::Point p1, cv::Point p2, cv::Point p3, cv::Point p4, cv::Point& intersection) 
+  {
+    float x1 = p1.x, x2 = p2.x, x3 = p3.x, x4 = p4.x;
+    float y1 = p1.y, y2 = p2.y, y3 = p3.y, y4 = p4.y;
+     
+    float d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    // If d is zero, there is no intersection
+    if (d == 0) return false;
+     
+    // Get the x and y
+    float pre = (x1*y2 - y1*x2), post = (x3*y4 - y3*x4);
+    float x = ( pre * (x3 - x4) - (x1 - x2) * post ) / d;
+    float y = ( pre * (y3 - y4) - (y1 - y2) * post ) / d;
+     
+    // Check if the x and y coordinates are within both lines
+    if ( x < std::min(x1, x2) || x > std::max(x1, x2) ||
+    x < std::min(x3, x4) || x > std::max(x3, x4) ) return false;
+    if ( y < std::min(y1, y2) || y > std::max(y1, y2) ||
+    y < std::min(y3, y4) || y > std::max(y3, y4) ) return false;
+     
+    // Return the point of intersection
+    intersection.x = x;
+    intersection.y = y;
+    return true;
+  }
+
+  enum Edge
+  {
+    LEFT,
+    RIGHT,
+    TOP,
+    BOTTOM
+  };
+
+  void ColorVisionNode::clampContourToImage(cv::Mat& mat, cv::vector<cv::Point>& contour)
+  {
+    int min_x = std::numeric_limits<unsigned int>::max();
+    int min_y = std::numeric_limits<unsigned int>::max();
+    int max_x = 0;
+    int max_y = 0;
+    for(unsigned int i = 0; i < contour.size(); i++)
+    {
+      if(contour[i].x < min_x)
+      {
+        min_x = contour[i].x;
+      }
+      if(contour[i].y < min_y)
+      {
+        min_y = contour[i].y;
+      }
+      if(contour[i].x > max_x)
+      {
+        max_x = contour[i].x;
+      }
+      if(contour[i].y > max_y)
+      {
+        max_y = contour[i].y;
+      }
+      ROS_INFO("Parsing %d,%d", contour[i].x, contour[i].y);
+    }
+
+    // cv::Mat mask(max_y-min_y, max_x=min_x, CV_8U, cv::Scalar(0));
+
+    // cv::vector<cv::Point> shifted_contour = contour;;
+    // for(unsigned int i = 0; i < shifted_contour.size(); i++)
+    // {
+    //   shifted_contour[i].x -= min_x;
+    //   shifted_contour[i].y -= min_y;
+    // }
+
+    // const cv::Point* contours[1] = {&contour[0]};
+    // int contours_n[1] = {contour.size()};
+
+    // std::vector<Point>& polyContour
+    // cv::fillPoly(mask, contours, contours_n, 1, cv::Scalar(255));
+    // approxPolyDP(mask, polyContour, accuracy, true);
+
+  }
+
+  // void ColorVisionNode::clampContourToImage(cv::Mat& mat, cv::vector<cv::Point>& contour)
+  // {
+  //   std::cerr << "clamping!" << std::endl;
+  //   cv::Point ul(0, 0);
+  //   cv::Point ur(mat.cols-1, 0);
+  //   cv::Point ll(0, mat.rows-1);
+  //   cv::Point lr(mat.cols-1, mat.rows-1);
+
+  //   assert(contour.size() == 4);// TODO: REMOVE!
+
+  //   cv::vector<cv::Point> clamped_contour;
+  //   for(unsigned int i = 0; i < contour.size(); i++)
+  //   {
+  //     std::cerr << "wat" << i << std::endl;
+  //     if(isOnImage(mat, contour[i].x, contour[i].y))
+  //     {
+  //       clamped_contour.push_back(contour[i]);
+  //     }
+  //     else //not on the image, replace with two intersection points
+  //     {
+  //       unsigned int p1_idx_1 = (i == 0)? contour.size() - 1 : i - 1;
+  //       unsigned int p1_idx_2 = i;
+  //       unsigned int p2_idx_1 = (i == contour.size() - 1)? 0 : i + 1;
+  //       unsigned int p2_idx_2 = i;
+  //       cv::Point p1, p2;
+
+  //       int num_to_skip = 0;
+  //       while(!isOnImage(mat, contour[p1_idx_1].x, contour[p1_idx_1].y))
+  //       {
+  //         p1_idx_2 = p1_idx_1;
+  //         p1_idx_1 = (p1_idx_1 == 0)? contour.size() - 1 : p1_idx_1 - 1;
+  //         ROS_INFO("1 Skipping to %d->%d (%d) ", p1_idx_1, p1_idx_2, contour.size());
+  //         assert(p1_idx_1 != i); //looped => something horrible happened
+  //       }
+  //       while(!isOnImage(mat, contour[p2_idx_1].x, contour[p2_idx_1].y))
+  //       {
+  //         int last_p2_1 = p2_idx_1;
+  //         int last_p2_2 = p2_idx_2;
+  //         p2_idx_2 = p2_idx_1; // 2.2 <= 1
+  //         p2_idx_1 = (p2_idx_1 == contour.size() - 1)? 0 : p2_idx_1 + 1; // 2.1 <= 1+1 = 2
+  //         ROS_INFO("2 Skipping from %d->%d to %d->%d (%d)", last_p2_1, last_p2_2, p2_idx_1, p2_idx_2, contour.size());
+  //         assert(last_p2_1 != p2_idx_1);
+  //         //2 Skipping to 1->0 (4)
+  //         //p2_idx_1 = 1
+  //         //p2_idx_2 = 0
+
+  //         assert(p2_idx_1 != i); //looped => something horrible happened
+  //         num_to_skip++;
+  //       }
+
+  //       Edge edge1;
+  //       cv::Point intersection;
+  //       if(lineIntersection(contour[p1_idx_1], contour[p1_idx_2], ul, ur, intersection))
+  //       {
+  //         p1 = intersection;
+  //         edge1 = TOP;
+  //       }
+  //       else if(lineIntersection(contour[p1_idx_1], contour[p1_idx_2], ur, lr, intersection))
+  //       {
+  //         p1 = intersection;
+  //         edge1 = RIGHT;
+  //       }
+  //       else if(lineIntersection(contour[p1_idx_1], contour[p1_idx_2], lr, ll, intersection))
+  //       {
+  //         p1 = intersection;
+  //         edge1 = BOTTOM;
+  //       }
+  //       else if(lineIntersection(contour[p1_idx_1], contour[p1_idx_2], ll, ul, intersection))
+  //       {
+  //         p1 = intersection;
+  //         edge1 = LEFT;
+  //       }
+  //       else
+  //       {
+  //         assert(0); // this should never happen
+  //       }
+
+  //       Edge edge2;
+  //       if(lineIntersection(contour[p2_idx_1], contour[p2_idx_2], ul, ur, intersection))
+  //       {
+  //         p2 = intersection;
+  //         edge2 = TOP;
+  //       }
+  //       else if(lineIntersection(contour[p2_idx_1], contour[p2_idx_2], ur, lr, intersection))
+  //       {
+  //         p2 = intersection;
+  //         edge2 = RIGHT;
+  //       }
+  //       else if(lineIntersection(contour[p2_idx_1], contour[p2_idx_2], lr, ll, intersection))
+  //       {
+  //         p2 = intersection;
+  //         edge2 = BOTTOM;
+  //       }
+  //       else if(lineIntersection(contour[p2_idx_1], contour[p2_idx_2], ll, ul, intersection))
+  //       {
+  //         p2 = intersection;
+  //         edge2 = LEFT;
+  //       }
+  //       else
+  //       {
+  //         assert(0); // this should never happen
+  //       }
+
+  //       if(edge1 == edge2)
+  //       {
+  //         clamped_contour.push_back(p1);
+  //         clamped_contour.push_back(p2);
+  //       }
+  //       else if(edge1 == TOP && edge2 == LEFT)
+  //       {
+  //         clamped_contour.push_back(p1);
+  //         clamped_contour.push_back(ul);
+  //         clamped_contour.push_back(p2);
+  //         ROS_INFO("Area contained UL");
+  //       }
+  //       else if(edge1 == TOP && edge2 == RIGHT)
+  //       {
+  //         clamped_contour.push_back(p1);
+  //         clamped_contour.push_back(ur);
+  //         clamped_contour.push_back(p2);
+  //         ROS_INFO("Area contained UR");
+  //       }
+  //       else if(edge1 == BOTTOM && edge2 == LEFT)
+  //       {
+  //         clamped_contour.push_back(p1);
+  //         clamped_contour.push_back(ll);
+  //         clamped_contour.push_back(p2);
+  //         ROS_INFO("Area contained LL");
+  //       }
+  //       else if(edge1 == BOTTOM && edge2 == RIGHT)
+  //       {
+  //         clamped_contour.push_back(p1);
+  //         clamped_contour.push_back(lr);
+  //         clamped_contour.push_back(p2);
+  //         ROS_INFO("Area contained LR");
+  //       }
+  //       else if((edge1 == LEFT && edge2 == RIGHT) || (edge1 == RIGHT && edge2 == LEFT))
+  //       {
+  //         clamped_contour.push_back(p1);
+  //         clamped_contour.push_back(lr);
+  //         clamped_contour.push_back(p2);
+  //         ROS_INFO("Area contained L");
+  //       }
+  //       else
+  //       {
+  //         assert(0); // this should never happen
+  //       }
+
+  //       i += num_to_skip;
+  //     }
+  //   }
+
+  //   std::cerr << "Modified contour: ";
+  //   for(unsigned int i = 0; i < clamped_contour.size(); i++)
+  //   {
+  //     std::cerr << "(" << clamped_contour[i].x << "," << clamped_contour[i].y << ")";
+  //     if(i != (clamped_contour.size()-1))
+  //     {
+  //       std::cerr << ",";
+  //     }
+  //   }
+  //   contour = clamped_contour;
+  // }
+
   void ColorVisionNode::imageCallback(const sensor_msgs::ImageConstPtr& image)
   {
 //    if(m_first_sample)
@@ -405,20 +653,21 @@ namespace vision
 //      ROS_INFO_ONCE("Getting contour from (%g,%g) (%g,%g) (%g,%g) (%g,%g)", m_sample_boundaries.points[0].x, m_sample_boundaries.points[0].y, m_sample_boundaries.points[1].x, m_sample_boundaries.points[1].y, m_sample_boundaries.points[2].x, m_sample_boundaries.points[2].y, m_sample_boundaries.points[3].x, m_sample_boundaries.points[3].y);
 //    }
 
+    sensor_msgs::Image ros_img = *image;
+    cv_bridge::CvImagePtr bridge_img = cv_bridge::toCvCopy(ros_img, ros_img.encoding);
+    cv::Mat rgb_mat = bridge_img->image;
+
     if(!m_image_coordinate_lists_initialized)
     {
       if(!transformCloudToCamera(image->header, m_ground_grid, m_ground_image_points) || !transformCloudToCamera(image->header, m_sample_boundaries, m_sample_area_contour))
       {
         return;
       }
+      clampContourToImage(rgb_mat, m_sample_area_contour);
       m_image_coordinate_lists_initialized = true;
     }
 
-    sensor_msgs::Image ros_img = *image;
-    cv_bridge::CvImagePtr bridge_img = cv_bridge::toCvCopy(ros_img, ros_img.encoding);
-    cv::Mat rgb_mat = bridge_img->image;
-
-    if((ros::Time::now() - m_last_sample_time) > ros::Duration(m_sample_period))
+    if(m_first_sample || (((ros::Time::now() - m_last_sample_time) > ros::Duration(m_sample_period)) && !m_only_use_initial_colors))
     {
       updateColorRegions(rgb_mat, m_sample_area_contour);
     }
@@ -452,6 +701,7 @@ namespace vision
     {
       generateSampleRegion(false);
       transformCloudToCamera(image->header, m_sample_boundaries, m_sample_area_contour);
+      clampContourToImage(rgb_mat, m_sample_area_contour);
       m_first_sample = false;
     }
   }
