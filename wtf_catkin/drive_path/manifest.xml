@@ -1,0 +1,20 @@
+<package>
+  <description brief="drive_path">
+
+     drive_path
+
+  </description>
+  <author>jjames</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/drive_path</url>
+  <depend package="roscpp"/>
+  <depend package="actionlib"/>
+  <depend package="geometry_msgs"/>
+  <depend package="nav_msgs"/>
+  <depend package="move_base"/>
+  <depend package="tf"/>
+
+</package>
+
+

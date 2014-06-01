@@ -26,6 +26,10 @@
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 
+#include <boost/tokenizer.hpp>
+#include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
+
 namespace vision
 {
   class ColorRegion
@@ -45,13 +49,13 @@ namespace vision
 
     void expand(unsigned char c0, unsigned char c1, unsigned char c2)
     {
-      min.val[0] = (min.val[0] > c0)? min.val[0] - c0 : 0;
-      min.val[1] = (min.val[1] > c1)? min.val[1] - c1 : 0;
-      min.val[2] = (min.val[2] > c2)? min.val[2] - c2 : 0;
+      min.val[0] = (min.val[0] > c0) ? min.val[0] - c0 : 0;
+      min.val[1] = (min.val[1] > c1) ? min.val[1] - c1 : 0;
+      min.val[2] = (min.val[2] > c2) ? min.val[2] - c2 : 0;
 
-      max.val[0] = ((255 - max.val[0]) > c0)? max.val[0] + c0 : 255;
-      max.val[1] = ((255 - max.val[1]) > c1)? max.val[1] + c1 : 255;
-      max.val[2] = ((255 - max.val[2]) > c2)? max.val[2] + c2 : 255;
+      max.val[0] = ((255 - max.val[0]) > c0) ? max.val[0] + c0 : 255;
+      max.val[1] = ((255 - max.val[1]) > c1) ? max.val[1] + c1 : 255;
+      max.val[2] = ((255 - max.val[2]) > c2) ? max.val[2] + c2 : 255;
     }
 
     void print()
@@ -66,7 +70,7 @@ namespace vision
 
     void addProbableColor(cv::Vec3b color, double std_dev_factor)
     {
-      if(!initialized)
+      if (!initialized)
       {
         mean[0] = color.val[0];
         mean[1] = color.val[1];
@@ -80,7 +84,7 @@ namespace vision
       else
       {
         assert(num_colors_added > 0.0);
-        if(num_colors_added >= 2.0)
+        if (num_colors_added >= 2.0)
         {
           var[0] = (num_colors_added - 2) / (num_colors_added - 1) * var[0] + (color.val[0] - mean[0]) * (color.val[0] - mean[0]) / num_colors_added;
           var[1] = (num_colors_added - 2) / (num_colors_added - 1) * var[1] + (color.val[1] - mean[1]) * (color.val[1] - mean[1]) / num_colors_added;
@@ -96,15 +100,15 @@ namespace vision
       min.val[2] = mean[2];
       max = min;
 
-//      ROS_INFO("(%d,%d,%d) => (%g,%g), (%g,%g), (%g,%g)", color.val[0], color.val[1], color.val[2], mean[0], var[0], mean[1], var[1], mean[2], var[2]);
+      //      ROS_INFO("(%d,%d,%d) => (%g,%g), (%g,%g), (%g,%g)", color.val[0], color.val[1], color.val[2], mean[0], var[0], mean[1], var[1], mean[2], var[2]);
 
       expand(std_dev_factor * sqrt(var[0]), std_dev_factor * sqrt(var[1]), std_dev_factor * sqrt(var[2]));
-//      expand(std_dev_factor * var[0], std_dev_factor * var[1], std_dev_factor * var[2]);
+      //      expand(std_dev_factor * var[0], std_dev_factor * var[1], std_dev_factor * var[2]);
     }
 
     void addColor(cv::Vec3b color)
     {
-      if(!initialized)
+      if (!initialized)
       {
         min = color;
         max = color;
@@ -112,27 +116,27 @@ namespace vision
       }
       else
       {
-        if(color.val[0] < min.val[0])
+        if (color.val[0] < min.val[0])
         {
           min.val[0] = color.val[0];
         }
-        if(color.val[1] < min.val[1])
+        if (color.val[1] < min.val[1])
         {
           min.val[1] = color.val[1];
         }
-        if(color.val[2] < min.val[2])
+        if (color.val[2] < min.val[2])
         {
           min.val[2] = color.val[2];
         }
-        if(color.val[0] > max.val[0])
+        if (color.val[0] > max.val[0])
         {
           max.val[0] = color.val[0];
         }
-        if(color.val[1] > max.val[1])
+        if (color.val[1] > max.val[1])
         {
           max.val[1] = color.val[1];
         }
-        if(color.val[2] > max.val[2])
+        if (color.val[2] > max.val[2])
         {
           max.val[2] = color.val[2];
         }
@@ -143,7 +147,7 @@ namespace vision
   class ColorVisionNode
   {
   public:
-    ColorVisionNode(const ros::NodeHandle& nh);
+    ColorVisionNode(const ros::NodeHandle &nh);
     ~ColorVisionNode();
     void spin();
 
@@ -157,14 +161,16 @@ namespace vision
     double m_y_min;
     double m_y_max;
     double m_sample_period;
-    double m_sample_x_min;
-    double m_sample_x_max;
-    double m_sample_y_min;
-    double m_sample_y_max;
-    double m_initial_sample_x_min;
-    double m_initial_sample_x_max;
-    double m_initial_sample_y_min;
-    double m_initial_sample_y_max;
+    // double m_sample_x_min;
+    // double m_sample_x_max;
+    // double m_sample_y_min;
+    // double m_sample_y_max;
+    // double m_initial_sample_x_min;
+    // double m_initial_sample_x_max;
+    // double m_initial_sample_y_min;
+    // double m_initial_sample_y_max;
+    pcl::PointCloud<pcl::PointXYZ> m_sample_polygon;
+    pcl::PointCloud<pcl::PointXYZ> m_initial_sample_polygon;
     int m_num_color_regions;
     bool m_only_use_initial_colors;
 
@@ -205,7 +211,7 @@ namespace vision
 
     struct color_compare
     {
-      bool operator()(const cv::Vec3b& lhs, const cv::Vec3b& rhs) const
+      bool operator()(const cv::Vec3b &lhs, const cv::Vec3b &rhs) const
       {
         unsigned long lhs_val = (lhs.val[0] << 0) + (lhs.val[1] << 16) + (lhs.val[2] << 8);
         unsigned long rhs_val = (rhs.val[0] << 0) + (rhs.val[1] << 16) + (rhs.val[2] << 8);
@@ -226,19 +232,22 @@ namespace vision
 
     void drawRegion(cv::Mat mat, cv::vector<cv::Point> contour, CvScalar line_color);
     void updateColorRegions(cv::Mat mat, cv::vector<cv::Point> contour);
-    void thresholdImage(cv::Mat mat, std::vector<ColorRegion> regions, cv::Mat& thresholded);
-    bool transformGridToCamera(std::vector<sensor_msgs::Image>& images, pcl::PointCloud<pcl::PointXYZ> grid, std::vector<pcl::PointCloud<pcl::PointXYZ> >& clouds);
+    void thresholdImage(cv::Mat mat, std::vector<ColorRegion> regions, cv::Mat &thresholded);
+    bool transformGridToCamera(std::vector<sensor_msgs::Image> &images, pcl::PointCloud<pcl::PointXYZ> grid, std::vector<pcl::PointCloud<pcl::PointXYZ> > &clouds);
     void generateGroundGrid();
     void generateSampleRegion(bool initial);
     bool isKnownObstacleColor(cv::Vec3b color);
     bool isGroundColor(cv::Vec3b color);
-    void classifyGroundGrid(cv::Mat& mat, std_msgs::Header image_header);
-    bool transformCloudToCamera(std_msgs::Header image_header, pcl::PointCloud<pcl::PointXYZ>& cloud, std::vector<cv::Point>& image_points);
+    void classifyGroundGrid(cv::Mat &mat, std_msgs::Header image_header);
+    bool transformCloudToCamera(std_msgs::Header image_header, pcl::PointCloud<pcl::PointXYZ> &cloud, std::vector<cv::Point> &image_points);
     bool isOnImage(cv::Mat mat, int x, int y);
-    void clampContourToImage(cv::Mat& mat, cv::vector<cv::Point>& contour);
+    void clampContourToImage(cv::Mat &mat, cv::vector<cv::Point> &contour);
     cv::Vec3b rgb2hsv(cv::Vec3b rgb);
 
-    void imageCallback(const sensor_msgs::ImageConstPtr& image);
+    void parsePoints(std::string point_string, pcl::PointCloud<pcl::PointXYZ>& points);
+    void parseColors(std::string point_string, std::vector<cv::Vec3b> &colors);
+
+    void imageCallback(const sensor_msgs::ImageConstPtr &image);
   };
 }
 

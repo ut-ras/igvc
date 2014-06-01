@@ -9,7 +9,6 @@ namespace vision
     m_nh.param("neighborhood_radius", m_neighborhood_radius, 0.2);
     m_nh.param("min_neighbors", m_min_neighbors, 3);
     m_nh.param("sensor_frame_id", m_sensor_frame_id, std::string("/base_link"));
-    m_nh.param("fixed_frame_id", m_fixed_frame_id, std::string("/map"));
     m_nh.param("sync_clouds", m_sync_clouds, true);
     m_nh.param("double_filter", m_double_filter, true);
 
@@ -52,7 +51,7 @@ namespace vision
       ROS_ERROR_STREAM_THROTTLE(1.0, "Transform between " << header.frame_id << " and " << cloud.header.frame_id << " at time " << header.stamp << " failed!");
       return false;
     }
-    pcl_ros::transformPointCloud(header.frame_id, header.stamp, cloud, m_fixed_frame_id, synced_cloud, m_tf_listener);
+    pcl_ros::transformPointCloud(header.frame_id, header.stamp, cloud, cloud.header.frame_id, synced_cloud, m_tf_listener);
 
     return true;
   }

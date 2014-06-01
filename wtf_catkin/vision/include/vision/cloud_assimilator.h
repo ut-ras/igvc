@@ -33,7 +33,6 @@ namespace vision
     double m_neighborhood_radius;
     int m_min_neighbors;
     std::string m_sensor_frame_id;
-    std::string m_fixed_frame_id;
     bool m_sync_clouds;
     bool m_double_filter;
 
