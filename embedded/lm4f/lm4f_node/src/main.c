@@ -180,6 +180,7 @@ int main(void) {
     while (1) {
         char buf[100] = {0};
         int numbytes = ReadLine(buf, 100);
+        
         if (!checkFormat(buf, numbytes)) {
             Puts("bad format!\n");
         } else {
@@ -195,8 +196,8 @@ int main(void) {
             
             Printf(
                 "{\"received\":{\"right\":%d,\"left\":%d},"
-                "motors\":{\"right\":%f,\"left\":%f},"
-                "deltas\":{\"right\":%d,\"left\":%d}}\n",
+                "\"motors\":{\"right\":%f,\"left\":%f},"
+                "\"deltas\":{\"right\":%d,\"left\":%d}}\n",
                 goalDeltaTicksRight, goalDeltaTicksLeft, 
                 right.prevCommand, left.prevCommand, 
                 right.deltaTicks, left.deltaTicks);

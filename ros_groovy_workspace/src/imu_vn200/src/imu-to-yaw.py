@@ -11,7 +11,7 @@ if __name__ == "__main__" :
     rospy.init_node("imu_to_yaw")
     rospy.loginfo("imu to yaw node started")
     rate = rospy.Rate(10)
-    pub = rospy.Publisher( 'orientation_data', Float64)
+    pub = rospy.Publisher( '/imu/vn200/heading', Float64)
     def callback ( data, pub=pub) :
             angle = ((math.atan2(data.compass.y,data.compass.x) + (math.pi / 2)) % (2*math.pi)) 
             pub.publish( angle )
