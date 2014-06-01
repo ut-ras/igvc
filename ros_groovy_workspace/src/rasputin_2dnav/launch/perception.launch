@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <launch>
   <param name="robot_description" textfile="$(find igvc_sim)/models/hal/model.urdf"/>
   
@@ -32,6 +33,7 @@
     <param name="std_dev_factor" value="2.5"/>
     
     <param name="publish_debug_images" value="true"/>
+    <param name="only_use_initial_colors" value="false"/>
   </node>
   
   <!-- NOTE: color in right eye appears to be worse than in left -->
@@ -62,6 +64,7 @@
     <param name="std_dev_factor" value="2.5"/>
     
     <param name="publish_debug_images" value="true"/>
+    <param name="only_use_initial_colors" value="false"/>
   </node>
   
   <node pkg="vision" type="cloud_assimilator" name="cloud_assimilator" output="screen">

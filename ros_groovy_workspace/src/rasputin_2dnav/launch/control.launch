@@ -7,4 +7,50 @@
     <rosparam file="$(find rasputin_2dnav)/yaml/base_local_planner_params.yaml" command="load" />
   </node>
 
+  <!--
+	INTERMEDIATE: 
+	- Translation: [7.932, -0.029, 0.000]
+	- Rotation: in Quaternion [0.000, 0.000, -0.011, 1.000]
+	            in RPY [0.000, 0.000, -0.021]
+
+
+	- Translation: [13.963, 5.345, 0.000]
+	- Rotation: in Quaternion [0.000, 0.000, 0.897, 0.442]
+	            in RPY [0.000, -0.000, 2.227]
+
+
+	- Translation: [13.370, 12.113, 0.000]
+	- Rotation: in Quaternion [0.000, 0.000, 0.517, 0.856]
+	            in RPY [0.000, -0.000, 1.087]
+
+
+	REAL:
+	- Translation: [4.378, 17.300, 0.000]
+	- Rotation: in Quaternion [0.000, 0.000, 1.000, -0.002]
+	            in RPY [0.000, -0.000, -3.137]
+
+	- Translation: [-7.297, 17.300, 0.000]
+	- Rotation: in Quaternion [0.000, 0.000, 0.999, -0.050]
+	            in RPY [0.000, -0.000, -3.041]
+
+	INTERMEDIATE: 
+	- Translation: [-15.284, 10.783, 0.000]
+	- Rotation: in Quaternion [0.000, 0.000, -0.766, 0.642]
+	            in RPY [0.000, 0.000, -1.746]
+
+	- Translation: [-16.729, 0.243, 0.000]
+	- Rotation: in Quaternion [0.000, 0.000, 0.015, 1.000]
+	            in RPY [0.000, -0.000, 0.029]
+
+
+	FINISH:
+	- Translation: [-2.103, -0.091, 0.000]
+	- Rotation: in Quaternion [0.000, 0.000, 0.034, 0.999]
+	            in RPY [0.000, -0.000, 0.068]
+  -->
+
+  <node pkg="drive_path" type="drive_path" name="drive_path" output="screen">
+  	<param name="waypoints" value="(7.932, -0.029, -0.021), (13.963, 5.345, 2.227), (13.370, 12.113, 1.087), (4.378, 17.300, -3.137), (-7.297, 17.300, -3.041), (-15.284, 10.783, -1.746), (-16.729, 0.243, 0.029), (-2.103, -0.091, 0.068)"/>
+  </node>
+
 </launch>
