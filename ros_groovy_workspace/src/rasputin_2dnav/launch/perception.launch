@@ -2,7 +2,7 @@
 <launch>
   <param name="robot_description" textfile="$(find igvc_sim)/models/hal/model.urdf"/>
   
-  <node pkg="ekf" type="ekf_node.py" name="ekf_node" output="screen"/>
+  <!--<node pkg="ekf" type="ekf_node.py" name="ekf_node" output="screen"/>-->
   
   <node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher">
     <param name="publish_frequency" type="double" value="50.0" />
