@@ -48,7 +48,7 @@
     // Subscribe to yaw
     var ylistener = new ROSLIB.Topic({
       ros : ros,
-      name : '/orientation_data',
+      name : '/yaw',
       messageType : 'std_msgs/Float64'
     });
 

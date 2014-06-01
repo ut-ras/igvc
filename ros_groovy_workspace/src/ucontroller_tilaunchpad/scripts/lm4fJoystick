@@ -12,14 +12,15 @@
 # Kevin Gilbert
 #################
 import roslib; roslib.load_manifest('ucontroller_tilaunchpad')
-import json, serial, sys, os, roslib.packages, time
+import json, serial, sys, os, roslib.packages, time, math
 import rospy, traceback,subprocess
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 ##################################
 # Node parameters
 #################
-TOPIC = 'lm4f_debug'
+DEBUG_TOPIC = 'lm4f_debug'
+VEL_TOPIC = 'speedometer/lm4f/vel_data'
 SUBSCRIBER = 'vel_cmd'
 SERIAL_LINE = '/dev/lm4f'
 BAUD_RATE = 115200
@@ -29,6 +30,14 @@ rstLm4fFlag = '-C'
 rstLm4fdst = os.path.abspath(os.path.join(os.path.abspath(roslib.packages.get_pkg_dir('ucontroller_tilaunchpad')),'../../../../igvc2014/embedded/lm4f/lm4f_node/')
 )
 rstLm4farg = 'flash'
+
+### Robot info (found from measurements)
+WHEEL_AXIS_LEN = 0.5 # meters
+WHEEL_DIAMETER = 0.254
+TICKS_PER_REV = 8192.0
+TICKS_PER_METER = TICKS_PER_REV / (WHEEL_DIAMETER * math.pi)
+PID_LOOP_RATE = 10.0
+
 ##################################
 
 ##################################
@@ -40,19 +49,38 @@ rstLm4farg = 'flash'
 #    Called when data received 
 #    from subscriber topic.
 ##################################
-def lm4f_handler(data, pub):
+def lm4f_handler(data, pubs):
     try:
         # Parse and send data to LM4F
         sendCommand(data) 
-        # Read response and print to logs/debug topic
+        
+        # Read response
         response = comm.readline()
 
+        # Parse data into json
         try:
-            data = json.loads(response);
-            rospy.loginfo(rospy.get_name()+": LM4F response: "+str(data))
-            pub.publish(response) 
+            respData = json.loads(response);
         except:
-            rospy.loginfo(rospy.get_name()+": unable to parse ucontroller data: [["+response+"]]") 
+            rospy.loginfo(rospy.get_name()+": unable to parse LM4F response: [["+response+"]]") 
+            return
+        
+        # Publish raw reponse 
+        rospy.loginfo(rospy.get_name()+": LM4F response: "+str(respData))
+        pubs["debugPub"].publish(response) 
+        
+        # Calculate velocity
+        vel = Twist()
+
+        # convert from ticks/iteration to meters/sec
+        rightSpeed = respData["deltas"]["right"] / TICKS_PER_METER * PID_LOOP_RATE
+        leftSpeed = respData["deltas"]["left"] / TICKS_PER_METER * PID_LOOP_RATE
+ 
+        # convert to linear & angular velocity
+        vel.linear.x = (leftSpeed + rightSpeed)/2.0
+        vel.angular.z = (leftSpeed - rightSpeed)/WHEEL_AXIS_LEN
+
+        # Publish velocity
+        pubs["velPub"].publish(vel) 
 
     except:
         rospy.loginfo(traceback.format_exc())
@@ -64,53 +92,36 @@ def lm4f_handler(data, pub):
 
 def sendCommand(data):
     try:
-        left = data.linear.x
-        right = data.linear.x
-    
-        if data.angular.z > 0:
-    	    right += data.angular.z/2.0
-        if data.angular.z < 0:
-    	    left -= data.angular.z/2.0
+        # calculate wheel speeds based on input angular & linear velocities
+        left = data.linear.x + data.angular.z * WHEEL_AXIS_LEN / 2.0
+        right = data.linear.x - data.angular.z * WHEEL_AXIS_LEN / 2.0
 
-        """
-        # scale, round, and bound
-        PWMMAX = .125
-        right = min(max(round(right*PWMMAX*2, 3), -PWMMAX), PWMMAX)
-        left = min(max(round(left*PWMMAX*2, 3), -PWMMAX), PWMMAX)
-        mesg = "#%1.3f,%1.3f#" % (right, left) 
-       
-        if right > 0:
-            mesg = '#%1.4f,' % right
-        elif right < 0:
-            mesg = '#%1.3f,' % right
-        else:
-            mesg = '#%1.4f,' % 0 # stupid negative zeros...
+        # convert to ticks/iteration
+        left = int(left * TICKS_PER_METER / PID_LOOP_RATE)
+        right = int(right * TICKS_PER_METER / PID_LOOP_RATE)
 
-        if left > 0:
-            mesg += '%1.4f#' % left
-        elif right < 0:
-            mesg += '%1.3f#' % left
-        else:
-            mesg += '%1.4f#' % 0
-        """
-        left = int(left*1000)
-        right = int(right*1000)
         mesg = "#%07d,%07d#" % (left, right)
-
+        
         print 'sending: [%s]\n' % mesg
 
         comm.write(mesg+"\n")
         comm.flush()
         return
-    except:
-        print 'Error writing to LM4F'
+    except Exception as ex:
+        print 'Error writing to LM4F:', ex
         comm.close()
-
+        rospy.signal_shutdown('error writing to LM4F, signal shutdown')
+        sys.exit()
 
 def lm4fNode():
     rospy.init_node('lm4f_node', anonymous=False)
-    pub = rospy.Publisher(TOPIC, String)
-    sub = rospy.Subscriber(SUBSCRIBER, Twist, lm4f_handler, pub)
+    debugPub = rospy.Publisher(DEBUG_TOPIC, String)
+    velPub = rospy.Publisher(VEL_TOPIC, Twist)
+    sub = rospy.Subscriber(
+        SUBSCRIBER, 
+        Twist, 
+        lm4f_handler, 
+        {"debugPub":debugPub, "velPub":velPub})
     print 'printing debug info...'
     rospy.spin()
 
