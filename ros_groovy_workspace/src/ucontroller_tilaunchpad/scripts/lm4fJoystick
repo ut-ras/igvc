@@ -19,6 +19,9 @@ from geometry_msgs.msg import Twist
 ##################################
 # Node parameters
 #################
+LISTENING_TO_NAVSTACK = False
+
+### Constants
 DEBUG_TOPIC = 'lm4f_debug'
 VEL_TOPIC = 'speedometer/lm4f/vel_data'
 SUBSCRIBER = 'vel_cmd'
@@ -49,47 +52,57 @@ PID_LOOP_RATE = 10.0
 #    Called when data received 
 #    from subscriber topic.
 ##################################
+mostRecentData = None
+
 def lm4f_handler(data, pubs):
-    try:
-        # Parse and send data to LM4F
-        sendCommand(data) 
-        
-        # Read response
-        response = comm.readline()
-
-        # Parse data into json
+    global LISTENING_TO_NAVSTACK
+    if LISTENING_TO_NAVSTACK:
+        print 'received data!'
+        global mostRecentData
+        mostRecentData = data
+    else:
         try:
-            respData = json.loads(response);
+            # Parse and send data to LM4F
+            sendCommand(data) 
+        
+            # Read response and publish data from LM4F
+            processResponse(comm.readline(), pubs["debugPub"], pubs["velPub"])
         except:
-            rospy.loginfo(rospy.get_name()+": unable to parse LM4F response: [["+response+"]]") 
-            return
-        
-        # Publish raw reponse 
-        rospy.loginfo(rospy.get_name()+": LM4F response: "+str(respData))
-        pubs["debugPub"].publish(response) 
-        
-        # Calculate velocity
-        vel = Twist()
-
-        # convert from ticks/iteration to meters/sec
-        rightSpeed = respData["deltas"]["right"] / TICKS_PER_METER * PID_LOOP_RATE
-        leftSpeed = respData["deltas"]["left"] / TICKS_PER_METER * PID_LOOP_RATE
- 
-        # convert to linear & angular velocity
-        vel.linear.x = (leftSpeed + rightSpeed)/2.0
-        vel.angular.z = (leftSpeed - rightSpeed)/WHEEL_AXIS_LEN
-
-        # Publish velocity
-        pubs["velPub"].publish(vel) 
-
-    except:
-        rospy.loginfo(traceback.format_exc())
-        rospy.loginfo('Closing LM4F Node due to exception...')
-        comm.close()
-        rospy.signal_shutdown('Couldnt close node, ros signal shutdown. Nuts')
+            rospy.loginfo(traceback.format_exc())
+            rospy.loginfo('Closing LM4F Node due to exception...')
+            comm.close()
+            rospy.signal_shutdown('Couldnt close node, ros signal shutdown. Nuts')
 	
 ##################################
 
+def processResponse(response, debugPub, velPub):
+    # Parse data into json
+    try:
+        respData = json.loads(response);
+    except:
+        rospy.loginfo(rospy.get_name()+": unable to parse LM4F response: [["+response+"]]") 
+        return False
+    
+    # Publish raw reponse 
+    rospy.loginfo(rospy.get_name()+": LM4F response: "+str(respData))
+    debugPub.publish(response) 
+    
+    # Calculate velocity
+    vel = Twist()
+
+    # convert from ticks/iteration to meters/sec
+    rightSpeed = respData["deltas"]["right"] / TICKS_PER_METER * PID_LOOP_RATE
+    leftSpeed = respData["deltas"]["left"] / TICKS_PER_METER * PID_LOOP_RATE
+
+    # convert to linear & angular velocity
+    vel.linear.x = (leftSpeed + rightSpeed)/2.0
+    vel.angular.z = (leftSpeed - rightSpeed)/WHEEL_AXIS_LEN
+
+    # Publish velocity
+    velPub.publish(vel) 
+
+    return True
+    
 def sendCommand(data):
     try:
         # calculate wheel speeds based on input angular & linear velocities
@@ -122,8 +135,23 @@ def lm4fNode():
         Twist, 
         lm4f_handler, 
         {"debugPub":debugPub, "velPub":velPub})
-    print 'printing debug info...'
-    rospy.spin()
+
+    global LISTENING_TO_NAVSTACK
+    LISTENING_TO_NAVSTACK = rospy.get_param("~listening_to_navstack", False); 
+
+    r = rospy.Rate(10)
+    while not rospy.is_shutdown():
+        if LISTENING_TO_NAVSTACK:
+            global mostRecentData
+            if mostRecentData == None:
+                rospy.loginfo("have not received any commands from navstack!"); 
+            else:
+                # Parse and send data to LM4F
+                sendCommand(mostRecentData) 
+            
+                # Read response and publish data from LM4F
+                processResponse(comm.readline(), debugPub, velPub)
+        r.sleep() 
 
 if __name__ == '__main__':
     try:

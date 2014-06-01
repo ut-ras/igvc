@@ -1,4 +1,0 @@
-<launch>  
-  <node pkg="ucontroller_tilaunchpad" type="lm4fNode" name="lm4fNode" output="screen"/>
-  <node pkg="joystick" type="joystick_logitech_driver.py" name="joystick_logitech_driver" output="screen"/>
-</launch>
