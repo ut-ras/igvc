@@ -1,4 +1,6 @@
 <launch>
+  <node pkg="joystick" type="joystick_logitech_driver.py" name="joystick_logitech_driver" output="screen"/>
+
   <node pkg="ucontroller_tilaunchpad" type="lm4f_driver.py" name="lm4f_driver" output="screen">
     <param name="listening_to_navstack" value="True" type="bool"/>
   </node>
