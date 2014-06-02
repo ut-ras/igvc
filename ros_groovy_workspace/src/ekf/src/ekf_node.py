@@ -35,7 +35,7 @@ def initSensors():
             numpy.eye(2) * 1e-6,
             EKF.velocity_jacobian_funct, 
             EKF.velocity_observation_funct ),
-
+        
         Sensor(
             "imu/vn200/heading", 
             Float64, 
@@ -44,7 +44,7 @@ def initSensors():
             EKF.orientation_jacobian_funct, 
             EKF.orientation_observation_funct )
     ]
-    
+ 
     global USING_GPS
     if USING_GPS:
         sensors.append(
@@ -146,14 +146,11 @@ def main():
     count = 0; 
     while not rospy.is_shutdown():
         count += 1
-        print "predicting", count
         ekf.Predict()
 
-        print "creating & publishing msg"
         msg = createMsgFromEKF(ekf)
         pub.publish(msg)
 
-        print "sending tf transform"
         br.sendTransform(
             ( msg.pose.pose.position.x, 
               msg.pose.pose.position.y,
@@ -166,7 +163,6 @@ def main():
             "base_link",
             "map") 
 
-        print "sleeping"
         rate.sleep()
 
 if __name__ == "__main__":
