@@ -38,7 +38,7 @@ class ExtendedKalmanFilter:
 
     def Step(self, sensor_index, measurement_vector, dt=None):
         if dt == None:
-            dt = self.CalcDT(time.time())
+            dt = self.CalcDT(rospy.get_time())
 
         G_jacobian = self.G_jacobian_funct(self.state, dt)
 
