@@ -94,6 +94,11 @@ namespace vision
         bin_change_threshold = m_angle_min + m_angle_increment * (current_bin + 1);
       }
 
+      if(current_bin >= scan.ranges.size())
+      {
+        break;
+      }
+
       if(full_scan[i].second < scan.ranges[current_bin])
       {
         scan.ranges[current_bin] = full_scan[i].second;
@@ -148,6 +153,14 @@ namespace vision
   void CloudAssimilator::processClouds()
   {
     pcl::PointCloud<pcl::PointXYZ> combined_cloud = m_left_cloud;
+
+    if(m_left_cloud.points.size() == 0 || m_right_cloud.points.size() == 0)
+    {
+      ROS_WARN("Clouds empty!");
+      m_have_new_left_cloud = false;
+      m_have_new_right_cloud = false;
+      return;
+    }
 
     if(m_sync_clouds)
     {
