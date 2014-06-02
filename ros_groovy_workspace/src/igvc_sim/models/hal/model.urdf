@@ -222,7 +222,7 @@
     <joint name="left_camera_joint" type="fixed">
    
       <!-- <origin xyz="0.2667 0.0508 1.332" rpy="0 0.785398163 0"/> -->
-      <origin xyz="0.19 0.21 0.73" rpy="0 0.860447321 0.785398163"/>
+      <origin xyz="0.21 0.17 0.73" rpy="0 0.888372589 0.785398163"/>
       <!-- <origin xyz="0.1524 0.1524 0.7112" rpy="0 0.785 0.9"/> -->
       <parent link="base_link"/>
       <child link="left_camera_link"/>
@@ -277,7 +277,7 @@
     57.45 pitch 45 yaw -->
     <joint name="right_camera_joint" type="fixed">
       <!-- <origin xyz="0.2667 -0.05715 1.332" rpy="0 0.785398163 0"/> -->
-      <origin xyz="0.17 -0.215 0.73" rpy="0 1.00269166 -0.785398163"/>
+      <origin xyz="0.21 -0.22 0.73" rpy="0 1.03672558 -0.785398163"/>
       <parent link="base_link"/>
       <child link="right_camera_link"/>
     </joint>

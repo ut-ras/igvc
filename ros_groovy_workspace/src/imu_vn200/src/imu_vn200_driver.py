@@ -133,7 +133,7 @@ def publish_gps_data (gps_data) :
     gps_fix = int(gps_data[3])
 
     if gps_fix == 0:
-        logwarn_throttled("GPS: No GPS fix")
+        #logwarn_throttled("GPS: No GPS fix")
         gps_msg.error_present = True
         gps_msg.error_string += "No GPS fix.\n"
     elif gps_fix == 1:
@@ -147,7 +147,7 @@ def publish_gps_data (gps_data) :
 
     if gps_msg.num_satellites < 3:
         gps_msg.error_present = True
-        logwarn_throttled("GPS: Solution is has connection to less than 3 satellites. Please move to an open area")
+        #logwarn_throttled("GPS: Solution is has connection to less than 3 satellites. Please move to an open area")
         gps_msg.error_string += "Less than 3 satellites found\n"
 
     gps_msg.latitude  = float(gps_data[5])
@@ -186,7 +186,7 @@ def publish_ins_data (ins_data) :
 
     if ins_mode == 0:
         ins_msg.error_present = True
-        logwarn_throttled("INS: Not tracking. Insufficient dynamic motion")
+        #logwarn_throttled("INS: Not tracking. Insufficient dynamic motion")
         ins_msg.error_string += "Not tracking. Insufficient dynamic motion\n"
     elif ins_mode == 1:
         rospy.logwarn("INS: Sufficient dynamic motion, but solution was not within performence specs.")

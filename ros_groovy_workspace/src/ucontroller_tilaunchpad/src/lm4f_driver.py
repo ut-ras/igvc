@@ -95,7 +95,7 @@ def processResponse(response, debugPub, velPub):
 
     # convert to linear & angular velocity
     vel.linear.x = (leftSpeed + rightSpeed)/2.0
-    vel.angular.z = (leftSpeed - rightSpeed)/WHEEL_AXIS_LEN
+    vel.angular.z = (-leftSpeed + rightSpeed)/WHEEL_AXIS_LEN
 
     # Publish velocity
     velPub.publish(vel) 

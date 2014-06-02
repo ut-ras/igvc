@@ -20,6 +20,7 @@
   </node>
   
   <node pkg="ucontroller_tilaunchpad" type="lm4f_driver.py" name="lm4f_driver">
+    <remap from="/vel_cmd" to="/cmd_vel"/>
     <param name="listening_to_navstack" value="True" type="bool"/>
   </node>
 

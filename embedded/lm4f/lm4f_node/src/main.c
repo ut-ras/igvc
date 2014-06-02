@@ -131,7 +131,7 @@ struct PIDStruct {
 
 #define PIDP (0.00003)
 #define PIDD (0.00013)
-#define PIDI (0.000001)
+#define PIDI (0.000000)
 #define MAX_MOTOR (.5)
 #define MIN_MOTOR (-.5)
 
