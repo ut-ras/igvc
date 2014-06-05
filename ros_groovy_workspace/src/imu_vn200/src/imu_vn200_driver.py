@@ -43,24 +43,7 @@ class Throttler:
 
 logwarn_throttled = Throttler(rospy.logwarn, 2.0)
 
-def read_data(ser) :
-
-    data = "$"
-
-    while not rospy.is_shutdown():
-        c = ser.read(1)
-        if c == '$':
-            break
-
-    while not rospy.is_shutdown():
-        c = ser.read(1)
-        if c == '\n':
-            break
-        elif c == '\x00':
-            continue
-        data += c
-
-    return data
+def read_data(ser) : return ser.readline()
 
 def mkChksum(data) : return reduce( (lambda coll, char : coll ^ ord(char)), data, 0 )
 
