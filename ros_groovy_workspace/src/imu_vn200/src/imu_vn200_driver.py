@@ -3,6 +3,8 @@
 #driver for VN-200 IMU
 #datasheet:
 #Author: Cruz Monrreal II
+#Author: Gilberto Rodrigez 
+#Author: Jimmy Brisson
 
 import roslib; roslib.load_manifest('imu_vn200')
 import rospy
@@ -15,8 +17,6 @@ PRINT_MESSAGES = False
 DO_SCALING = True
 
 IMU_MSG_LEN = 12
-#ser = serial.Serial(port = '/dev/VN-200', baudrate=921600)
-ser = serial.Serial(port = '/dev/ttyUSB0', baudrate=921600)
 
 imu_pub = rospy.Publisher('vn_200_accel_gyro_compass', vn_200_accel_gyro_compass)
 gps_pub = rospy.Publisher('vn_200_gps_soln', vn_200_gps_soln)
@@ -43,7 +43,7 @@ class Throttler:
 
 logwarn_throttled = Throttler(rospy.logwarn, 2.0)
 
-def read_data() :
+def read_data(ser) :
 
     data = "$"
 
@@ -124,7 +124,7 @@ def process_and_publish(data):
 def vn200():
 
     global READ_CMDS
-    global ser
+    ser = serial.Serial(port = '/dev/ttyUSB0', baudrate=921600)
 
     rospy.init_node('imu_vn200')
     rospy.loginfo("VN-200 IMU listener is running on " + ser.portstr )
@@ -147,7 +147,7 @@ def vn200():
         # read 3 responses
         for i in range(len(READ_CMDS)):
             # read the data from the serial port
-            data = read_data()
+            data = read_data(ser)
 
             if validate_checksum(data):
                 # check if data was an IMU, INS SOLN or GPS SOLN reply,
