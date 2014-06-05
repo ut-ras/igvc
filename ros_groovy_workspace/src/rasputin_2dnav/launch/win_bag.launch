@@ -1,0 +1,4 @@
+<launch>
+  <include file="$(find rasputin_2dnav)/launch/perception.launch"/>
+  <include file="$(find rasputin_2dnav)/launch/control.launch"/>
+</launch>

@@ -72,7 +72,7 @@ def orientation_observation_funct(state, dt):
           [p],\
           [z + dt*w] ])
 
-def orientation_jacobian_funct(self, dt):
+def orientation_jacobian_funct(state, dt):
     return numpy.matrix(
         [ [0, 0, 0, 0,  0, 0, 1, 0],\
           [0, 0, 0, 0,  0, 0, 0, 1],\
