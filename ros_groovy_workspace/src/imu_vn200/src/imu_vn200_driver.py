@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #
 #driver for VN-200 IMU
 #datasheet:
@@ -65,30 +65,18 @@ def read_data() :
 
     return data
 
+def xorData(data) : return reduce( (lambda coll, char : coll ^ ord(char)), data, 0 )
+
 def validate_checksum(msg):
     try:
-        xor = 0
         msg = msg.strip()
-        #rospy.loginfo("~~~~~~~" + msg + "~~~~~~");
-        #rospy.loginfo("~~~~~~~" + str(msg[-2]) + str(msg[-1])+ "!~~~~~~~~");
         chksum = int(str(msg[-2]) + str(msg[-1]), 16)
-        #chksum = int(str(msg[-3]) +str([-2]), 16)
         data = msg[1:-3].upper()
-
-        for char in data:
-            xor = xor ^ ord(char)
-        #rospy.loginfo(">>>>>" + str(xor) + ">>>>>>>>" + str(chksum))
-        return xor == chksum
+        return xorData(data) == chksum
     except ValueError:
         return False
 
-def cmd(string):
-    xor = 0
-
-    for char in string.upper():
-        xor = xor ^ ord(char)
-
-    return '$' + string + '*' + hex(xor & 0xFF)[2:4].upper() + '\n'
+def cmd(string): return """${0:s}*{1:X}\n""".format(string,xorData(string.upper()))
 
 READ_CMDS = [cmd("VNRRG,54"), # read IMU data from the register
              cmd("VNRRG,58"), # read GPS soln from the register
