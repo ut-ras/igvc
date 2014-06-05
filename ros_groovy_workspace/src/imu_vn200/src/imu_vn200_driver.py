@@ -15,9 +15,6 @@ PRINT_MESSAGES = False
 DO_SCALING = True
 
 IMU_MSG_LEN = 12
-GPS_SOLN_MSG_LEN = 16
-INS_SOL_MSG_LEN = 16
-
 #ser = serial.Serial(port = '/dev/VN-200', baudrate=921600)
 ser = serial.Serial(port = '/dev/ttyUSB0', baudrate=921600)
 
@@ -104,15 +101,12 @@ def publish_imu_data (imu_data) :
 
     imu_pub.publish(imu_msg)
 
-def strip_tag_and_checksum (data) :
-    # remove the $VNRRG tag in front of the message and the checksum behind the message
-    return data[7:-4].split(',')
+# remove the $VNRRG tag in front of the message and the checksum behind the message
+def strip_tag_and_checksum (data) : return data[7:-4].split(',')
 
 def process_and_publish(data):
 
     global GPS_SOLN_MSG_LEN
-    global INS_SOL_MSG_LEN
-    global IMU_MSG_LEN
 
     if data[7:9] == "54" and data[1:6] == "VNRRG":#data[1:6] == "VNIMU":
         imu_data = strip_tag_and_checksum(data)
@@ -165,7 +159,7 @@ def vn200():
             else:
                 rospy.logwarn("Checksum incorrect for %s. Dropping packet", data)
 
-            r.sleep()
+        r.sleep()
 
 if __name__ == "__main__":
     try:
