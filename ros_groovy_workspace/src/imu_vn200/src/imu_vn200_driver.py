@@ -10,7 +10,6 @@ import roslib; roslib.load_manifest('imu_vn200')
 import rospy
 from imu_vn200.msg import vn_200_accel_gyro_compass, vn_200_gps_soln, vn_200_ins_soln
 import serial
-import struct
 import time
 
 PRINT_MESSAGES = False
@@ -19,8 +18,6 @@ DO_SCALING = True
 IMU_MSG_LEN = 12
 
 imu_pub = rospy.Publisher('vn_200_accel_gyro_compass', vn_200_accel_gyro_compass)
-gps_pub = rospy.Publisher('vn_200_gps_soln', vn_200_gps_soln)
-ins_pub = rospy.Publisher('vn_200_ins_soln', vn_200_ins_soln)
 
 class Throttler:
     def __init__(self, f, period):
@@ -50,7 +47,7 @@ def mkChksum(data) : return reduce( (lambda coll, char : coll ^ ord(char)), data
 def validate_checksum(msg):
     try:
         msg = msg.strip()
-        chksum = int(msg[-2:]), 16)
+        chksum = int(msg[-2:], 16)
         data = msg[1:-3].upper()
         return mkChksum(data) == chksum
     except ValueError:
@@ -89,20 +86,21 @@ def strip_tag_and_checksum (data) : return data[7:-4].split(',')
 
 def process_and_publish(data):
 
-    global GPS_SOLN_MSG_LEN
-
     if data[7:9] == "54" and data[1:6] == "VNRRG":#data[1:6] == "VNIMU":
         imu_data = strip_tag_and_checksum(data)
         # discard the message of if it does not have all the necessaty fields
         if len(imu_data) is not IMU_MSG_LEN:
             rospy.logwarn("ERROR reading IMU message")
-            return
-        publish_imu_data(imu_data)
-
+        else :
+            publish_imu_data(imu_data)
 
     else:
         rospy.loginfo("Unknown message: " + str(data) + '\n')
 
+
+initCommands = [cmd("VNWRG,05,921600"),
+                cmd("VNWRG,07,50"),
+                cmd("VNWRG,06,0")]
 
 def vn200():
 
@@ -113,14 +111,12 @@ def vn200():
     rospy.loginfo("VN-200 IMU listener is running on " + ser.portstr )
 
     ser.flush()
-    ser.open()
+    for initcmd in initCommands :
+        ser.write(initcmd)
+        ser.readline()
 
-    ser.write(cmd("VNWRG,05,921600"))
-    ser.write(cmd("VNWRG,07,50"))
-    ser.write(cmd("VNWRG,06,0"))
-    #ser.write(cmd("VNWRG,06,247"))
 
-    r = rospy.Rate(20)
+    r = rospy.Rate(50)
 
     while not rospy.is_shutdown():
 
@@ -128,7 +124,7 @@ def vn200():
             ser.write(cmds)
 
         # read 3 responses
-        for i in range(len(READ_CMDS)):
+        for cmds in READ_CMDS:
             # read the data from the serial port
             data = read_data(ser)
 
@@ -137,8 +133,9 @@ def vn200():
                 # process accordingly and then publish the appropriate message
                 try:
                     process_and_publish(data)
-                except:
+                except Excepiton as e:
                     rospy.logwarn("vn_200_imu data dropped")
+                    rospy.logwarn(e)
             else:
                 rospy.logwarn("Checksum incorrect for %s. Dropping packet", data)
 
