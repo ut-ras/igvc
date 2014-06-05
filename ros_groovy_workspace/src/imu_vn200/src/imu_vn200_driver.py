@@ -17,7 +17,7 @@ DO_SCALING = True
 
 IMU_MSG_LEN = 12
 
-imu_pub = rospy.Publisher('vn_200_accel_gyro_compass', vn_200_accel_gyro_compass)
+imu_pub = rospy.Publisher('/raw', vn_200_accel_gyro_compass)
 
 class Throttler:
     def __init__(self, f, period):
@@ -103,7 +103,6 @@ initCommands = [cmd("VNWRG,05,921600"),
                 cmd("VNWRG,06,0")]
 
 def vn200():
-
     global READ_CMDS
     ser = serial.Serial(port = '/dev/ttyUSB0', baudrate=921600)
 
@@ -121,11 +120,8 @@ def vn200():
     while not rospy.is_shutdown():
 
         for cmds in READ_CMDS:
-            ser.write(cmds)
-
-        # read 3 responses
-        for cmds in READ_CMDS:
             # read the data from the serial port
+            ser.write(cmds)
             data = read_data(ser)
 
             if validate_checksum(data):
