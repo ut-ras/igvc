@@ -84,6 +84,8 @@ def publish_imu_data (imu_data) :
 # remove the $VNRRG tag in front of the message and the checksum behind the message
 def strip_tag_and_checksum (data) : return data[7:-4].split(',')
 
+def nameData (data,names) : { name : data[index] for name , index in names if index < len(data) }
+
 def process_and_publish(data):
 
     if data[7:9] == "54" and data[1:6] == "VNRRG":#data[1:6] == "VNIMU":
@@ -115,10 +117,9 @@ def vn200():
         ser.readline()
 
 
-    r = rospy.Rate(50)
+    r = rospy.Rate(200)
 
     while not rospy.is_shutdown():
-
         for cmds in READ_CMDS:
             # read the data from the serial port
             ser.write(cmds)
