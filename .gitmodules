@@ -13,3 +13,6 @@
 [submodule "ros_groovy_workspace/src/imu_tools"]
 	path = ros_groovy_workspace/src/imu_tools
 	url = https://github.com/ccny-ros-pkg/imu_tools
+[submodule "rasware"]
+	path = rasware
+	url = https://github.com/ut-ras/Rasware2013.git
