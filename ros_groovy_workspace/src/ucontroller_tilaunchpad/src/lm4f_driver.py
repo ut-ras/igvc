@@ -24,13 +24,13 @@ LISTENING_TO_NAVSTACK = False
 ### Constants
 DEBUG_TOPIC = 'lm4f_debug'
 VEL_TOPIC = 'speedometer/lm4f/vel_data'
-SUBSCRIBER = 'vel_cmd'
+SUBSCRIBER = 'cmd_vel'
 SERIAL_LINE = '/dev/lm4f'
 BAUD_RATE = 115200
 ### LM4F parameters to reflash board on node startup 
 rstLm4fcmd = 'make' 
 rstLm4fFlag = '-C'
-rstLm4fdst = os.path.abspath(os.path.join(os.path.abspath(roslib.packages.get_pkg_dir('ucontroller_tilaunchpad')),'../../../../igvc2014/embedded/lm4f/lm4f_node/')
+rstLm4fdst = os.path.abspath(os.path.join(os.path.abspath(roslib.packages.get_pkg_dir('ucontroller_tilaunchpad')),'../../../rasware/igvc_code/')
 )
 rstLm4farg = 'flash'
 
