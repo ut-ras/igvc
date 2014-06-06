@@ -7,8 +7,8 @@ project(imu_vn200)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
+  sensor_msgs
   geometry_msgs
-  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -45,13 +45,9 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  vn_200_ins_soln.msg
-  vn_200_gps_soln.msg
-  vn_200_accel_gyro_compass.msg 
-  EulerOrientation.msg 
-)
+#add_message_files(
+#  FILES
+#)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -68,11 +64,18 @@ add_message_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  geometry_msgs
-)
+#generate_messages(
+#  DEPENDENCIES
+#  std_msgs
+#  geometry_msgs
+#)
+
+#########################
+## Dynamic Reconfigure ##
+#########################
+
+find_package(catkin REQUIRED dynamic_reconfigure)
+generate_dynamic_reconfigure_options(cfg/ImuFilterMadgwick.cfg)
 
 ###################################
 ## catkin specific configuration ##
@@ -88,7 +91,7 @@ catkin_package(
 #  LIBRARIES imu_vn200
 #  CATKIN_DEPENDS rospy std_msgs
 #  DEPENDS system_lib
-  CATKIN_DEPENDS message_runtime
+#  CATKIN_DEPENDS message_runtime
 )
 
 ###########
@@ -99,25 +102,27 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
-# add_library(imu_vn200
-#   src/${PROJECT_NAME}/imu_vn200.cpp
-# )
+add_library(imu_filter
+  src/imu_filter.cpp
+)
 
 ## Declare a cpp executable
-# add_executable(imu_vn200_node src/imu_vn200_node.cpp)
+add_executable(imu_filter_node src/imu_filter_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(imu_vn200_node imu_vn200_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(imu_vn200_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(imu_filter_node
+  imu_filter
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
