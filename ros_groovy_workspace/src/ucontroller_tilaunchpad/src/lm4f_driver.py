@@ -16,6 +16,7 @@ import json, serial, sys, os, roslib.packages, time, math
 import rospy, traceback,subprocess
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
+from ucontroller_tilaunchpad.msg import lm4f_debug
 ##################################
 # Node parameters
 #################
@@ -30,8 +31,9 @@ BAUD_RATE = 115200
 ### LM4F parameters to reflash board on node startup 
 rstLm4fcmd = 'make' 
 rstLm4fFlag = '-C'
-rstLm4fdst = os.path.abspath(os.path.join(os.path.abspath(roslib.packages.get_pkg_dir('ucontroller_tilaunchpad')),'../../../../igvc2014/embedded/lm4f/lm4f_node/')
-)
+rstLm4fdst = os.path.abspath(os.path.join(
+  os.path.abspath(roslib.packages.get_pkg_dir('ucontroller_tilaunchpad')),
+  '../../../embedded/lm4f/lm4f_node/'))
 rstLm4farg = 'flash'
 
 ### Robot info (found from measurements)
