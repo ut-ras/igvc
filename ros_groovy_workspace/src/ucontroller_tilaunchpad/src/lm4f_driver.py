@@ -168,13 +168,11 @@ if __name__ == '__main__':
             timeout = .2,
             writeTimeout = 1
         )
-        """
         print 'comm initialized...'
         print 'Flashing board...'
         process = subprocess.call([rstLm4fcmd,rstLm4fFlag,rstLm4fdst,rstLm4farg])
         print 'board reset, output: '
         print process
-        """
         lm4fNode()
     except rospy.ROSInterruptException: pass
     except serial.SerialException:
