@@ -6,7 +6,7 @@
 #Author: Gilberto Rodrigez III
 #Author: Jimmy Brisson
 
-import serial, time
+import serial, time, sys
 import rospy, roslib; roslib.load_manifest('imu_vn200')
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Vector3,Vector3Stamped
@@ -43,10 +43,12 @@ def callPublisher (data, pubFunc) : return pubFunc(strip_tag_and_checksum(data))
 
 def publish_imu_data (imu_data) :
     mag_msg = Vector3Stamped()
+    mag_msg.header.stamp = rospy.Time.now()
     mag_msg.vector              = Vector3(float(imu_data[0]),float(imu_data[1]),float(imu_data[2]))
     mag_pub.publish(mag_msg)
 
     imu_msg = Imu()
+    imu_msg.header.stamp = rospy.Time.now()
     imu_msg.linear_acceleration = Vector3(float(imu_data[3]),float(imu_data[4]),float(imu_data[5]))
     imu_msg.angular_velocity    = Vector3(float(imu_data[6]),float(imu_data[7]),float(imu_data[8]))
     imu_pub.publish(imu_msg)
@@ -88,7 +90,7 @@ if __name__ == "__main__":
             ser.write(initcmd)
             ser.readline()
         r = rospy.Rate(200)
-        for i in xrange(1000) :
+        while not rospy.is_shutdown() :
             for cmds in READ_CMDS:
                 ser.write(cmds)
                 try:
@@ -96,5 +98,6 @@ if __name__ == "__main__":
                 except Exception:
                     logwarn_throttled("vn_200_imu data dropped")
             r.sleep()
-    except Exception :
-        pass
+    except Exception as e:
+        print(e)
+        sys.exit(1)
