@@ -16,6 +16,7 @@ import json, serial, sys, os, roslib.packages, time, math
 import rospy, traceback,subprocess
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
+from ucontroller_tilaunchpad.msg import lm4f_debug
 ##################################
 # Node parameters
 #################
@@ -27,11 +28,13 @@ VEL_TOPIC = 'speedometer/lm4f/vel_data'
 SUBSCRIBER = 'cmd_vel'
 SERIAL_LINE = '/dev/lm4f'
 BAUD_RATE = 115200
+
 ### LM4F parameters to reflash board on node startup 
 rstLm4fcmd = 'make' 
 rstLm4fFlag = '-C'
-rstLm4fdst = os.path.abspath(os.path.join(os.path.abspath(roslib.packages.get_pkg_dir('ucontroller_tilaunchpad')),'../../../rasware/igvc_code/')
-)
+rstLm4fdst = os.path.abspath(os.path.join(
+  os.path.abspath(roslib.packages.get_pkg_dir('ucontroller_tilaunchpad')),
+  '../../../rasware/igvc_code/'))
 rstLm4farg = 'flash'
 
 ### Robot info (found from measurements)
@@ -78,13 +81,20 @@ def processResponse(response, debugPub, velPub):
     # Parse data into json
     try:
         respData = json.loads(response);
+        rospy.loginfo(rospy.get_name()+": LM4F response: "+str(respData))
     except:
-        rospy.loginfo(rospy.get_name()+": unable to parse LM4F response: [["+response+"]]") 
+        rospy.logerr(rospy.get_name()+": unable to parse LM4F response: [["+response+"]]") 
         return False
     
-    # Publish raw reponse 
-    rospy.loginfo(rospy.get_name()+": LM4F response: "+str(respData))
-    debugPub.publish(response) 
+    # Publish "raw" (correctly formatted) reponse 
+    debugMsg = lm4f_debug()
+    debugMsg.received_right = respData["received"]["right"]
+    debugMsg.received_left = respData["received"]["left"]
+    debugMsg.motors_right = respData["motors"]["right"]
+    debugMsg.motors_left = respData["motors"]["left"]
+    debugMsg.deltas_right = respData["deltas"]["right"]
+    debugMsg.deltas_left = respData["deltas"]["left"]
+    debugPub.publish(debugMsg)
     
     # Calculate velocity
     vel = Twist()
@@ -127,7 +137,7 @@ def sendCommand(data):
 
 def lm4fNode():
     rospy.init_node('lm4f_node', anonymous=False)
-    debugPub = rospy.Publisher(DEBUG_TOPIC, String)
+    debugPub = rospy.Publisher(DEBUG_TOPIC, lm4f_debug)
     velPub = rospy.Publisher(VEL_TOPIC, Twist)
     sub = rospy.Subscriber(
         SUBSCRIBER, 
@@ -151,6 +161,7 @@ def lm4fNode():
 
 if __name__ == '__main__':
     try:
+      
         comm = serial.Serial(
             port = SERIAL_LINE,
             baudrate = BAUD_RATE,
