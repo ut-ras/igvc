@@ -80,5 +80,6 @@
     <param name="min_neighbors" value="3"/>
     <param name="angle_increment" value="0.01"/>
   </node>
+  <include file="$(find imu_vn200)/launch/perception.launch"/>
 
 </launch>

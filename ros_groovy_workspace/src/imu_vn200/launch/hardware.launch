@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="imu_vn200" type="imu_vn200_driver.py" name="imu_vn200_driver" output="screen">
+        <remap from='/raw' to='/imu/vn200/raw'/>
+        <remap from='/mag' to='/imu/vn200/mag'/>
+    </node>
+</launch>

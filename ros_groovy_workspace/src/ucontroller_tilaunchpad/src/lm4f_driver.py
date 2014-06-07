@@ -34,7 +34,7 @@ rstLm4fcmd = 'make'
 rstLm4fFlag = '-C'
 rstLm4fdst = os.path.abspath(os.path.join(
   os.path.abspath(roslib.packages.get_pkg_dir('ucontroller_tilaunchpad')),
-  '../../../embedded/lm4f/lm4f_node/'))
+  '../../../rasware/igvc_code/'))
 rstLm4farg = 'flash'
 
 ### Robot info (found from measurements)
