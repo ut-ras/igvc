@@ -7,9 +7,6 @@
 [submodule "ros_groovy_workspace/src/roswebkit"]
 	path = ros_groovy_workspace/src/roswebkit
 	url = https://github.com/geky/roswebkit.git
-[submodule "embedded/lm4f/lm4f_node/navlib"]
-	path = embedded/lm4f/lm4f_node/navlib
-	url = https://github.com/ut-ras/Rasware2013.git
 [submodule "ros_groovy_workspace/src/imu_tools"]
 	path = ros_groovy_workspace/src/imu_tools
 	url = https://github.com/ccny-ros-pkg/imu_tools
