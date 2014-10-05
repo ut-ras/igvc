@@ -1,0 +1,14 @@
+<package>
+  <description brief="igvc_launch">
+
+     igvc_launch
+
+  </description>
+  <author>jjames</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/igvc_launch</url>
+
+</package>
+
+

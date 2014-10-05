@@ -1,6 +1,8 @@
 *.bag
 .cproject
 .project
+msg_gen
+srv_gen
 ros_groovy_workspace/devel
 ros_groovy_workspace/build
 *.swp

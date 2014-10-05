@@ -1,0 +1,16 @@
+<package>
+  <description brief="rasputin_2dnav">
+
+     rasputin_2dnav
+
+  </description>
+  <author>jjames</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/rasputin_2dnav</url>
+  <depend package="ekf"/>
+  <depend package="ucontroller_tilaunchpad"/>
+
+</package>
+
+

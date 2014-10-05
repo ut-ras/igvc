@@ -1,0 +1,21 @@
+<package>
+  <description brief="igvc_sim">
+
+     igvc_sim
+
+  </description>
+  <author>jjames</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/igvc_sim</url>
+  <depend package="roscpp"/>
+  <depend package="urdf"/>
+  <depend package="urdfdom"/>
+
+  <export>
+    <gazebo_ros plugin_path="${prefix}/lib"/>
+    <gazebo_ros gazebo_media_path="${prefix}"/>
+  </export>
+</package>
+
+

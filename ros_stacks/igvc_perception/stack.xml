@@ -1,0 +1,10 @@
+<stack>
+  <description brief="igvc_perception">
+    igvc_perception
+  </description>
+  <author>RAS</author>
+  <license>BSD,LGPL,Apache 2.0</license>
+  <review status="" notes=""/>
+  <url>http://ros.org/wiki/igvc_perception</url>
+
+</stack>

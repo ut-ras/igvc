@@ -1,0 +1,18 @@
+<package>
+  <description brief="gps_trimble_driver">
+
+     gps_trimble_driver
+
+  </description>
+  <author>jjames</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/gps_trimble_driver</url>
+  <depend package="rospy"/>
+  <depend package="gps_common"/>
+  <depend package="geometry_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="roscpp"/>
+</package>
+
+

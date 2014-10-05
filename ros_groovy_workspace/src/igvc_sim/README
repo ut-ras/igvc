@@ -1,2 +1,0 @@
-Add the following line to your .bashrc, obviously replacing the [] with the real path:
-export GAZEBO_MODEL_PATH=[path_to_repo]/ros_groovy_workspace/src/igvc_sim/models:$GAZEBO_MODEL_PATH

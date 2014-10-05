@@ -1,0 +1,2 @@
+Add the following line to your .bashrc, obviously replacing the [] with the real path:
+export GAZEBO_MODEL_PATH=`rospack find igvc_sim`/models:$GAZEBO_MODEL_PATH

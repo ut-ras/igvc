@@ -1,7 +1,0 @@
-set(_CATKIN_CURRENT_PACKAGE "ucontroller_tilaunchpad")
-set(ucontroller_tilaunchpad_MAINTAINER "rjnevels <ut.ieee.ras@gmail.com>")
-set(ucontroller_tilaunchpad_DEPRECATED "")
-set(ucontroller_tilaunchpad_VERSION "0.0.0")
-set(ucontroller_tilaunchpad_BUILD_DEPENDS "roscpp" "rospy" "std_msgs")
-set(ucontroller_tilaunchpad_RUN_DEPENDS "roscpp" "rospy" "std_msgs")
-set(ucontroller_tilaunchpad_BUILDTOOL_DEPENDS "catkin")
