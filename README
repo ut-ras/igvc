@@ -5,7 +5,7 @@ Code for the Universtiy of Texas Robotics and Automation Society's entry in IGVC
 
 Installation instructions:
 cd
-mkdir igvc_ros && igvc_ros ros
+mkdir igvc_ros && cd igvc_ros
 rosws init . /opt/ros/hydro
 [Download igvc.rosinstall]
 rosws merge [path to igvc.rosinstall]
