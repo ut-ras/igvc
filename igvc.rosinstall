@@ -3,7 +3,3 @@
 - git: {local-name: mechanical_design, uri: 'git@github.com:jbryant57/IGVC2013Design.git', version: master}
 - git: {local-name: roswebkit, uri: 'git@github.com:geky/roswebkit.git', version: master}
 - git: {local-name: imu_tools, uri: 'git@github.com:ccny-ros-pkg/imu_tools', version: master}
-
-
-
-
