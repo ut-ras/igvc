@@ -34,7 +34,7 @@ rstLm4fcmd = 'make'
 rstLm4fFlag = '-C'
 rstLm4fdst = os.path.abspath(os.path.join(
   os.path.abspath(roslib.packages.get_pkg_dir('ucontroller_tilaunchpad')),
-  '../../../rasware/igvc_code/'))
+  '../../../Rasware2013/igvc_code/'))
 rstLm4farg = 'flash'
 
 ### Robot info (found from measurements)
@@ -161,7 +161,6 @@ def lm4fNode():
 
 if __name__ == '__main__':
     try:
-      
         comm = serial.Serial(
             port = SERIAL_LINE,
             baudrate = BAUD_RATE,
@@ -176,7 +175,7 @@ if __name__ == '__main__':
         lm4fNode()
     except rospy.ROSInterruptException: pass
     except serial.SerialException:
-        comm.close()
         print 'comm error'
+        comm.close()
         sys.exit()
         
