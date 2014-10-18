@@ -4247,6 +4247,54 @@ Based on the following sources:
 </deviceset>
 </devicesets>
 </library>
+<library name="wirepad">
+<description>&lt;b&gt;Single Pads&lt;/b&gt;&lt;p&gt;
+&lt;author&gt;Created by librarian@cadsoft.de&lt;/author&gt;</description>
+<packages>
+<package name="1,6/0,8">
+<description>&lt;b&gt;THROUGH-HOLE PAD&lt;/b&gt;</description>
+<wire x1="-0.762" y1="0.762" x2="-0.508" y2="0.762" width="0.1524" layer="21"/>
+<wire x1="-0.762" y1="0.762" x2="-0.762" y2="0.508" width="0.1524" layer="21"/>
+<wire x1="0.762" y1="0.762" x2="0.762" y2="0.508" width="0.1524" layer="21"/>
+<wire x1="0.762" y1="0.762" x2="0.508" y2="0.762" width="0.1524" layer="21"/>
+<wire x1="0.762" y1="-0.508" x2="0.762" y2="-0.762" width="0.1524" layer="21"/>
+<wire x1="0.762" y1="-0.762" x2="0.508" y2="-0.762" width="0.1524" layer="21"/>
+<wire x1="-0.508" y1="-0.762" x2="-0.762" y2="-0.762" width="0.1524" layer="21"/>
+<wire x1="-0.762" y1="-0.762" x2="-0.762" y2="-0.508" width="0.1524" layer="21"/>
+<circle x="0" y="0" radius="0.635" width="0.1524" layer="51"/>
+<pad name="1" x="0" y="0" drill="0.8128" diameter="1.6002" shape="octagon"/>
+<text x="-0.762" y="1.016" size="1.27" layer="25" ratio="10">&gt;NAME</text>
+<text x="0" y="0.6" size="0.0254" layer="27">&gt;VALUE</text>
+</package>
+</packages>
+<symbols>
+<symbol name="PAD">
+<wire x1="-1.016" y1="1.016" x2="1.016" y2="-1.016" width="0.254" layer="94"/>
+<wire x1="-1.016" y1="-1.016" x2="1.016" y2="1.016" width="0.254" layer="94"/>
+<text x="-1.143" y="1.8542" size="1.778" layer="95">&gt;NAME</text>
+<text x="-1.143" y="-3.302" size="1.778" layer="96">&gt;VALUE</text>
+<pin name="P" x="2.54" y="0" visible="off" length="short" direction="pas" rot="R180"/>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="1,6/0,8" prefix="PAD" uservalue="yes">
+<description>&lt;b&gt;THROUGH-HOLE PAD&lt;/b&gt;</description>
+<gates>
+<gate name="P" symbol="PAD" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="1,6/0,8">
+<connects>
+<connect gate="P" pin="P" pad="1"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -4262,13 +4310,11 @@ Based on the following sources:
 <part name="LEFT_MOTOR_TERMINAL" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
 <part name="LEFT_ENCODER_TERMINALS" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
 <part name="RIGHT_ENCODER_TERMINALS" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
-<part name="LED1" library="led" deviceset="NFSG036BT" device=""/>
 <part name="LED2" library="led" deviceset="NFSG036BT" device=""/>
 <part name="LED3" library="led" deviceset="NFSG036BT" device=""/>
 <part name="LED4" library="led" deviceset="NFSG036BT" device=""/>
 <part name="LED5" library="led" deviceset="NFSG036BT" device=""/>
 <part name="LED6" library="led" deviceset="NFSG036BT" device=""/>
-<part name="R1" library="resistor" deviceset="R-US_" device="M0805"/>
 <part name="R2" library="resistor" deviceset="R-US_" device="M0805"/>
 <part name="R3" library="resistor" deviceset="R-US_" device="M0805"/>
 <part name="R4" library="resistor" deviceset="R-US_" device="M0805"/>
@@ -4279,6 +4325,7 @@ Based on the following sources:
 <part name="H2" library="holes" deviceset="MOUNT-HOLE" device="3.0"/>
 <part name="H4" library="holes" deviceset="MOUNT-HOLE" device="3.0"/>
 <part name="H5" library="holes" deviceset="MOUNT-HOLE" device="3.0"/>
+<part name="+5_CTRL" library="wirepad" deviceset="1,6/0,8" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -4300,30 +4347,29 @@ controller to interface to the LED.</text>
 <instance part="LEFT_ENCODER_TERMINALS" gate="-2" x="215.9" y="170.18"/>
 <instance part="RIGHT_ENCODER_TERMINALS" gate="-1" x="134.62" y="116.84" rot="R180"/>
 <instance part="RIGHT_ENCODER_TERMINALS" gate="-2" x="134.62" y="121.92" rot="R180"/>
-<instance part="LED1" gate="G$1" x="213.36" y="68.58"/>
 <instance part="LED2" gate="G$1" x="223.52" y="68.58"/>
 <instance part="LED3" gate="G$1" x="233.68" y="68.58"/>
 <instance part="LED4" gate="G$1" x="243.84" y="68.58"/>
 <instance part="LED5" gate="G$1" x="254" y="68.58"/>
 <instance part="LED6" gate="G$1" x="264.16" y="68.58"/>
-<instance part="R1" gate="G$1" x="213.36" y="58.42" rot="R90"/>
 <instance part="R2" gate="G$1" x="223.52" y="58.42" rot="R90"/>
 <instance part="R3" gate="G$1" x="233.68" y="58.42" rot="R90"/>
 <instance part="R4" gate="G$1" x="243.84" y="58.42" rot="R90"/>
 <instance part="R5" gate="G$1" x="254" y="58.42" rot="R90"/>
 <instance part="R6" gate="G$1" x="264.16" y="58.42" rot="R90"/>
-<instance part="IC1" gate="A" x="213.36" y="88.9" rot="R270"/>
-<instance part="IC1" gate="B" x="223.52" y="88.9" rot="R270"/>
-<instance part="IC1" gate="C" x="233.68" y="88.9" rot="R270"/>
-<instance part="IC1" gate="D" x="243.84" y="88.9" rot="R270"/>
-<instance part="IC1" gate="E" x="254" y="88.9" rot="R270"/>
-<instance part="IC1" gate="F" x="264.16" y="88.9" rot="R270"/>
+<instance part="IC1" gate="F" x="213.36" y="88.9" rot="R270"/>
+<instance part="IC1" gate="E" x="223.52" y="88.9" rot="R270"/>
+<instance part="IC1" gate="D" x="233.68" y="88.9" rot="R270"/>
+<instance part="IC1" gate="C" x="243.84" y="88.9" rot="R270"/>
+<instance part="IC1" gate="B" x="254" y="88.9" rot="R270"/>
+<instance part="IC1" gate="A" x="264.16" y="88.9" rot="R270"/>
 <instance part="GND_TERMINALS" gate="-1" x="134.62" y="63.5" rot="R180"/>
 <instance part="GND_TERMINALS" gate="-2" x="134.62" y="68.58" rot="R180"/>
-<instance part="IC1" gate="P" x="203.2" y="86.36"/>
 <instance part="H2" gate="G$1" x="88.9" y="185.42"/>
 <instance part="H4" gate="G$1" x="88.9" y="53.34"/>
 <instance part="H5" gate="G$1" x="294.64" y="53.34"/>
+<instance part="+5_CTRL" gate="P" x="213.36" y="66.04" rot="R90"/>
+<instance part="IC1" gate="P" x="162.56" y="88.9"/>
 </instances>
 <busses>
 </busses>
@@ -4335,6 +4381,8 @@ controller to interface to the LED.</text>
 <wire x1="152.4" y1="157.48" x2="144.78" y2="165.1" width="0.1524" layer="91"/>
 <pinref part="LEFT_MOTOR_TERMINAL" gate="-1" pin="KL"/>
 <wire x1="144.78" y1="165.1" x2="137.16" y2="165.1" width="0.1524" layer="91"/>
+<junction x="162.56" y="157.48"/>
+<junction x="137.16" y="165.1"/>
 </segment>
 </net>
 <net name="N$3" class="0">
@@ -4344,6 +4392,8 @@ controller to interface to the LED.</text>
 <pinref part="LEFT_MOTOR_TERMINAL" gate="-2" pin="KL"/>
 <wire x1="144.78" y1="170.18" x2="137.16" y2="170.18" width="0.1524" layer="91"/>
 <wire x1="154.94" y1="160.02" x2="144.78" y2="170.18" width="0.1524" layer="91"/>
+<junction x="162.56" y="160.02"/>
+<junction x="137.16" y="170.18"/>
 </segment>
 </net>
 <net name="N$1" class="0">
@@ -4353,6 +4403,7 @@ controller to interface to the LED.</text>
 <wire x1="147.32" y1="119.38" x2="144.78" y2="121.92" width="0.1524" layer="91"/>
 <pinref part="RIGHT_ENCODER_TERMINALS" gate="-2" pin="KL"/>
 <wire x1="144.78" y1="121.92" x2="137.16" y2="121.92" width="0.1524" layer="91"/>
+<junction x="137.16" y="121.92"/>
 </segment>
 </net>
 <net name="N$4" class="0">
@@ -4360,6 +4411,7 @@ controller to interface to the LED.</text>
 <pinref part="LM4F" gate="G$1" pin="PE5"/>
 <pinref part="RIGHT_ENCODER_TERMINALS" gate="-1" pin="KL"/>
 <wire x1="162.56" y1="116.84" x2="137.16" y2="116.84" width="0.1524" layer="91"/>
+<junction x="137.16" y="116.84"/>
 </segment>
 </net>
 <net name="N$5" class="0">
@@ -4367,6 +4419,8 @@ controller to interface to the LED.</text>
 <pinref part="LM4F" gate="G$1" pin="PB0"/>
 <pinref part="LEFT_ENCODER_TERMINALS" gate="-1" pin="KL"/>
 <wire x1="193.04" y1="175.26" x2="213.36" y2="175.26" width="0.1524" layer="91"/>
+<junction x="193.04" y="175.26"/>
+<junction x="213.36" y="175.26"/>
 </segment>
 </net>
 <net name="N$6" class="0">
@@ -4375,12 +4429,8 @@ controller to interface to the LED.</text>
 <pinref part="LEFT_ENCODER_TERMINALS" gate="-2" pin="KL"/>
 <wire x1="193.04" y1="172.72" x2="210.82" y2="172.72" width="0.1524" layer="91"/>
 <wire x1="210.82" y1="172.72" x2="213.36" y2="170.18" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$8" class="0">
-<segment>
-<pinref part="R1" gate="G$1" pin="2"/>
-<pinref part="LED1" gate="G$1" pin="C"/>
+<junction x="193.04" y="172.72"/>
+<junction x="213.36" y="170.18"/>
 </segment>
 </net>
 <net name="N$9" class="0">
@@ -4413,46 +4463,49 @@ controller to interface to the LED.</text>
 <pinref part="LED6" gate="G$1" pin="C"/>
 </segment>
 </net>
-<net name="N$14" class="0">
-<segment>
-<pinref part="LED1" gate="G$1" pin="A"/>
-<pinref part="IC1" gate="A" pin="O"/>
-<wire x1="213.36" y1="71.12" x2="213.36" y2="78.74" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="N$15" class="0">
 <segment>
 <pinref part="LED2" gate="G$1" pin="A"/>
-<pinref part="IC1" gate="B" pin="O"/>
+<pinref part="IC1" gate="E" pin="O"/>
 <wire x1="223.52" y1="71.12" x2="223.52" y2="78.74" width="0.1524" layer="91"/>
+<junction x="223.52" y="71.12"/>
+<junction x="223.52" y="78.74"/>
 </segment>
 </net>
 <net name="N$16" class="0">
 <segment>
 <pinref part="LED3" gate="G$1" pin="A"/>
-<pinref part="IC1" gate="C" pin="O"/>
+<pinref part="IC1" gate="D" pin="O"/>
 <wire x1="233.68" y1="71.12" x2="233.68" y2="78.74" width="0.1524" layer="91"/>
+<junction x="233.68" y="71.12"/>
+<junction x="233.68" y="78.74"/>
 </segment>
 </net>
 <net name="N$17" class="0">
 <segment>
 <pinref part="LED4" gate="G$1" pin="A"/>
-<pinref part="IC1" gate="D" pin="O"/>
+<pinref part="IC1" gate="C" pin="O"/>
 <wire x1="243.84" y1="71.12" x2="243.84" y2="78.74" width="0.1524" layer="91"/>
+<junction x="243.84" y="78.74"/>
+<junction x="243.84" y="71.12"/>
 </segment>
 </net>
 <net name="N$18" class="0">
 <segment>
 <pinref part="LED5" gate="G$1" pin="A"/>
-<pinref part="IC1" gate="E" pin="O"/>
+<pinref part="IC1" gate="B" pin="O"/>
 <wire x1="254" y1="71.12" x2="254" y2="78.74" width="0.1524" layer="91"/>
+<junction x="254" y="71.12"/>
+<junction x="254" y="78.74"/>
 </segment>
 </net>
 <net name="N$19" class="0">
 <segment>
 <pinref part="LED6" gate="G$1" pin="A"/>
-<pinref part="IC1" gate="F" pin="O"/>
+<pinref part="IC1" gate="A" pin="O"/>
 <wire x1="264.16" y1="71.12" x2="264.16" y2="78.74" width="0.1524" layer="91"/>
+<junction x="264.16" y="78.74"/>
+<junction x="264.16" y="71.12"/>
 </segment>
 </net>
 <net name="DEBUG_LEDS" class="0">
@@ -4468,8 +4521,10 @@ controller to interface to the LED.</text>
 <pinref part="LM4F" gate="G$1" pin="PD0"/>
 <wire x1="193.04" y1="152.4" x2="231.14" y2="152.4" width="0.1524" layer="91"/>
 <wire x1="231.14" y1="152.4" x2="264.16" y2="119.38" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="F" pin="I"/>
+<pinref part="IC1" gate="A" pin="I"/>
 <wire x1="264.16" y1="119.38" x2="264.16" y2="99.06" width="0.1524" layer="91"/>
+<junction x="264.16" y="99.06"/>
+<junction x="193.04" y="152.4"/>
 </segment>
 </net>
 <net name="N$21" class="0">
@@ -4477,8 +4532,10 @@ controller to interface to the LED.</text>
 <pinref part="LM4F" gate="G$1" pin="PD1"/>
 <wire x1="193.04" y1="149.86" x2="228.6" y2="149.86" width="0.1524" layer="91"/>
 <wire x1="228.6" y1="149.86" x2="254" y2="124.46" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="E" pin="I"/>
+<pinref part="IC1" gate="B" pin="I"/>
 <wire x1="254" y1="124.46" x2="254" y2="99.06" width="0.1524" layer="91"/>
+<junction x="254" y="99.06"/>
+<junction x="193.04" y="149.86"/>
 </segment>
 </net>
 <net name="N$22" class="0">
@@ -4486,8 +4543,10 @@ controller to interface to the LED.</text>
 <pinref part="LM4F" gate="G$1" pin="PD2"/>
 <wire x1="193.04" y1="147.32" x2="226.06" y2="147.32" width="0.1524" layer="91"/>
 <wire x1="226.06" y1="147.32" x2="243.84" y2="129.54" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="D" pin="I"/>
+<pinref part="IC1" gate="C" pin="I"/>
 <wire x1="243.84" y1="129.54" x2="243.84" y2="99.06" width="0.1524" layer="91"/>
+<junction x="243.84" y="99.06"/>
+<junction x="193.04" y="147.32"/>
 </segment>
 </net>
 <net name="N$23" class="0">
@@ -4495,8 +4554,10 @@ controller to interface to the LED.</text>
 <pinref part="LM4F" gate="G$1" pin="PD3"/>
 <wire x1="193.04" y1="144.78" x2="223.52" y2="144.78" width="0.1524" layer="91"/>
 <wire x1="223.52" y1="144.78" x2="233.68" y2="134.62" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="C" pin="I"/>
+<pinref part="IC1" gate="D" pin="I"/>
 <wire x1="233.68" y1="134.62" x2="233.68" y2="99.06" width="0.1524" layer="91"/>
+<junction x="233.68" y="99.06"/>
+<junction x="193.04" y="144.78"/>
 </segment>
 </net>
 <net name="N$24" class="0">
@@ -4504,7 +4565,10 @@ controller to interface to the LED.</text>
 <pinref part="LM4F" gate="G$1" pin="PD6"/>
 <wire x1="193.04" y1="137.16" x2="208.28" y2="137.16" width="0.1524" layer="91"/>
 <wire x1="208.28" y1="137.16" x2="223.52" y2="121.92" width="0.1524" layer="91"/>
-<wire x1="223.52" y1="121.92" x2="223.52" y2="96.52" width="0.1524" layer="91"/>
+<pinref part="IC1" gate="E" pin="I"/>
+<wire x1="223.52" y1="99.06" x2="223.52" y2="121.92" width="0.1524" layer="91"/>
+<junction x="223.52" y="99.06"/>
+<junction x="193.04" y="137.16"/>
 </segment>
 </net>
 <net name="N$25" class="0">
@@ -4512,8 +4576,10 @@ controller to interface to the LED.</text>
 <pinref part="LM4F" gate="G$1" pin="PD7"/>
 <wire x1="193.04" y1="134.62" x2="208.28" y2="134.62" width="0.1524" layer="91"/>
 <wire x1="208.28" y1="134.62" x2="213.36" y2="129.54" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="A" pin="I"/>
+<pinref part="IC1" gate="F" pin="I"/>
 <wire x1="213.36" y1="129.54" x2="213.36" y2="99.06" width="0.1524" layer="91"/>
+<junction x="213.36" y="99.06"/>
+<junction x="193.04" y="134.62"/>
 </segment>
 </net>
 <net name="GND" class="0">
@@ -4522,13 +4588,11 @@ controller to interface to the LED.</text>
 <pinref part="GND_TERMINALS" gate="-1" pin="KL"/>
 <wire x1="137.16" y1="68.58" x2="137.16" y2="63.5" width="0.1524" layer="91"/>
 <pinref part="LM4F" gate="G$1" pin="GND2"/>
-<wire x1="193.04" y1="104.14" x2="193.04" y2="78.74" width="0.1524" layer="91"/>
-<wire x1="193.04" y1="78.74" x2="193.04" y2="68.58" width="0.1524" layer="91"/>
+<wire x1="193.04" y1="104.14" x2="193.04" y2="81.28" width="0.1524" layer="91"/>
+<wire x1="193.04" y1="81.28" x2="193.04" y2="68.58" width="0.1524" layer="91"/>
 <wire x1="193.04" y1="68.58" x2="208.28" y2="53.34" width="0.1524" layer="91"/>
-<pinref part="R1" gate="G$1" pin="1"/>
-<wire x1="208.28" y1="53.34" x2="213.36" y2="53.34" width="0.1524" layer="91"/>
 <pinref part="R2" gate="G$1" pin="1"/>
-<wire x1="213.36" y1="53.34" x2="223.52" y2="53.34" width="0.1524" layer="91"/>
+<wire x1="208.28" y1="53.34" x2="223.52" y2="53.34" width="0.1524" layer="91"/>
 <pinref part="R3" gate="G$1" pin="1"/>
 <wire x1="223.52" y1="53.34" x2="233.68" y2="53.34" width="0.1524" layer="91"/>
 <pinref part="R4" gate="G$1" pin="1"/>
@@ -4538,21 +4602,45 @@ controller to interface to the LED.</text>
 <pinref part="R6" gate="G$1" pin="1"/>
 <wire x1="254" y1="53.34" x2="264.16" y2="53.34" width="0.1524" layer="91"/>
 <wire x1="137.16" y1="68.58" x2="193.04" y2="68.58" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="P" pin="VCC"/>
-<pinref part="IC1" gate="P" pin="GND"/>
-<wire x1="203.2" y1="78.74" x2="203.2" y2="93.98" width="0.1524" layer="91" style="shortdash"/>
-<wire x1="203.2" y1="78.74" x2="193.04" y2="78.74" width="0.1524" layer="91"/>
-<pinref part="LM4F" gate="G$1" pin="VBUS"/>
-<wire x1="162.56" y1="104.14" x2="162.56" y2="99.06" width="0.1524" layer="91"/>
-<wire x1="162.56" y1="99.06" x2="167.64" y2="93.98" width="0.1524" layer="91"/>
-<wire x1="167.64" y1="93.98" x2="203.2" y2="93.98" width="0.1524" layer="91"/>
-<junction x="193.04" y="78.74"/>
 <junction x="193.04" y="68.58"/>
+<pinref part="IC1" gate="P" pin="GND"/>
+<wire x1="162.56" y1="81.28" x2="193.04" y2="81.28" width="0.1524" layer="91"/>
+<junction x="193.04" y="81.28"/>
+<junction x="137.16" y="68.58"/>
+<junction x="137.16" y="63.5"/>
+<junction x="193.04" y="104.14"/>
+<junction x="162.56" y="81.28"/>
+<junction x="223.52" y="53.34"/>
+<junction x="233.68" y="53.34"/>
+<junction x="243.84" y="53.34"/>
+<junction x="254" y="53.34"/>
+<junction x="264.16" y="53.34"/>
+</segment>
+</net>
+<net name="N$8" class="0">
+<segment>
+<pinref part="+5_CTRL" gate="P" pin="P"/>
+<pinref part="IC1" gate="F" pin="O"/>
+<wire x1="213.36" y1="68.58" x2="213.36" y2="78.74" width="0.1524" layer="91"/>
+<junction x="213.36" y="78.74"/>
+<junction x="213.36" y="68.58"/>
+</segment>
+</net>
+<net name="VBUS" class="0">
+<segment>
+<pinref part="IC1" gate="P" pin="VCC"/>
+<pinref part="LM4F" gate="G$1" pin="VBUS"/>
+<wire x1="162.56" y1="96.52" x2="162.56" y2="104.14" width="0.1524" layer="91"/>
+<junction x="162.56" y="104.14"/>
 </segment>
 </net>
 </nets>
 </sheet>
 </sheets>
+<errors>
+<approved hash="204,1,162.56,106.68,LM4F,3.3V,,,,"/>
+<approved hash="204,1,193.04,109.22,LM4F,RST,,,,"/>
+</errors>
 </schematic>
 </drawing>
 <compatibility>
