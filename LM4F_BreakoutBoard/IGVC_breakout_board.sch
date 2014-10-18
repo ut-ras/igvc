@@ -4307,7 +4307,7 @@ Based on the following sources:
 <parts>
 <part name="LM4F" library="StellarisLaunchPad_Fred" deviceset="STELLARIS-LAUNCHPAD" device="STELLARIS-LAUNCHPAD-XL"/>
 <part name="FRAME1" library="frames" deviceset="A3L-LOC" device=""/>
-<part name="LEFT_MOTOR_TERMINAL" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
+<part name="MOTOR_TERMINALS" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
 <part name="LEFT_ENCODER_TERMINALS" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
 <part name="RIGHT_ENCODER_TERMINALS" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
 <part name="LED2" library="led" deviceset="NFSG036BT" device=""/>
@@ -4341,8 +4341,8 @@ controller to interface to the LED.</text>
 <instances>
 <instance part="LM4F" gate="G$1" x="177.8" y="142.24"/>
 <instance part="FRAME1" gate="G$1" x="0" y="0"/>
-<instance part="LEFT_MOTOR_TERMINAL" gate="-1" x="134.62" y="165.1" rot="R180"/>
-<instance part="LEFT_MOTOR_TERMINAL" gate="-2" x="134.62" y="170.18" rot="R180"/>
+<instance part="MOTOR_TERMINALS" gate="-1" x="134.62" y="165.1" rot="R180"/>
+<instance part="MOTOR_TERMINALS" gate="-2" x="134.62" y="170.18" rot="R180"/>
 <instance part="LEFT_ENCODER_TERMINALS" gate="-1" x="215.9" y="175.26"/>
 <instance part="LEFT_ENCODER_TERMINALS" gate="-2" x="215.9" y="170.18"/>
 <instance part="RIGHT_ENCODER_TERMINALS" gate="-1" x="134.62" y="116.84" rot="R180"/>
@@ -4379,7 +4379,7 @@ controller to interface to the LED.</text>
 <pinref part="LM4F" gate="G$1" pin="PA7"/>
 <wire x1="162.56" y1="157.48" x2="152.4" y2="157.48" width="0.1524" layer="91"/>
 <wire x1="152.4" y1="157.48" x2="144.78" y2="165.1" width="0.1524" layer="91"/>
-<pinref part="LEFT_MOTOR_TERMINAL" gate="-1" pin="KL"/>
+<pinref part="MOTOR_TERMINALS" gate="-1" pin="KL"/>
 <wire x1="144.78" y1="165.1" x2="137.16" y2="165.1" width="0.1524" layer="91"/>
 <junction x="162.56" y="157.48"/>
 <junction x="137.16" y="165.1"/>
@@ -4389,7 +4389,7 @@ controller to interface to the LED.</text>
 <segment>
 <pinref part="LM4F" gate="G$1" pin="PA6"/>
 <wire x1="162.56" y1="160.02" x2="154.94" y2="160.02" width="0.1524" layer="91"/>
-<pinref part="LEFT_MOTOR_TERMINAL" gate="-2" pin="KL"/>
+<pinref part="MOTOR_TERMINALS" gate="-2" pin="KL"/>
 <wire x1="144.78" y1="170.18" x2="137.16" y2="170.18" width="0.1524" layer="91"/>
 <wire x1="154.94" y1="160.02" x2="144.78" y2="170.18" width="0.1524" layer="91"/>
 <junction x="162.56" y="160.02"/>
