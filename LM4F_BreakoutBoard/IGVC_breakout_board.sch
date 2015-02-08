@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.1" unitdist="inch" unit="inch" style="dots" multiple="1" display="yes" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
 <layer number="16" name="Bottom" color="1" fill="1" visible="no" active="no"/>
@@ -623,127 +623,6 @@ DIN A3, landscape with location and doc. field</description>
 </gates>
 <devices>
 <device name="">
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-</devicesets>
-</library>
-<library name="con-phoenix-508">
-<description>&lt;b&gt;Phoenix Connectors&lt;/b&gt;&lt;p&gt;
-Grid 5.08 mm&lt;p&gt;
-Based on the previous libraries:
-&lt;ul&gt;
-&lt;li&gt;pho508a.lbr
-&lt;li&gt;pho508b.lbr
-&lt;li&gt;pho508c.lbr
-&lt;li&gt;pho508d.lbr
-&lt;li&gt;pho508e.lbr
-&lt;/ul&gt;
-&lt;author&gt;Created by librarian@cadsoft.de&lt;/author&gt;</description>
-<packages>
-<package name="MKDSN1,5/2-5,08">
-<description>&lt;b&gt;MKDSN 1,5/ 2-5,08&lt;/b&gt; Printklemme&lt;p&gt;
-Nennstrom: 13,5 A&lt;br&gt;
-Nennspannung: 250 V&lt;br&gt;
-Rastermaß: 5,08 mm&lt;br&gt;
-Polzahl: 2&lt;br&gt;
-Anschlussart: Schraubanschluss&lt;br&gt;
-Montage: Löten&lt;br&gt;
-Anschlussrichtung Leiter/Platine: 0 °&lt;br&gt;
-Artikelnummer: 1729128&lt;br&gt;
-Source: http://eshop.phoenixcontact.com .. 1729128.pdf</description>
-<wire x1="-5.1011" y1="-4.05" x2="5.0589" y2="-4.05" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="2.5243" x2="5.0589" y2="2.5243" width="0.2032" layer="21"/>
-<wire x1="-2.7211" y1="-0.63" x2="-3.6341" y2="-1.543" width="0.2032" layer="51"/>
-<wire x1="-5.1011" y1="-1.9555" x2="-5.1011" y2="-2.4479" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="-3.327" x2="-5.2298" y2="-3.327" width="0.2032" layer="21"/>
-<wire x1="-5.2298" y1="-2.913" x2="-5.1011" y2="-2.913" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="-3.1279" x2="-5.1011" y2="-2.913" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="-3.327" x2="-5.1011" y2="-3.1279" width="0.2032" layer="21"/>
-<wire x1="-5.6711" y1="-2.763" x2="-5.4081" y2="-2.763" width="0.2032" layer="21"/>
-<wire x1="-5.6711" y1="-3.477" x2="-5.4081" y2="-3.477" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="-2.913" x2="-5.1011" y2="-2.4479" width="0.2032" layer="21"/>
-<wire x1="-5.2298" y1="-3.327" x2="-5.4081" y2="-3.477" width="0.2032" layer="21"/>
-<wire x1="-5.6711" y1="-2.763" x2="-5.6711" y2="-3.477" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="2.5243" x2="-5.1011" y2="2.0413" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="-1.9555" x2="-5.1011" y2="2.0413" width="0.2032" layer="21"/>
-<wire x1="-5.4081" y1="-2.763" x2="-5.2298" y2="-2.913" width="0.2032" layer="21"/>
-<wire x1="5.0589" y1="-2.4479" x2="-5.1011" y2="-2.4479" width="0.2032" layer="21"/>
-<wire x1="-2.5611" y1="-0.47" x2="-2.7211" y2="-0.63" width="0.2032" layer="51"/>
-<wire x1="-3.2001" y1="-0.119" x2="-2.5611" y2="0.52" width="0.2032" layer="51"/>
-<wire x1="-4.1291" y1="-1.048" x2="-3.2001" y2="-0.119" width="0.2032" layer="51"/>
-<wire x1="0.9509" y1="-1.048" x2="1.8799" y2="-0.119" width="0.2032" layer="51"/>
-<wire x1="5.0589" y1="-1.9555" x2="5.0589" y2="-2.4479" width="0.2032" layer="21"/>
-<wire x1="2.3589" y1="-0.63" x2="1.4459" y2="-1.543" width="0.2032" layer="51"/>
-<wire x1="1.8799" y1="-0.119" x2="2.5189" y2="0.52" width="0.2032" layer="51"/>
-<wire x1="2.5189" y1="-0.47" x2="2.3589" y2="-0.63" width="0.2032" layer="51"/>
-<wire x1="4.0869" y1="1.098" x2="3.1489" y2="0.16" width="0.2032" layer="51"/>
-<wire x1="2.6379" y1="0.639" x2="3.5919" y2="1.593" width="0.2032" layer="51"/>
-<wire x1="3.1489" y1="0.16" x2="2.5189" y2="-0.47" width="0.2032" layer="51"/>
-<wire x1="2.5189" y1="0.52" x2="2.6379" y2="0.639" width="0.2032" layer="51"/>
-<wire x1="-1.9311" y1="0.16" x2="-2.5611" y2="-0.47" width="0.2032" layer="51"/>
-<wire x1="-2.5611" y1="0.52" x2="-2.4421" y2="0.639" width="0.2032" layer="51"/>
-<wire x1="-2.4421" y1="0.639" x2="-1.4881" y2="1.593" width="0.2032" layer="51"/>
-<wire x1="-0.9931" y1="1.098" x2="-1.9311" y2="0.16" width="0.2032" layer="51"/>
-<wire x1="-5.1011" y1="-3.1279" x2="5.0589" y2="-3.1279" width="0.2032" layer="21"/>
-<wire x1="5.0589" y1="-3.1279" x2="5.0589" y2="-2.4479" width="0.2032" layer="21"/>
-<wire x1="5.0589" y1="-1.9555" x2="5.0589" y2="2.0413" width="0.2032" layer="21"/>
-<wire x1="5.0589" y1="2.5243" x2="5.0589" y2="2.0413" width="0.2032" layer="21"/>
-<wire x1="5.0589" y1="2.5243" x2="5.0589" y2="4.05" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="-3.75" x2="-5.1011" y2="-3.327" width="0.2032" layer="21"/>
-<wire x1="5.0589" y1="-3.75" x2="5.0589" y2="-3.1279" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="4.05" x2="5.0589" y2="4.05" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="2.5243" x2="-5.1011" y2="4.05" width="0.2032" layer="21"/>
-<wire x1="5.0589" y1="-3.75" x2="-5.1011" y2="-3.75" width="0.2032" layer="21"/>
-<wire x1="-5.1011" y1="-3.75" x2="-5.1011" y2="-4.05" width="0.2032" layer="21"/>
-<wire x1="5.0589" y1="-3.75" x2="5.0589" y2="-4.05" width="0.2032" layer="21"/>
-<wire x1="-3.2001" y1="-0.119" x2="-2.7211" y2="-0.63" width="0.2032" layer="51" curve="65.201851"/>
-<wire x1="1.8799" y1="-0.119" x2="2.3589" y2="-0.63" width="0.2032" layer="51" curve="65.201851"/>
-<wire x1="3.1489" y1="0.16" x2="2.6379" y2="0.639" width="0.2032" layer="51" curve="65.201851"/>
-<wire x1="-1.9311" y1="0.16" x2="-2.4421" y2="0.639" width="0.2032" layer="51" curve="65.201851"/>
-<circle x="-2.5611" y="0.025" radius="1.915" width="0.2032" layer="21"/>
-<circle x="2.5189" y="0.025" radius="1.915" width="0.2032" layer="21"/>
-<pad name="1" x="-2.5611" y="0.025" drill="1.3" diameter="2"/>
-<pad name="2" x="2.5189" y="0.025" drill="1.3" diameter="2"/>
-<text x="-4.7511" y="4.445" size="1.27" layer="25">&gt;NAME</text>
-<text x="6.985" y="-3.81" size="1.27" layer="27" rot="R90">&gt;VALUE</text>
-</package>
-</packages>
-<symbols>
-<symbol name="KLV">
-<circle x="1.27" y="0" radius="1.27" width="0.254" layer="94"/>
-<circle x="1.27" y="0" radius="1.27" width="0.254" layer="94"/>
-<circle x="1.27" y="0" radius="1.27" width="0.254" layer="94"/>
-<text x="3.048" y="-0.889" size="1.778" layer="95">&gt;NAME</text>
-<text x="-2.54" y="-3.683" size="1.778" layer="96">&gt;VALUE</text>
-<pin name="KL" x="-2.54" y="0" visible="off" length="short" direction="pas"/>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="MKDSN1,5/2-5,08" prefix="X">
-<description>&lt;b&gt;MKDSN 1,5/ 2-5,08&lt;/b&gt; Printklemme&lt;p&gt;
-Nennstrom: 13,5 A&lt;br&gt;
-Nennspannung: 250 V&lt;br&gt;
-Rastermaß: 5,08 mm&lt;br&gt;
-Polzahl: 2&lt;br&gt;
-Anschlussart: Schraubanschluss&lt;br&gt;
-Montage: Löten&lt;br&gt;
-Anschlussrichtung Leiter/Platine: 0 °&lt;br&gt;
-Artikelnummer: 1729128&lt;br&gt;
-Source: http://eshop.phoenixcontact.com .. 1729128.pdf</description>
-<gates>
-<gate name="-1" symbol="KLV" x="0" y="0" addlevel="always" swaplevel="1"/>
-<gate name="-2" symbol="KLV" x="0" y="-5.08" addlevel="always" swaplevel="1"/>
-</gates>
-<devices>
-<device name="" package="MKDSN1,5/2-5,08">
-<connects>
-<connect gate="-1" pin="KL" pad="1"/>
-<connect gate="-2" pin="KL" pad="2"/>
-</connects>
 <technologies>
 <technology name=""/>
 </technologies>
@@ -4295,6 +4174,63 @@ Based on the following sources:
 </deviceset>
 </devicesets>
 </library>
+<library name="RASEagleLib">
+<packages>
+<package name="PHOENIXSCREWTERMINAL_2">
+<pad name="1" x="-2.5" y="0" drill="1.5" shape="square"/>
+<pad name="2" x="2.5" y="0" drill="1.5"/>
+<text x="-3" y="-3" size="1.27" layer="25">&gt;NAME</text>
+<text x="-3" y="-7" size="1.27" layer="27">&gt;VALUE</text>
+</package>
+</packages>
+<symbols>
+<symbol name="PHOENIXSCREWTERMINAL_2">
+<wire x1="-1.27" y1="-3.81" x2="1.27" y2="-1.27" width="0.254" layer="94"/>
+<wire x1="-1.27" y1="-4.445" x2="0" y2="-4.445" width="0.254" layer="94"/>
+<wire x1="0" y1="-4.445" x2="2.54" y2="-4.445" width="0.254" layer="94"/>
+<wire x1="-2.54" y1="-4.445" x2="0" y2="-4.445" width="0.254" layer="94"/>
+<wire x1="-1.27" y1="4.445" x2="-2.54" y2="4.445" width="0.254" layer="94"/>
+<wire x1="-1.27" y1="4.445" x2="-3.81" y2="4.445" width="0.254" layer="94"/>
+<wire x1="-3.81" y1="4.445" x2="-3.81" y2="-4.445" width="0.254" layer="94"/>
+<wire x1="-3.81" y1="-4.445" x2="-2.54" y2="-4.445" width="0.254" layer="94"/>
+<wire x1="-2.54" y1="4.445" x2="-2.54" y2="-4.445" width="0.254" layer="94"/>
+<wire x1="-1.27" y1="4.445" x2="2.54" y2="4.445" width="0.254" layer="94"/>
+<wire x1="2.54" y1="4.445" x2="3.81" y2="4.445" width="0.254" layer="94"/>
+<wire x1="3.81" y1="4.445" x2="3.81" y2="-4.445" width="0.254" layer="94"/>
+<wire x1="3.81" y1="-4.445" x2="2.54" y2="-4.445" width="0.254" layer="94"/>
+<wire x1="-1.27" y1="1.27" x2="1.27" y2="3.81" width="0.254" layer="94"/>
+<wire x1="2.54" y1="-4.445" x2="2.54" y2="4.445" width="0.254" layer="94"/>
+<circle x="0" y="2.54" radius="1.27" width="0.254" layer="94"/>
+<circle x="0" y="-2.54" radius="1.27" width="0.254" layer="94"/>
+<text x="-3.81" y="5.715" size="1.778" layer="95">&gt;NAME</text>
+<text x="-3.81" y="-6.985" size="1.778" layer="96">&gt;VALUE</text>
+<pin name="1" x="-5.08" y="2.54" visible="pin" length="middle"/>
+<pin name="2" x="-5.08" y="-2.54" visible="pin" length="middle"/>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="PHOENIXSCREWTERMINAL_2" prefix="J">
+<description>&lt;h1&gt;Phoenix Screw Terminal
+&lt;h2&gt;2 contacts, 5 mm pitch
+&lt;h3&gt;Terminal: 1934861
+&lt;br&gt;Pins: 1933189</description>
+<gates>
+<gate name="G$1" symbol="PHOENIXSCREWTERMINAL_2" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="PHOENIXSCREWTERMINAL_2">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -4307,9 +4243,6 @@ Based on the following sources:
 <parts>
 <part name="LM4F" library="StellarisLaunchPad_Fred" deviceset="STELLARIS-LAUNCHPAD" device="STELLARIS-LAUNCHPAD-XL"/>
 <part name="FRAME1" library="frames" deviceset="A3L-LOC" device=""/>
-<part name="MOTOR_TERMINALS" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
-<part name="LEFT_ENCODER_TERMINALS" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
-<part name="RIGHT_ENCODER_TERMINALS" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
 <part name="LED2" library="led" deviceset="NFSG036BT" device=""/>
 <part name="LED3" library="led" deviceset="NFSG036BT" device=""/>
 <part name="LED4" library="led" deviceset="NFSG036BT" device=""/>
@@ -4321,11 +4254,14 @@ Based on the following sources:
 <part name="R5" library="resistor" deviceset="R-US_" device="M0805"/>
 <part name="R6" library="resistor" deviceset="R-US_" device="M0805"/>
 <part name="IC1" library="74xx-eu" deviceset="74*07" device="N"/>
-<part name="GND_TERMINALS" library="con-phoenix-508" deviceset="MKDSN1,5/2-5,08" device=""/>
 <part name="H2" library="holes" deviceset="MOUNT-HOLE" device="3.0"/>
 <part name="H4" library="holes" deviceset="MOUNT-HOLE" device="3.0"/>
 <part name="H5" library="holes" deviceset="MOUNT-HOLE" device="3.0"/>
 <part name="+5_CTRL" library="wirepad" deviceset="1,6/0,8" device=""/>
+<part name="LEFT-ENCODER" library="RASEagleLib" deviceset="PHOENIXSCREWTERMINAL_2" device=""/>
+<part name="RIGHT-ENCODER" library="RASEagleLib" deviceset="PHOENIXSCREWTERMINAL_2" device=""/>
+<part name="MOTORS" library="RASEagleLib" deviceset="PHOENIXSCREWTERMINAL_2" device=""/>
+<part name="GND" library="RASEagleLib" deviceset="PHOENIXSCREWTERMINAL_2" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -4341,12 +4277,6 @@ controller to interface to the LED.</text>
 <instances>
 <instance part="LM4F" gate="G$1" x="177.8" y="142.24"/>
 <instance part="FRAME1" gate="G$1" x="0" y="0"/>
-<instance part="MOTOR_TERMINALS" gate="-1" x="134.62" y="165.1" rot="R180"/>
-<instance part="MOTOR_TERMINALS" gate="-2" x="134.62" y="170.18" rot="R180"/>
-<instance part="LEFT_ENCODER_TERMINALS" gate="-1" x="215.9" y="175.26"/>
-<instance part="LEFT_ENCODER_TERMINALS" gate="-2" x="215.9" y="170.18"/>
-<instance part="RIGHT_ENCODER_TERMINALS" gate="-1" x="134.62" y="116.84" rot="R180"/>
-<instance part="RIGHT_ENCODER_TERMINALS" gate="-2" x="134.62" y="121.92" rot="R180"/>
 <instance part="LED2" gate="G$1" x="223.52" y="68.58"/>
 <instance part="LED3" gate="G$1" x="233.68" y="68.58"/>
 <instance part="LED4" gate="G$1" x="243.84" y="68.58"/>
@@ -4363,76 +4293,19 @@ controller to interface to the LED.</text>
 <instance part="IC1" gate="C" x="243.84" y="88.9" rot="R270"/>
 <instance part="IC1" gate="B" x="254" y="88.9" rot="R270"/>
 <instance part="IC1" gate="A" x="264.16" y="88.9" rot="R270"/>
-<instance part="GND_TERMINALS" gate="-1" x="134.62" y="63.5" rot="R180"/>
-<instance part="GND_TERMINALS" gate="-2" x="134.62" y="68.58" rot="R180"/>
 <instance part="H2" gate="G$1" x="88.9" y="185.42"/>
 <instance part="H4" gate="G$1" x="88.9" y="53.34"/>
 <instance part="H5" gate="G$1" x="294.64" y="53.34"/>
 <instance part="+5_CTRL" gate="P" x="213.36" y="66.04" rot="R90"/>
 <instance part="IC1" gate="P" x="162.56" y="88.9"/>
+<instance part="LEFT-ENCODER" gate="G$1" x="208.28" y="172.72"/>
+<instance part="RIGHT-ENCODER" gate="G$1" x="144.78" y="116.84" rot="R180"/>
+<instance part="MOTORS" gate="G$1" x="144.78" y="157.48" rot="R180"/>
+<instance part="GND" gate="G$1" x="182.88" y="73.66" rot="R270"/>
 </instances>
 <busses>
 </busses>
 <nets>
-<net name="N$2" class="0">
-<segment>
-<pinref part="LM4F" gate="G$1" pin="PA7"/>
-<wire x1="162.56" y1="157.48" x2="152.4" y2="157.48" width="0.1524" layer="91"/>
-<wire x1="152.4" y1="157.48" x2="144.78" y2="165.1" width="0.1524" layer="91"/>
-<pinref part="MOTOR_TERMINALS" gate="-1" pin="KL"/>
-<wire x1="144.78" y1="165.1" x2="137.16" y2="165.1" width="0.1524" layer="91"/>
-<junction x="162.56" y="157.48"/>
-<junction x="137.16" y="165.1"/>
-</segment>
-</net>
-<net name="N$3" class="0">
-<segment>
-<pinref part="LM4F" gate="G$1" pin="PA6"/>
-<wire x1="162.56" y1="160.02" x2="154.94" y2="160.02" width="0.1524" layer="91"/>
-<pinref part="MOTOR_TERMINALS" gate="-2" pin="KL"/>
-<wire x1="144.78" y1="170.18" x2="137.16" y2="170.18" width="0.1524" layer="91"/>
-<wire x1="154.94" y1="160.02" x2="144.78" y2="170.18" width="0.1524" layer="91"/>
-<junction x="162.56" y="160.02"/>
-<junction x="137.16" y="170.18"/>
-</segment>
-</net>
-<net name="N$1" class="0">
-<segment>
-<pinref part="LM4F" gate="G$1" pin="PE4"/>
-<wire x1="162.56" y1="119.38" x2="147.32" y2="119.38" width="0.1524" layer="91"/>
-<wire x1="147.32" y1="119.38" x2="144.78" y2="121.92" width="0.1524" layer="91"/>
-<pinref part="RIGHT_ENCODER_TERMINALS" gate="-2" pin="KL"/>
-<wire x1="144.78" y1="121.92" x2="137.16" y2="121.92" width="0.1524" layer="91"/>
-<junction x="137.16" y="121.92"/>
-</segment>
-</net>
-<net name="N$4" class="0">
-<segment>
-<pinref part="LM4F" gate="G$1" pin="PE5"/>
-<pinref part="RIGHT_ENCODER_TERMINALS" gate="-1" pin="KL"/>
-<wire x1="162.56" y1="116.84" x2="137.16" y2="116.84" width="0.1524" layer="91"/>
-<junction x="137.16" y="116.84"/>
-</segment>
-</net>
-<net name="N$5" class="0">
-<segment>
-<pinref part="LM4F" gate="G$1" pin="PB0"/>
-<pinref part="LEFT_ENCODER_TERMINALS" gate="-1" pin="KL"/>
-<wire x1="193.04" y1="175.26" x2="213.36" y2="175.26" width="0.1524" layer="91"/>
-<junction x="193.04" y="175.26"/>
-<junction x="213.36" y="175.26"/>
-</segment>
-</net>
-<net name="N$6" class="0">
-<segment>
-<pinref part="LM4F" gate="G$1" pin="PB1"/>
-<pinref part="LEFT_ENCODER_TERMINALS" gate="-2" pin="KL"/>
-<wire x1="193.04" y1="172.72" x2="210.82" y2="172.72" width="0.1524" layer="91"/>
-<wire x1="210.82" y1="172.72" x2="213.36" y2="170.18" width="0.1524" layer="91"/>
-<junction x="193.04" y="172.72"/>
-<junction x="213.36" y="170.18"/>
-</segment>
-</net>
 <net name="N$9" class="0">
 <segment>
 <pinref part="R2" gate="G$1" pin="2"/>
@@ -4516,7 +4389,7 @@ controller to interface to the LED.</text>
 <wire x1="198.12" y1="101.6" x2="198.12" y2="45.72" width="0.1524" layer="91" style="shortdash"/>
 </segment>
 </net>
-<net name="N$20" class="0">
+<net name="LEFT" class="0">
 <segment>
 <pinref part="LM4F" gate="G$1" pin="PD0"/>
 <wire x1="193.04" y1="152.4" x2="231.14" y2="152.4" width="0.1524" layer="91"/>
@@ -4584,9 +4457,6 @@ controller to interface to the LED.</text>
 </net>
 <net name="GND" class="0">
 <segment>
-<pinref part="GND_TERMINALS" gate="-2" pin="KL"/>
-<pinref part="GND_TERMINALS" gate="-1" pin="KL"/>
-<wire x1="137.16" y1="68.58" x2="137.16" y2="63.5" width="0.1524" layer="91"/>
 <pinref part="LM4F" gate="G$1" pin="GND2"/>
 <wire x1="193.04" y1="104.14" x2="193.04" y2="81.28" width="0.1524" layer="91"/>
 <wire x1="193.04" y1="81.28" x2="193.04" y2="68.58" width="0.1524" layer="91"/>
@@ -4601,13 +4471,9 @@ controller to interface to the LED.</text>
 <wire x1="243.84" y1="53.34" x2="254" y2="53.34" width="0.1524" layer="91"/>
 <pinref part="R6" gate="G$1" pin="1"/>
 <wire x1="254" y1="53.34" x2="264.16" y2="53.34" width="0.1524" layer="91"/>
-<wire x1="137.16" y1="68.58" x2="193.04" y2="68.58" width="0.1524" layer="91"/>
-<junction x="193.04" y="68.58"/>
 <pinref part="IC1" gate="P" pin="GND"/>
-<wire x1="162.56" y1="81.28" x2="193.04" y2="81.28" width="0.1524" layer="91"/>
+<wire x1="162.56" y1="81.28" x2="180.34" y2="81.28" width="0.1524" layer="91"/>
 <junction x="193.04" y="81.28"/>
-<junction x="137.16" y="68.58"/>
-<junction x="137.16" y="63.5"/>
 <junction x="193.04" y="104.14"/>
 <junction x="162.56" y="81.28"/>
 <junction x="223.52" y="53.34"/>
@@ -4615,6 +4481,16 @@ controller to interface to the LED.</text>
 <junction x="243.84" y="53.34"/>
 <junction x="254" y="53.34"/>
 <junction x="264.16" y="53.34"/>
+<pinref part="GND" gate="G$1" pin="2"/>
+<wire x1="180.34" y1="81.28" x2="185.42" y2="81.28" width="0.1524" layer="91"/>
+<wire x1="185.42" y1="81.28" x2="193.04" y2="81.28" width="0.1524" layer="91"/>
+<wire x1="180.34" y1="78.74" x2="180.34" y2="81.28" width="0.1524" layer="91"/>
+<junction x="180.34" y="81.28"/>
+<pinref part="GND" gate="G$1" pin="1"/>
+<wire x1="185.42" y1="78.74" x2="185.42" y2="81.28" width="0.1524" layer="91"/>
+<junction x="185.42" y="81.28"/>
+<pinref part="LM4F" gate="G$1" pin="GND1"/>
+<wire x1="193.04" y1="106.68" x2="193.04" y2="104.14" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$8" class="0">
@@ -4632,6 +4508,51 @@ controller to interface to the LED.</text>
 <pinref part="LM4F" gate="G$1" pin="VBUS"/>
 <wire x1="162.56" y1="96.52" x2="162.56" y2="104.14" width="0.1524" layer="91"/>
 <junction x="162.56" y="104.14"/>
+</segment>
+</net>
+<net name="N$5" class="0">
+<segment>
+<pinref part="LM4F" gate="G$1" pin="PB0"/>
+<pinref part="LEFT-ENCODER" gate="G$1" pin="1"/>
+<wire x1="193.04" y1="175.26" x2="203.2" y2="175.26" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$6" class="0">
+<segment>
+<pinref part="LM4F" gate="G$1" pin="PB1"/>
+<pinref part="LEFT-ENCODER" gate="G$1" pin="2"/>
+<wire x1="193.04" y1="172.72" x2="200.66" y2="172.72" width="0.1524" layer="91"/>
+<wire x1="200.66" y1="172.72" x2="203.2" y2="170.18" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$2" class="0">
+<segment>
+<pinref part="LM4F" gate="G$1" pin="PA6"/>
+<pinref part="MOTORS" gate="G$1" pin="2"/>
+<wire x1="162.56" y1="160.02" x2="149.86" y2="160.02" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$3" class="0">
+<segment>
+<pinref part="LM4F" gate="G$1" pin="PA7"/>
+<pinref part="MOTORS" gate="G$1" pin="1"/>
+<wire x1="162.56" y1="157.48" x2="152.4" y2="157.48" width="0.1524" layer="91"/>
+<wire x1="152.4" y1="157.48" x2="149.86" y2="154.94" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$1" class="0">
+<segment>
+<pinref part="RIGHT-ENCODER" gate="G$1" pin="2"/>
+<pinref part="LM4F" gate="G$1" pin="PE4"/>
+<wire x1="149.86" y1="119.38" x2="162.56" y2="119.38" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$4" class="0">
+<segment>
+<pinref part="LM4F" gate="G$1" pin="PE5"/>
+<pinref part="RIGHT-ENCODER" gate="G$1" pin="1"/>
+<wire x1="162.56" y1="116.84" x2="152.4" y2="116.84" width="0.1524" layer="91"/>
+<wire x1="152.4" y1="116.84" x2="149.86" y2="114.3" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
