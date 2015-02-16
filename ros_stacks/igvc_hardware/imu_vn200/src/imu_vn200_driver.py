@@ -13,7 +13,7 @@ from geometry_msgs.msg import Vector3,Vector3Stamped
 
 imu_pub = rospy.Publisher('/raw', Imu)
 mag_pub = rospy.Publisher('/mag', Vector3Stamped)
-DEVFILE = '/dev/ttyUSB0'
+DEVFILE = '/dev/serial/by-id/usb-FTDI_USB-RS232_Cable_FTVJUGLS-if00-port0'
 baudrate = 921600
 
 class Throttler:
